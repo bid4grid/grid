@@ -28,7 +28,7 @@
 
   var TOPIC_GUIDES = {
     basics: {
-      title: "Single & 3-Phase Power Fundamentals",
+      title: "3-Phase Power Fundamentals",
       models: "Models complex power (S = P + jQ), power factor (cos φ), 3-phase line vs. phase relationships (Wye & Delta), and sizing shunt capacitor banks (kvar) to counteract inductive motor lag.",
       why: [
         "<strong>Utility Surcharges:</strong> Utilities penalize commercial and industrial customers if their power factor drops below 0.90–0.95 due to wasted reactive current.",
@@ -109,8 +109,8 @@
         <nav class="pwr-nav" aria-label="Main Navigation">
           <button class="on" data-tab="basics">
             <span class="pwr-tab-icon">⚡</span>
-            <span class="pwr-tab-full">Single &amp; 3-Phase</span>
-            <span class="pwr-tab-short">Single</span>
+            <span class="pwr-tab-full">3-Phase Power</span>
+            <span class="pwr-tab-short">3Φ</span>
           </button>
           <button data-tab="flow">
             <span class="pwr-tab-icon">🌐</span>
@@ -234,7 +234,7 @@
                 <h2 class="card-title">Vector Schematics / Diagram</h2>
                 <div class="pwr-toolbar">
                   <span class="badge">3Φ SYSTEMS</span>
-                  <button class="pwr-btn-action active" id="btn-view-sld">Single Line Diagram</button>
+                  <button class="pwr-btn-action active" id="btn-view-sld">Bus Diagram</button>
                   <button class="pwr-btn-action" id="btn-view-triangle">Power Triangle</button>
                   <button class="pwr-btn-action" id="btn-view-phasor">3Φ Phasors</button>
                   <button class="pwr-btn-action" id="btn-png-basics">📷 Export PNG</button>
@@ -451,7 +451,7 @@
 
             <div class="card">
               <div class="card-header">
-                <h2 class="card-title">3-Bus Single Line Diagram &amp; Line Flows</h2>
+                <h2 class="card-title">3-Bus Bus Diagram &amp; Line Flows</h2>
                 <div class="pwr-toolbar">
                   <button class="pwr-btn-action active" id="btn-flow-sld">Network Flows SLD</button>
                   <button class="pwr-btn-action" id="btn-flow-ybus">Y-Bus Admittance Matrix</button>

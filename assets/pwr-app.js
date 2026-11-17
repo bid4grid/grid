@@ -451,10 +451,10 @@
 
             <div class="card">
               <div class="card-header">
-                <h2 class="card-title">3-Bus Bus Diagram &amp; Line Flows</h2>
+                <h2 class="card-title">3-Bus Network &amp; Power Flows</h2>
                 <div class="pwr-toolbar">
                   <button class="pwr-btn-action active" id="btn-flow-sld">Network Flows SLD</button>
-                  <button class="pwr-btn-action" id="btn-flow-ybus">Y-Bus Admittance Matrix</button>
+                  <button class="pwr-btn-action" id="btn-flow-ybus">Bus Matrix</button>
                   <button class="pwr-btn-action" id="btn-png-flow">📷 Export PNG</button>
                 </div>
               </div>

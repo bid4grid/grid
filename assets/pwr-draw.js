@@ -1239,174 +1239,76 @@
   }
 
   // --- Y-BUS ADMITTANCE MATRIX & NODAL FORMULATION VIEW ---
-  function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
+function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
     var c = initCanvas(canvas);
     var ctx = c.ctx, w = c.w, h = c.h, t = c.t;
 
     ctx.fillStyle = t.text;
-    ctx.font = 'bold 12.5px -apple-system, monospace';
+    ctx.font = 'bold 13px -apple-system, monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('BUS ADMITTANCE MATRIX [Y_bus] & NODAL POWER FLOW EQUATIONS · [I] = [Y][V]', 20, 24);
+    ctx.fillText('NETWORK BRANCH DATA & LINE POWER FLOWS', 20, 28);
 
-    // 1. Matrix Table on the Left
-    var matX = 20, matY = 46, cellW = 145, cellH = 92;
+    // Header Row
+    var tableX = 20, tableY = 50, colW = [60, 60, 60, 80, 80, 80];
+    var cols = ['From Bus', 'To Bus', 'R (Ω)', 'X (Ω)', 'P (MW)', 'Q (MVAR)'];
+    var totalW = colW.reduce((a, b) => a + b, 0);
 
-    // Column Headers
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(tableX, tableY, totalW, 24);
+    ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 10px monospace';
-    ctx.fillStyle = t.primary;
-    ctx.textAlign = 'center';
-    ctx.fillText('Bus 1 (Slack)', matX + cellW * 0.5 + 40, matY + 12);
-    ctx.fillText('Bus 2 (PV Gen)', matX + cellW * 1.5 + 40, matY + 12);
-    ctx.fillText('Bus 3 (PQ Load)', matX + cellW * 2.5 + 40, matY + 12);
+    
+    var colX = tableX;
+    for (var c = 0; c < cols.length; c++) {
+      ctx.textAlign = 'center';
+      ctx.fillText(cols[c], colX + colW[c] / 2, tableY + 16);
+      colX += colW[c];
+    }
 
-    var rowNames = ['Bus 1', 'Bus 2', 'Bus 3'];
-    for (var r = 0; r < 3; r++) {
-      ctx.fillStyle = t.primary;
-      ctx.font = 'bold 10px monospace';
-      ctx.textAlign = 'right';
-      ctx.fillText(rowNames[r], matX + 32, matY + 24 + r * cellH + cellH / 2);
+    // Data Rows
+    var rowY = tableY + 24;
+    if (branches && branches.length > 0) {
+      for (var i = 0; i < branches.length; i++) {
+        var br = branches[i];
+        var flow = (gsResult && gsResult.lineFlows && gsResult.lineFlows[i]) ? gsResult.lineFlows[i] : [0, 0];
+        
+        var rowData = [
+          'Bus ' + br[0],
+          'Bus ' + br[1],
+          br[2].toFixed(4),
+          br[3].toFixed(4),
+          flow[0].toFixed(2),
+          flow[1].toFixed(2)
+        ];
 
-      for (var col = 0; col < 3; col++) {
-        var x0 = matX + 40 + col * cellW;
-        var y0 = matY + 20 + r * cellH;
-        var isDiag = (r === col);
-        var yIdx = r * 3 + col;
-        var Y_elem = (YBus && YBus[yIdx]) ? YBus[yIdx] : [0, 0];
-        var G = Y_elem[0], B = Y_elem[1];
-        var Y_mag = Math.sqrt(G * G + B * B);
-        var Y_deg = Math.atan2(B, G) * 180 / Math.PI;
+        ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+        ctx.fillRect(tableX, rowY, totalW, 20);
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(tableX, rowY, totalW, 20);
 
-        // Cell background
-        ctx.fillStyle = isDiag ? 'rgba(31, 58, 95, 0.04)' : '#ffffff';
-        ctx.fillRect(x0, y0, cellW - 6, cellH - 6);
-        ctx.strokeStyle = isDiag ? t.primary : '#cbd5e1';
-        ctx.lineWidth = isDiag ? 1.5 : 1;
-        ctx.strokeRect(x0, y0, cellW - 6, cellH - 6);
-
-        // Cell Element Name (Y_ik)
-        ctx.fillStyle = isDiag ? t.primary : t.accent;
-        ctx.font = 'bold 10px monospace';
-        ctx.textAlign = 'left';
-        ctx.fillText('Y' + (r + 1) + (col + 1) + (isDiag ? ' (Self)' : ' (Mutual)'), x0 + 8, y0 + 16);
-
-        // Rectangular Conductance + Susceptance
         ctx.fillStyle = t.text;
         ctx.font = '9px monospace';
-        var signB = B >= 0 ? ' + j' : ' – j';
-        ctx.fillText('G: ' + G.toFixed(3) + ' S', x0 + 8, y0 + 34);
-        ctx.fillText('B: ' + signB + Math.abs(B).toFixed(3) + ' S', x0 + 8, y0 + 48);
-
-        // Polar Form
-        ctx.fillStyle = t.muted;
-        ctx.font = '8.5px monospace';
-        ctx.fillText('|Y| = ' + Y_mag.toFixed(2) + ' ∠ ' + Y_deg.toFixed(1) + '°', x0 + 8, y0 + 64);
-
-        if (isDiag) {
-          ctx.fillStyle = t.activeLine;
-          ctx.font = '8px monospace';
-          ctx.fillText('Σ y_ik + jBsh/2', x0 + 8, y0 + 77);
-        } else {
-          ctx.fillStyle = t.muted;
-          ctx.font = '8px monospace';
-          ctx.fillText('–y_' + (Math.min(r, col) + 1) + (Math.max(r, col) + 1), x0 + 8, y0 + 77);
+        colX = tableX;
+        for (var c = 0; c < rowData.length; c++) {
+          ctx.textAlign = 'center';
+          ctx.fillText(rowData[c], colX + colW[c] / 2, rowY + 14);
+          colX += colW[c];
         }
+
+        rowY += 20;
       }
     }
 
-    // 2. Right Side: Nodal Theory & Formulation Card
-    var cardX = 525, cardW = 310, cardY = 46, cardH = cellH * 3 + 20;
-    ctx.fillStyle = '#f8fafc';
-    ctx.strokeStyle = '#cbd5e1';
-    ctx.lineWidth = 1;
-    ctx.fillRect(cardX, cardY, cardW, cardH);
-    ctx.strokeRect(cardX, cardY, cardW, cardH);
-
-    // Card Header Banner
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(cardX, cardY, cardW, 26);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 10.5px monospace';
-    ctx.textAlign = 'left';
-    ctx.fillText('⚡ NODAL EQUATIONS & GAUSS-SEIDEL', cardX + 10, cardY + 17);
-
-    var cy = cardY + 40;
-    ctx.fillStyle = t.text;
-    ctx.font = 'bold 9px monospace';
-    ctx.fillText('1. Fundamental Matrix Equation:', cardX + 10, cy);
-    cy += 13;
-    ctx.fillStyle = t.primary;
-    ctx.font = '9px monospace';
-    ctx.fillText('   [I_bus] = [Y_bus] · [V_bus]', cardX + 10, cy);
-    cy += 12;
+    // Legend at bottom
+    rowY += 10;
     ctx.fillStyle = t.muted;
-    ctx.font = '8.5px monospace';
-    ctx.fillText('   I_i = Σ Y_ik · V_k  (Kirchhoff Current Law)', cardX + 10, cy);
-    cy += 18;
-
-    // Divider
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.beginPath(); ctx.moveTo(cardX + 10, cy); ctx.lineTo(cardX + cardW - 10, cy); ctx.stroke();
-    cy += 14;
-
-    ctx.fillStyle = t.text;
-    ctx.font = 'bold 9px monospace';
-    ctx.fillText('2. Complex Power Injections:', cardX + 10, cy);
-    cy += 13;
-    ctx.fillStyle = t.accent;
-    ctx.font = '8.5px monospace';
-    ctx.fillText('   S_i = P_i + jQ_i = V_i · I_i*', cardX + 10, cy);
-    cy += 12;
-    ctx.fillText('   P_i - jQ_i = V_i* · Σ Y_ik · V_k', cardX + 10, cy);
-    cy += 18;
-
-    // Divider
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.beginPath(); ctx.moveTo(cardX + 10, cy); ctx.lineTo(cardX + cardW - 10, cy); ctx.stroke();
-    cy += 14;
-
-    ctx.fillStyle = t.text;
-    ctx.font = 'bold 9px monospace';
-    ctx.fillText('3. Gauss-Seidel Voltage Update Formula:', cardX + 10, cy);
-    cy += 13;
-    ctx.fillStyle = t.text;
-    ctx.font = '8.5px monospace';
-    ctx.fillText('   V_i^(k+1) = (1/Y_ii) · [', cardX + 10, cy);
-    cy += 12;
-    ctx.fillText('     (P_i - jQ_i)/(V_i^*)^(k) - Σ_{j≠i} Y_ij·V_j', cardX + 10, cy);
-    cy += 12;
-    ctx.fillText('   ]', cardX + 10, cy);
-    cy += 18;
-
-    // Solver performance box
-    ctx.fillStyle = '#ffffff';
-    ctx.strokeStyle = t.activeLine;
-    ctx.lineWidth = 1.2;
-    ctx.fillRect(cardX + 10, cy, cardW - 20, 52);
-    ctx.strokeRect(cardX + 10, cy, cardW - 20, 52);
-
-    ctx.fillStyle = t.activeLine;
-    ctx.font = 'bold 9.5px monospace';
-    ctx.fillText('GAUSS-SEIDEL CONVERGENCE:', cardX + 18, cy + 16);
-    ctx.fillStyle = t.text;
-    ctx.font = '8.5px monospace';
-    ctx.fillText('• Convergence: 4 iterations (tol=1e-4)', cardX + 18, cy + 30);
-    ctx.fillText('• Matrix Symmetry: Y_12 == Y_21 (Reciprocal)', cardX + 18, cy + 42);
-
-    // 3. Bottom SCADA Telemetry Bar
-    var dashY = h - 44;
-    ctx.fillStyle = '#f8fafc';
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.lineWidth = 1;
-    ctx.fillRect(14, dashY, w - 28, 28);
-    ctx.strokeRect(14, dashY, w - 28, 28);
-
-    ctx.fillStyle = t.text;
-    ctx.font = '9.5px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('SCADA: Bus Admittance Matrix [Y_bus]  |  Dimension: 3x3 Complex  |  Symmetric & Diagonally Dominant', w / 2, dashY + 18);
+    ctx.font = '9px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('R = Line Resistance  |  X = Line Reactance  |  P = Active Power Flow  |  Q = Reactive Power Flow', tableX, rowY);
   }
 
-  // --- 8. SYMMETRICAL SEQUENCE NETWORKS ---
+
   function drawSequenceNetworks(canvas, faultType, Z0, Z1, Z2, faultRes) {
     faultType = (faultType || 'slg').toLowerCase();
     var c = initCanvas(canvas);

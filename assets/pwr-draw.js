@@ -1243,146 +1243,107 @@ function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
     var c = initCanvas(canvas);
     var ctx = c.ctx, w = c.w, h = c.h, t = c.t;
 
-    var sectionY = 20;
-
-    // ===== TOP SECTION: NETWORK TOPOLOGY =====
     ctx.fillStyle = t.text;
     ctx.font = 'bold 13px -apple-system, monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('1. NETWORK TOPOLOGY', 20, sectionY + 20);
+    ctx.fillText('BUS ADMITTANCE MATRIX [Y_bus] & POWER INJECTION SUMMARY', 20, 24);
 
-    // Caption explaining the topology
-    ctx.fillStyle = t.muted;
-    ctx.font = '9px monospace';
-    ctx.fillText('Shows all transmission lines connecting buses and their electrical impedances. This data is used to calculate power flows.', 20, sectionY + 38);
+    // 1. Y-Bus Matrix on the Left
+    var matX = 20, matY = 50, cellW = 145, cellH = 92;
 
-    // Header Row
-    var tableX = 20, tableY = sectionY + 55, colW = [60, 60, 60, 60];
-    var cols = ['From Bus', 'To Bus', 'R (Ω)', 'X (Ω)'];
-    var totalW = colW.reduce((a, b) => a + b, 0);
-
-    // Header background
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(tableX, tableY, totalW, 24);
-    ctx.fillStyle = '#ffffff';
+    // Column Headers
     ctx.font = 'bold 10px monospace';
-    
-    var colX = tableX;
-    for (var c = 0; c < cols.length; c++) {
-      ctx.textAlign = 'center';
-      ctx.fillText(cols[c], colX + colW[c] / 2, tableY + 16);
-      colX += colW[c];
-    }
+    ctx.fillStyle = t.primary;
+    ctx.textAlign = 'center';
+    ctx.fillText('Bus 1 (Slack)', matX + cellW * 0.5 + 40, matY + 12);
+    ctx.fillText('Bus 2 (PV Gen)', matX + cellW * 1.5 + 40, matY + 12);
+    ctx.fillText('Bus 3 (PQ Load)', matX + cellW * 2.5 + 40, matY + 12);
 
-    // Data Rows - Topology
-    var rowY = tableY + 24;
-    if (branches && branches.length > 0) {
-      for (var i = 0; i < branches.length; i++) {
-        var br = branches[i];
-        
-        var rowData = [
-          'Bus ' + br.from,
-          'Bus ' + br.to,
-          (br.r || 0).toFixed(4),
-          (br.x || 0).toFixed(4)
-        ];
+    var rowNames = ['Bus 1', 'Bus 2', 'Bus 3'];
+    for (var r = 0; r < 3; r++) {
+      ctx.fillStyle = t.primary;
+      ctx.font = 'bold 10px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(rowNames[r], matX + 32, matY + 24 + r * cellH + cellH / 2);
 
-        ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#f8fafc';
-        ctx.fillRect(tableX, rowY, totalW, 20);
-        ctx.strokeStyle = '#e2e8f0';
-        ctx.lineWidth = 0.5;
-        ctx.strokeRect(tableX, rowY, totalW, 20);
+      for (var col = 0; col < 3; col++) {
+        var x0 = matX + 40 + col * cellW;
+        var y0 = matY + 20 + r * cellH;
+        var isDiag = (r === col);
+        var yIdx = r * 3 + col;
+        var Y_elem = (YBus && YBus[yIdx]) ? YBus[yIdx] : [0, 0];
+        var G = Y_elem[0], B = Y_elem[1];
+        var Y_mag = Math.sqrt(G * G + B * B);
+        var Y_deg = Math.atan2(B, G) * 180 / Math.PI;
 
+        // Cell background
+        ctx.fillStyle = isDiag ? 'rgba(31, 58, 95, 0.04)' : '#ffffff';
+        ctx.fillRect(x0, y0, cellW - 6, cellH - 6);
+        ctx.strokeStyle = isDiag ? t.primary : '#cbd5e1';
+        ctx.lineWidth = isDiag ? 1.5 : 1;
+        ctx.strokeRect(x0, y0, cellW - 6, cellH - 6);
+
+        // Cell Element Name
+        ctx.fillStyle = isDiag ? t.primary : t.accent;
+        ctx.font = 'bold 10px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText('Y' + (r + 1) + (col + 1) + (isDiag ? ' (Self)' : ' (Mutual)'), x0 + 8, y0 + 16);
+
+        // Values
         ctx.fillStyle = t.text;
         ctx.font = '9px monospace';
-        colX = tableX;
-        for (var c = 0; c < rowData.length; c++) {
-          ctx.textAlign = 'center';
-          ctx.fillText(rowData[c], colX + colW[c] / 2, rowY + 14);
-          colX += colW[c];
-        }
+        var signB = B >= 0 ? ' + j' : ' – j';
+        ctx.fillText('G: ' + G.toFixed(3) + ' S', x0 + 8, y0 + 34);
+        ctx.fillText('B: ' + signB + Math.abs(B).toFixed(3) + ' S', x0 + 8, y0 + 48);
 
-        rowY += 20;
+        // Magnitude & Angle
+        ctx.fillStyle = t.muted;
+        ctx.font = '8.5px monospace';
+        ctx.fillText('|Y| = ' + Y_mag.toFixed(2) + ' ∠ ' + Y_deg.toFixed(1) + '°', x0 + 8, y0 + 64);
       }
     }
 
-    // ===== BOTTOM SECTION: POWER FLOWS =====
-    var flowSectionY = rowY + 35;
-    
-    ctx.fillStyle = t.text;
-    ctx.font = 'bold 13px -apple-system, monospace';
-    ctx.textAlign = 'left';
-    ctx.fillText('2. CALCULATED POWER FLOWS', 20, flowSectionY + 20);
+    // 2. Right Side: Power Injection Summary Card
+    var cardX = 525, cardW = 310, cardY = 50, cardH = cellH * 3 + 20;
+    ctx.fillStyle = '#f8fafc';
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1;
+    ctx.fillRect(cardX, cardY, cardW, cardH);
+    ctx.strokeRect(cardX, cardY, cardW, cardH);
 
-    // Caption
-    ctx.fillStyle = t.muted;
-    ctx.font = '9px monospace';
-    ctx.fillText('Power flowing through each line calculated from solved bus voltages using P = V·I·cos(θ) and Q = V·I·sin(θ).', 20, flowSectionY + 38);
-
-    // Header Row - Flows
-    var flowTableX = 20, flowTableY = flowSectionY + 55, flowColW = [60, 60, 80, 80, 80, 80];
-    var flowCols = ['From', 'To', 'P (MW)', 'Q (MVAR)', 'Loss-P (MW)', 'Loss-Q (MVAR)'];
-    var flowTotalW = flowColW.reduce((a, b) => a + b, 0);
-
+    // Card Header
     ctx.fillStyle = '#0f172a';
-    ctx.fillRect(flowTableX, flowTableY, flowTotalW, 24);
+    ctx.fillRect(cardX, cardY, cardW, 26);
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 10px monospace';
-    
-    var colX = flowTableX;
-    for (var c = 0; c < flowCols.length; c++) {
-      ctx.textAlign = 'center';
-      ctx.fillText(flowCols[c], colX + flowColW[c] / 2, flowTableY + 16);
-      colX += flowColW[c];
-    }
-
-    // Data Rows - Power Flows
-    var flowRowY = flowTableY + 24;
-    if (branches && branches.length > 0 && gsResult && gsResult.lineFlows) {
-      for (var i = 0; i < branches.length; i++) {
-        var br = branches[i];
-        var flow = gsResult.lineFlows[i] || [0, 0];
-        
-        // Calculate losses (simple approximation: I²R & I²X)
-        var S = Math.sqrt(flow[0]*flow[0] + flow[1]*flow[1]);
-        var I = S / 1.0; // Approximate current magnitude (MVA / 1.0 kV base)
-        var loss_p = I*I * (br.r || 0);
-        var loss_q = I*I * (br.x || 0);
-        
-        var flowData = [
-          'B' + br.from,
-          'B' + br.to,
-          (flow[0] || 0).toFixed(2),
-          (flow[1] || 0).toFixed(2),
-          loss_p.toFixed(3),
-          loss_q.toFixed(3)
-        ];
-
-        ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#f8fafc';
-        ctx.fillRect(flowTableX, flowRowY, flowTotalW, 20);
-        ctx.strokeStyle = '#e2e8f0';
-        ctx.lineWidth = 0.5;
-        ctx.strokeRect(flowTableX, flowRowY, flowTotalW, 20);
-
-        ctx.fillStyle = t.text;
-        ctx.font = '9px monospace';
-        colX = flowTableX;
-        for (var c = 0; c < flowData.length; c++) {
-          ctx.textAlign = 'center';
-          ctx.fillText(flowData[c], colX + flowColW[c] / 2, flowRowY + 14);
-          colX += flowColW[c];
-        }
-
-        flowRowY += 20;
-      }
-    }
-
-    // Legend
-    flowRowY += 10;
-    ctx.fillStyle = t.muted;
-    ctx.font = '8.5px monospace';
+    ctx.font = 'bold 10.5px monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('Legend: P = Active Power  |  Q = Reactive Power  |  Loss = Power dissipated in line resistance & reactance', flowTableX, flowRowY);
+    ctx.fillText('⚡ POWER INJECTION SUMMARY', cardX + 10, cardY + 17);
+
+    var cy = cardY + 40;
+    var injections = [
+      { label: 'Bus 1 (Slack / Swing)', type: 'Generator', role: 'Voltage Reference', color: t.primary },
+      { label: 'Bus 2 (PV Generator)', type: 'Generator', role: 'Constant Voltage & Power', color: t.primary },
+      { label: 'Bus 3 (PQ Load)', type: 'Load', role: 'Constant Power Demand', color: t.accent }
+    ];
+
+    injections.forEach(function(inj) {
+      ctx.fillStyle = inj.color;
+      ctx.font = 'bold 9px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(inj.label, cardX + 10, cy);
+      cy += 13;
+      ctx.fillStyle = t.text;
+      ctx.font = '8.5px monospace';
+      ctx.fillText(inj.type + ' - ' + inj.role, cardX + 15, cy);
+      cy += 18;
+    });
+
+    // Legend at bottom
+    cy = cardY + cardH - 15;
+    ctx.fillStyle = t.muted;
+    ctx.font = '8px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('Y_bus encodes network topology & impedances', cardX + 10, cy);
   }
 
   function drawSequenceNetworks(canvas, faultType, Z0, Z1, Z2, faultRes) {

@@ -1249,10 +1249,11 @@ function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
     ctx.fillText('NETWORK BRANCH DATA & LINE POWER FLOWS', 20, 28);
 
     // Header Row
-    var tableX = 20, tableY = 50, colW = [60, 60, 60, 80, 80, 80];
-    var cols = ['From Bus', 'To Bus', 'R (Ω)', 'X (Ω)', 'P (MW)', 'Q (MVAR)'];
+    var tableX = 20, tableY = 50, colW = [60, 60, 60, 60, 80, 80];
+    var cols = ['From', 'To', 'R (Ω)', 'X (Ω)', 'P (MW)', 'Q (MVAR)'];
     var totalW = colW.reduce((a, b) => a + b, 0);
 
+    // Header background
     ctx.fillStyle = '#0f172a';
     ctx.fillRect(tableX, tableY, totalW, 24);
     ctx.fillStyle = '#ffffff';
@@ -1273,14 +1274,15 @@ function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
         var flow = (gsResult && gsResult.lineFlows && gsResult.lineFlows[i]) ? gsResult.lineFlows[i] : [0, 0];
         
         var rowData = [
-          'Bus ' + br[0],
-          'Bus ' + br[1],
-          br[2].toFixed(4),
-          br[3].toFixed(4),
-          flow[0].toFixed(2),
-          flow[1].toFixed(2)
+          'B' + br.from,
+          'B' + br.to,
+          (br.r || 0).toFixed(4),
+          (br.x || 0).toFixed(4),
+          (flow[0] || 0).toFixed(2),
+          (flow[1] || 0).toFixed(2)
         ];
 
+        // Alternating row colors
         ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#f8fafc';
         ctx.fillRect(tableX, rowY, totalW, 20);
         ctx.strokeStyle = '#e2e8f0';
@@ -1300,14 +1302,13 @@ function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
       }
     }
 
-    // Legend at bottom
+    // Legend
     rowY += 10;
     ctx.fillStyle = t.muted;
     ctx.font = '9px monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('R = Line Resistance  |  X = Line Reactance  |  P = Active Power Flow  |  Q = Reactive Power Flow', tableX, rowY);
+    ctx.fillText('R = Series Resistance  |  X = Series Reactance  |  P = Active Power  |  Q = Reactive Power', tableX, rowY);
   }
-
 
   function drawSequenceNetworks(canvas, faultType, Z0, Z1, Z2, faultRes) {
     faultType = (faultType || 'slg').toLowerCase();

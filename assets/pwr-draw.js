@@ -1243,14 +1243,22 @@ function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
     var c = initCanvas(canvas);
     var ctx = c.ctx, w = c.w, h = c.h, t = c.t;
 
+    var sectionY = 20;
+
+    // ===== TOP SECTION: NETWORK TOPOLOGY =====
     ctx.fillStyle = t.text;
     ctx.font = 'bold 13px -apple-system, monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('NETWORK BRANCH DATA & LINE POWER FLOWS', 20, 28);
+    ctx.fillText('1. NETWORK TOPOLOGY', 20, sectionY + 20);
+
+    // Caption explaining the topology
+    ctx.fillStyle = t.muted;
+    ctx.font = '9px monospace';
+    ctx.fillText('Shows all transmission lines connecting buses and their electrical impedances. This data is used to calculate power flows.', 20, sectionY + 38);
 
     // Header Row
-    var tableX = 20, tableY = 50, colW = [60, 60, 60, 60, 80, 80];
-    var cols = ['From', 'To', 'R (Ω)', 'X (Ω)', 'P (MW)', 'Q (MVAR)'];
+    var tableX = 20, tableY = sectionY + 55, colW = [60, 60, 60, 60];
+    var cols = ['From Bus', 'To Bus', 'R (Ω)', 'X (Ω)'];
     var totalW = colW.reduce((a, b) => a + b, 0);
 
     // Header background
@@ -1266,23 +1274,19 @@ function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
       colX += colW[c];
     }
 
-    // Data Rows
+    // Data Rows - Topology
     var rowY = tableY + 24;
     if (branches && branches.length > 0) {
       for (var i = 0; i < branches.length; i++) {
         var br = branches[i];
-        var flow = (gsResult && gsResult.lineFlows && gsResult.lineFlows[i]) ? gsResult.lineFlows[i] : [0, 0];
         
         var rowData = [
-          'B' + br.from,
-          'B' + br.to,
+          'Bus ' + br.from,
+          'Bus ' + br.to,
           (br.r || 0).toFixed(4),
-          (br.x || 0).toFixed(4),
-          (flow[0] || 0).toFixed(2),
-          (flow[1] || 0).toFixed(2)
+          (br.x || 0).toFixed(4)
         ];
 
-        // Alternating row colors
         ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#f8fafc';
         ctx.fillRect(tableX, rowY, totalW, 20);
         ctx.strokeStyle = '#e2e8f0';
@@ -1302,12 +1306,83 @@ function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
       }
     }
 
-    // Legend
-    rowY += 10;
+    // ===== BOTTOM SECTION: POWER FLOWS =====
+    var flowSectionY = rowY + 35;
+    
+    ctx.fillStyle = t.text;
+    ctx.font = 'bold 13px -apple-system, monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('2. CALCULATED POWER FLOWS', 20, flowSectionY + 20);
+
+    // Caption
     ctx.fillStyle = t.muted;
     ctx.font = '9px monospace';
+    ctx.fillText('Power flowing through each line calculated from solved bus voltages using P = V·I·cos(θ) and Q = V·I·sin(θ).', 20, flowSectionY + 38);
+
+    // Header Row - Flows
+    var flowTableX = 20, flowTableY = flowSectionY + 55, flowColW = [60, 60, 80, 80, 80, 80];
+    var flowCols = ['From', 'To', 'P (MW)', 'Q (MVAR)', 'Loss-P (MW)', 'Loss-Q (MVAR)'];
+    var flowTotalW = flowColW.reduce((a, b) => a + b, 0);
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(flowTableX, flowTableY, flowTotalW, 24);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 10px monospace';
+    
+    var colX = flowTableX;
+    for (var c = 0; c < flowCols.length; c++) {
+      ctx.textAlign = 'center';
+      ctx.fillText(flowCols[c], colX + flowColW[c] / 2, flowTableY + 16);
+      colX += flowColW[c];
+    }
+
+    // Data Rows - Power Flows
+    var flowRowY = flowTableY + 24;
+    if (branches && branches.length > 0 && gsResult && gsResult.lineFlows) {
+      for (var i = 0; i < branches.length; i++) {
+        var br = branches[i];
+        var flow = gsResult.lineFlows[i] || [0, 0];
+        
+        // Calculate losses (simple approximation: I²R & I²X)
+        var S = Math.sqrt(flow[0]*flow[0] + flow[1]*flow[1]);
+        var I = S / 1.0; // Approximate current magnitude (MVA / 1.0 kV base)
+        var loss_p = I*I * (br.r || 0);
+        var loss_q = I*I * (br.x || 0);
+        
+        var flowData = [
+          'B' + br.from,
+          'B' + br.to,
+          (flow[0] || 0).toFixed(2),
+          (flow[1] || 0).toFixed(2),
+          loss_p.toFixed(3),
+          loss_q.toFixed(3)
+        ];
+
+        ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+        ctx.fillRect(flowTableX, flowRowY, flowTotalW, 20);
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(flowTableX, flowRowY, flowTotalW, 20);
+
+        ctx.fillStyle = t.text;
+        ctx.font = '9px monospace';
+        colX = flowTableX;
+        for (var c = 0; c < flowData.length; c++) {
+          ctx.textAlign = 'center';
+          ctx.fillText(flowData[c], colX + flowColW[c] / 2, flowRowY + 14);
+          colX += flowColW[c];
+        }
+
+        flowRowY += 20;
+      }
+    }
+
+    // Legend
+    flowRowY += 10;
+    ctx.fillStyle = t.muted;
+    ctx.font = '8.5px monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('R = Series Resistance  |  X = Series Reactance  |  P = Active Power  |  Q = Reactive Power', tableX, rowY);
+    ctx.fillText('Legend: P = Active Power  |  Q = Reactive Power  |  Loss = Power dissipated in line resistance & reactance', flowTableX, flowRowY);
   }
 
   function drawSequenceNetworks(canvas, faultType, Z0, Z1, Z2, faultRes) {

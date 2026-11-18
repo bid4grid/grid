@@ -71,7 +71,8 @@
     var conn = loadData.conn || 'wye';
     var vll = loadData.V_LL || 480;
     var pf = loadData.pf || 0.75;
-    var dQ = loadData.dQ_kvar || 276.6;
+    var targetPf = loadData.targetPf !== undefined ? loadData.targetPf : 0.95;
+    var dQ = loadData.dQ_kvar !== undefined ? loadData.dQ_kvar : 276.6;
     var isDelta = conn === 'delta';
     var I_line = loadData.I_line || 801.9;
 
@@ -449,7 +450,7 @@
     ctx.fillText('CAPACITORS: +' + dQ.toFixed(1) + ' kvar', capAnnX, capFeederY - 4);
     ctx.fillStyle = t.muted;
     ctx.font = '9.5px monospace';
-    ctx.fillText('PF: ' + pf.toFixed(2) + ' → 0.95 (' + (isDelta ? 'Δ-Wired' : 'Y-Wired') + ')', capAnnX, capFeederY + 12);
+    ctx.fillText('PF: ' + pf.toFixed(2) + ' → ' + targetPf.toFixed(2) + ' (' + (isDelta ? 'Δ-Wired' : 'Y-Wired') + ')', capAnnX, capFeederY + 12);
 
     // ==========================================
     // BOTTOM SCADA DIGITAL TELEMETRY DASHBOARD

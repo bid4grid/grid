@@ -784,6 +784,7 @@
       conn: conn,
       V_LL: vll,
       pf: pf1,
+      targetPf: pf2,
       dQ_kvar: pfRes.dQ_kvar,
       I_line: sys3ph.I_line,
       V_phase: sys3ph.V_phase,

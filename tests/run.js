@@ -196,6 +196,7 @@ const draw = require('../assets/pwr-draw.js');
 function createMockCanvas(width, height) {
   let minX = Infinity, maxX = -Infinity;
   let minY = Infinity, maxY = -Infinity;
+  const text = [];
 
   function record(x1, y1, x2, y2) {
     if (x1 < minX) minX = x1;
@@ -238,19 +239,22 @@ function createMockCanvas(width, height) {
       return { width: text.length * size * 0.62 };
     },
     fillText(text, x, y) {
+      this._text.push(text);
       const w = this.measureText(text).width;
       let left = x;
       if (this.textAlign === 'center') left = x - w / 2;
       else if (this.textAlign === 'right') left = x - w;
       record(left, y - 10, left + w, y + 4);
-    }
+    },
+    _text: text
   };
 
   return {
     width,
     height,
     getContext() { return ctx; },
-    getBounds() { return { minX, maxX, minY, maxY }; }
+    getBounds() { return { minX, maxX, minY, maxY }; },
+    getText() { return text; }
   };
 }
 
@@ -269,6 +273,16 @@ verifyDiagramFit("Single Line Diagram (Delta Load)", c => {
 verifyDiagramFit("Single Line Diagram (Wye Load)", c => {
   draw.drawSLD(c, { P: 500, conn: 'wye', V_LL: 480, pf: 0.75, dQ_kvar: 276.6, I_line: 801.9 });
 });
+
+const sldCanvas = createMockCanvas(850, 420);
+draw.drawSLD(sldCanvas, { conn: 'wye', pf: 0.75, targetPf: 0.80, dQ_kvar: 66.0 });
+ok(sldCanvas.getText().includes('PF: 0.75 → 0.80 (Y-Wired)'), "SLD displays the selected target power factor");
+ok(sldCanvas.getText().includes('CAPACITORS: +66.0 kvar'), "SLD displays the calculated capacitor size");
+
+const noCorrectionCanvas = createMockCanvas(850, 420);
+draw.drawSLD(noCorrectionCanvas, { conn: 'delta', pf: 0.75, targetPf: 0.75, dQ_kvar: 0 });
+ok(noCorrectionCanvas.getText().includes('PF: 0.75 → 0.75 (Δ-Wired)'), "SLD displays an unchanged target power factor");
+ok(noCorrectionCanvas.getText().includes('CAPACITORS: +0.0 kvar'), "SLD displays zero capacitor size when no correction is needed");
 
 verifyDiagramFit("Transformer T-Equivalent Circuit", c => {
   draw.drawTransformerCircuit(c, { Rc: 310, Xm: 86, Req: 0.0142, Xeq: 0.0182, S_kVA: 50, eff: 98.03, vr: 1.94, Poc: 186, Psc: 617 });

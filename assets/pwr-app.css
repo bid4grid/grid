@@ -60,16 +60,17 @@ body.pwr-standalone,
   line-height: 1.4;
 }
 
-.pwr-btn-report {
+.pwr-nav-guide {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: #faf8f5;
-  border: 1px solid #d5d0c8;
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: var(--radius-sm);
-  color: #374151;
-  padding: 9px 15px;
-  font-size: 13.5px;
+  color: #ffffff;
+  padding: 8px 12px;
+  font-size: 12.5px;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
@@ -77,10 +78,9 @@ body.pwr-standalone,
   transition: all 0.15s;
 }
 
-.pwr-btn-report:hover {
-  background: #f0ece6;
-  border-color: #b8b2a8;
-  color: var(--ink);
+.pwr-nav-guide:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.65);
 }
 
 /* Sticky Navigation Bar */
@@ -124,6 +124,10 @@ body.pwr-standalone,
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+.pwr-guide-short {
+  display: none;
 }
 
 .pwr-nav button:hover {
@@ -610,18 +614,18 @@ button.btn-primary:hover {
     gap: 10px;
   }
 
-  .pwr-btn-report {
-    width: 100%;
-    justify-content: center;
+  .pwr-header .subtitle {
+    font-size: 11.5px;
+    line-height: 1.2;
+    white-space: nowrap;
   }
 
-  /* Phone tab bar: 6 equal tabs, icon over a short label */
+  /* Phone tab bar: full tab names scroll horizontally; theory stays last */
   .pwr-nav {
-    display: grid !important;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 3px;
-    padding: 6px 4px 7px;
-    overflow: visible;
+    display: flex;
+    gap: 4px;
+    padding: 6px 8px 7px;
+    overflow-x: auto;
   }
 
   .pwr-nav button {
@@ -629,12 +633,29 @@ button.btn-primary:hover {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
-    min-width: 0;
-    padding: 7px 1px 6px;
+    flex: 0 0 auto;
+    gap: 4px;
+    min-width: 48px;
+    padding: 7px 9px 6px;
     font-size: 10px;
     line-height: 1.1;
     white-space: nowrap;
+    border-radius: 9px;
+    text-align: center;
+  }
+
+  .pwr-nav .pwr-nav-guide {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    gap: 4px;
+    min-width: 48px;
+    margin-left: 0;
+    padding: 7px 9px 6px;
+    font-size: 10px;
+    line-height: 1.1;
     border-radius: 9px;
     text-align: center;
   }
@@ -649,6 +670,14 @@ button.btn-primary:hover {
   }
 
   .pwr-nav .pwr-tab-short {
+    display: block;
+  }
+
+  .pwr-nav .pwr-guide-full {
+    display: none;
+  }
+
+  .pwr-nav .pwr-guide-short {
     display: block;
   }
 

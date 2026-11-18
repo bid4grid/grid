@@ -93,13 +93,7 @@
         <div class="pwr-header-content">
           <div>
             <h1>Power Systems CAD Calculator</h1>
-            <div class="subtitle">Interactive Power Systems Engineering Suite (Fundamentals, Machines, Transformers, Lines &amp; Faults) · v1.0.0</div>
-          </div>
-          <div>
-            <a href="assets/pwr-help.html" target="_blank" class="pwr-btn-report" title="Open Technical Guide &amp; Formulas">
-              <span>📖</span>
-              <span>Technical Theory &amp; Formulas</span>
-            </a>
+            <div class="subtitle">Interactive Power Systems Engineering Suite</div>
           </div>
         </div>
       </header>
@@ -137,6 +131,11 @@
             <span class="pwr-tab-full">Fault Analysis</span>
             <span class="pwr-tab-short">Faults</span>
           </button>
+          <a href="assets/pwr-help.html" target="_blank" class="pwr-nav-guide" title="Open Technical Theory &amp; Formulas" aria-label="Technical Theory and Formulas">
+            <span class="pwr-tab-icon">📖</span>
+            <span class="pwr-guide-full">Technical Theory &amp; Formulas</span>
+            <span class="pwr-guide-short">Theory</span>
+          </a>
         </nav>
       </div>
 

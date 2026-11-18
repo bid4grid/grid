@@ -44,16 +44,61 @@
       border-radius: 8px;
       margin-bottom: 24px;
     }
+    body { counter-reset: eqn; }
     .eq {
-      background: #f1f5f9;
-      border-left: 3px solid #e07a3f;
-      padding: 10px 14px;
+      position: relative;
       margin: 12px 0;
-      font-family: ui-monospace, Menlo, Monaco, Consolas, monospace;
-      font-size: 14px;
-      border-radius: 0 6px 6px 0;
+      padding: 8px 48px 8px 16px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 3px solid #1f3a5f;
+      border-radius: 8px;
+      color: #0f172a;
+      font-family: "STIX Two Math", "Cambria Math", "Latin Modern Math", "Times New Roman", Times, serif;
+      font-size: 18px;
+      line-height: 1.6;
+      text-align: center;
+      counter-increment: eqn;
       overflow-x: auto;
     }
+    .eq::after {
+      content: "(" counter(eqn) ")";
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      font: 12px -apple-system, "Segoe UI", Arial, sans-serif;
+    }
+    .eq .ln {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 4px 24px;
+      padding: 4px 0;
+    }
+    .eq .t { white-space: nowrap; }
+    .m {
+      font-family: "STIX Two Math", "Cambria Math", "Latin Modern Math", "Times New Roman", Times, serif;
+      font-size: 1.07em;
+      white-space: nowrap;
+    }
+    .frac {
+      display: inline-flex;
+      flex-direction: column;
+      vertical-align: middle;
+      margin: 0 .2em;
+      line-height: 1.2;
+      text-align: center;
+    }
+    .frac > span:first-child { border-bottom: 1px solid currentColor; padding: 0 .3em .08em; }
+    .frac > span:last-child { padding: .08em .3em 0; }
+    .rad { white-space: nowrap; }
+    .rel { margin: 0 .25em; }
+    .bin { margin: 0 .18em; }
+    .m sub, .m sup, .eq sub, .eq sup { font-size: .68em; line-height: 0; }
+    .tw { overflow-x: auto; }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -87,6 +132,7 @@
       main { padding: 20px 16px; border-radius: 8px; }
       h1 { font-size: 21px; }
       h2 { font-size: 17px; }
+      .eq { font-size: 15px; padding: 6px 38px 6px 10px; }
     }
   </style>
 </head>
@@ -100,117 +146,135 @@
   <h2>1. Electric Power System Overview &amp; Single Line Diagrams (SLD)</h2>
   <p>Single line diagrams (SLD) represent balanced 3-phase power networks using a single conductor line to depict all three phases. Component representations follow <strong>IEEE Std 315</strong> and <strong>IEC 60617</strong>:</p>
   <ul>
-    <li><strong>Synchronous Generator:</strong> Circle labeled with &lsquo;G&rsquo; indicating source EMF $E_g \angle \delta$.</li>
-    <li><strong>Power Transformer:</strong> Two interlocking circles or two parallel coiled windings indicating turns ratio $N_1:N_2$.</li>
-    <li><strong>Circuit Breaker (CB):</strong> Square box representing interrupting device rated for subtransient fault current ($I_f''$).</li>
+    <li><strong>Synchronous Generator:</strong> Circle labeled with &lsquo;G&rsquo; indicating source EMF <span class="m"><i>E</i><sub>g</sub> ∠ <i>δ</i></span>.</li>
+    <li><strong>Power Transformer:</strong> Two interlocking circles or two parallel coiled windings indicating turns ratio <span class="m"><i>N</i><sub>1</sub>:<i>N</i><sub>2</sub></span>.</li>
+    <li><strong>Circuit Breaker (CB):</strong> Square box representing interrupting device rated for subtransient fault current (<span class="m"><i>I</i><sub>f</sub>″</span>).</li>
     <li><strong>Busbar:</strong> Heavy solid conductor line interconnecting generation, transmission, and load feeders.</li>
   </ul>
 
   <h2>2. Complex Power &amp; Power Factor Correction</h2>
-  <p>Complex power $\mathbf{S}$ in single-phase and balanced three-phase systems is defined as:</p>
+  <p>Complex power <span class="m"><b>S</b></span> in single-phase and balanced three-phase systems is defined as:</p>
   <div class="eq">
-    <b>S</b> = P + jQ = |<b>S</b>| &ang; &theta; = <b>V</b> &middot; <b>I</b>*<br>
-    |<b>S</b>| = &radic;(P&sup2; + Q&sup2;) &nbsp; [kVA / MVA], &nbsp; cos &theta; = P / |<b>S</b>| &nbsp; (Power Factor)
+    <div class="ln">
+      <span class="t"><b>S</b> = <i>P</i> + j<i>Q</i> = |<b>S</b>| ∠ <i>θ</i> = <b>V</b> · <b>I</b>*</span>
+      <span class="t">|<b>S</b>| = √(<i>P</i><sup>2</sup> + <i>Q</i><sup>2</sup>)</span>
+      <span class="t">cos <i>θ</i> = <span class="frac"><span><i>P</i></span><span>|<b>S</b>|</span></span> (Power Factor)</span>
+    </div>
   </div>
-  <p>To correct power factor from $\cos\theta_1$ to a higher target $\cos\theta_2$ at constant active power $P$:</p>
+  <p>To correct power factor from <span class="m">cos <i>θ</i><sub>1</sub></span> to a higher target <span class="m">cos <i>θ</i><sub>2</sub></span> at constant active power <span class="m"><i>P</i></span>:</p>
   <div class="eq">
-    &Delta;Q<sub>cap</sub> = P &middot; [tan(arccos(pf<sub>1</sub>)) &minus; tan(arccos(pf<sub>2</sub>))] &nbsp; [kvar / MVAR]<br>
-    C = &Delta;Q<sub>cap</sub> / (&omega; &middot; V&sup2;) &nbsp; [Farads]
+    <div class="ln">
+      <span class="t">Δ<i>Q</i><sub>cap</sub> = <i>P</i> · [tan(cos<sup>−1</sup>(pf<sub>1</sub>)) − tan(cos<sup>−1</sup>(pf<sub>2</sub>))]</span>
+      <span class="t">[kvar / Mvar]</span>
+    </div>
+    <div class="ln">
+      <span class="t"><i>C</i> = <span class="frac"><span>Δ<i>Q</i><sub>cap</sub></span><span><i>ωV</i><sup>2</sup></span></span></span>
+      <span class="t">[Farads]</span>
+    </div>
   </div>
 
   <h2>3. Balanced Three-Phase Systems (Star vs. Delta)</h2>
-  <table>
+  <div class="tw"><table>
     <thead>
       <tr><th>Connection</th><th>Phase vs. Line Voltage</th><th>Phase vs. Line Current</th><th>Apparent Power</th></tr>
     </thead>
     <tbody>
       <tr>
         <td><strong>Star (Wye, Y)</strong></td>
-        <td>$V_{LL} = \sqrt{3} V_{ph} \angle 30^\circ$</td>
-        <td>$I_L = I_{ph}$</td>
-        <td>$S_{3\phi} = \sqrt{3} V_{LL} I_L = 3 V_{ph} I_{ph}$</td>
+        <td><span class="m"><i>V</i><sub>LL</sub> = √3 <i>V</i><sub>ph</sub> ∠ 30°</span></td>
+        <td><span class="m"><i>I</i><sub>L</sub> = <i>I</i><sub>ph</sub></span></td>
+        <td><span class="m"><i>S</i><sub>3φ</sub> = √3 <i>V</i><sub>LL</sub> <i>I</i><sub>L</sub> = 3 <i>V</i><sub>ph</sub> <i>I</i><sub>ph</sub></span></td>
       </tr>
       <tr>
         <td><strong>Delta (&Delta;)</strong></td>
-        <td>$V_{LL} = V_{ph}$</td>
-        <td>$I_L = \sqrt{3} I_{ph} \angle -30^\circ$</td>
-        <td>$S_{3\phi} = \sqrt{3} V_{LL} I_L = 3 V_{ph} I_{ph}$</td>
+        <td><span class="m"><i>V</i><sub>LL</sub> = <i>V</i><sub>ph</sub></span></td>
+        <td><span class="m"><i>I</i><sub>L</sub> = √3 <i>I</i><sub>ph</sub> ∠ −30°</span></td>
+        <td><span class="m"><i>S</i><sub>3φ</sub> = √3 <i>V</i><sub>LL</sub> <i>I</i><sub>L</sub> = 3 <i>V</i><sub>ph</sub> <i>I</i><sub>ph</sub></span></td>
       </tr>
     </tbody>
-  </table>
+  </table></div>
   <p>Impedance transformations between three-phase equivalent circuits:</p>
   <div class="eq">
-    Z<sub>Y</sub> = Z<sub>&Delta;</sub> / 3, &nbsp;&nbsp; Z<sub>&Delta;</sub> = 3 &middot; Z<sub>Y</sub>
+    <div class="ln"><span class="t"><i>Z</i><sub>Y</sub> = <span class="frac"><span><i>Z</i><sub>Δ</sub></span><span>3</span></span></span><span class="t"><i>Z</i><sub>Δ</sub> = 3 <i>Z</i><sub>Y</sub></span></div>
   </div>
 
   <h2>4. Synchronous Generators (P-&delta; Stability)</h2>
   <p>Synchronous machine steady-state excitation and power-angle characteristics:</p>
   <h3>Cylindrical (Round) Rotor:</h3>
   <div class="eq">
-    <b>E</b><sub>g</sub> = <b>V</b><sub>t</sub> + <b>I</b><sub>a</sub>(R<sub>a</sub> + jX<sub>s</sub>)<br>
-    P(&delta;) = [ |<b>E</b><sub>g</sub>| |<b>V</b><sub>t</sub>| / X<sub>s</sub> ] &middot; sin(&delta;)<br>
-    P<sub>max</sub> occurs at torque angle &delta; = 90&deg;
+    <div class="ln"><span class="t"><b>E</b><sub>g</sub> = <b>V</b><sub>t</sub> + <b>I</b><sub>a</sub>(<i>R</i><sub>a</sub> + j<i>X</i><sub>s</sub>)</span></div>
+    <div class="ln"><span class="t"><i>P</i>(δ) = <span class="frac"><span>|<b>E</b><sub>g</sub>| |<b>V</b><sub>t</sub>|</span><span><i>X</i><sub>s</sub></span></span> sin(δ)</span></div>
+    <div class="ln"><span class="t"><i>P</i><sub>max</sub> occurs at torque angle δ = 90°</span></div>
   </div>
   <h3>Salient-Pole Machine (Blondel Two-Reaction Theory):</h3>
   <div class="eq">
-    P(&delta;) = [ |<b>E</b><sub>g</sub>| |<b>V</b><sub>t</sub>| / X<sub>d</sub> ] &middot; sin(&delta;) + [ |<b>V</b><sub>t</sub>|&sup2; (X<sub>d</sub> &minus; X<sub>q</sub>) / (2 X<sub>d</sub> X<sub>q</sub>) ] &middot; sin(2&delta;)
+    <div class="ln"><span class="t"><i>P</i>(δ) = <span class="frac"><span>|<b>E</b><sub>g</sub>| |<b>V</b><sub>t</sub>|</span><span><i>X</i><sub>d</sub></span></span> sin(δ) + <span class="frac"><span>|<b>V</b><sub>t</sub>|<sup>2</sup>(<i>X</i><sub>d</sub> − <i>X</i><sub>q</sub>)</span><span>2<i>X</i><sub>d</sub><i>X</i><sub>q</sub></span></span> sin(2δ)</span></div>
   </div>
-  <p>The second term represents <em>reluctance power</em> resulting from rotor saliency ($X_d > X_q$), shifting peak power $P_{max}$ to $\delta < 90^\circ$.</p>
+  <p>The second term represents <em>reluctance power</em> resulting from rotor saliency (<span class="m"><i>X</i><sub>d</sub> &gt; <i>X</i><sub>q</sub></span>), shifting peak power <span class="m"><i>P</i><sub>max</sub></span> to <span class="m"><i>δ</i> &lt; 90°</span>.</p>
 
   <h2>5. Power Transformers</h2>
   <p>Parameters are derived from standard Open-Circuit (OC) and Short-Circuit (SC) test measurements:</p>
   <div class="eq">
-    R<sub>c</sub> = V<sub>oc</sub>&sup2; / P<sub>oc</sub>, &nbsp;&nbsp; X<sub>m</sub> = V<sub>oc</sub>&sup2; / Q<sub>oc</sub> &nbsp; (Shunt core branch)<br>
-    R<sub>eq</sub> = P<sub>sc</sub> / I<sub>sc</sub>&sup2;, &nbsp;&nbsp; X<sub>eq</sub> = &radic;( (V<sub>sc</sub> / I<sub>sc</sub>)&sup2; &minus; R<sub>eq</sub>&sup2; ) &nbsp; (Series winding branch)
+    <div class="ln">
+      <span class="t"><i>R</i><sub>c</sub> = <span class="frac"><span><i>V</i><sub>oc</sub><sup>2</sup></span><span><i>P</i><sub>oc</sub></span></span></span>
+      <span class="t"><i>X</i><sub>m</sub> = <span class="frac"><span><i>V</i><sub>oc</sub><sup>2</sup></span><span><i>Q</i><sub>oc</sub></span></span> (Shunt core branch)</span>
+    </div>
+    <div class="ln">
+      <span class="t"><i>R</i><sub>eq</sub> = <span class="frac"><span><i>P</i><sub>sc</sub></span><span><i>I</i><sub>sc</sub><sup>2</sup></span></span></span>
+      <span class="t"><i>X</i><sub>eq</sub> = √[(<span class="frac"><span><i>V</i><sub>sc</sub></span><span><i>I</i><sub>sc</sub></span></span>)<sup>2</sup> − <i>R</i><sub>eq</sub><sup>2</sup>] (Series winding branch)</span>
+    </div>
   </div>
-  <p>Full-load efficiency ($\eta\%$) and exact Voltage Regulation (VR%):</p>
+  <p>Full-load efficiency (<span class="m"><i>η</i>%</span>) and exact Voltage Regulation (VR%):</p>
   <div class="eq">
-    &eta;% = [ P<sub>out</sub> / (P<sub>out</sub> + P<sub>core</sub> + m&sup2; &middot; P<sub>cu,FL</sub>) ] &times; 100<br>
-    VR% = [ (|V<sub>2,no-load</sub>| &minus; |V<sub>2,rated</sub>|) / |V<sub>2,rated</sub>| ] &times; 100
+    <div class="ln"><span class="t">η% = <span class="frac"><span><i>P</i><sub>out</sub></span><span><i>P</i><sub>out</sub> + <i>P</i><sub>core</sub> + <i>m</i><sup>2</sup><i>P</i><sub>cu,FL</sub></span></span> × 100</span></div>
+    <div class="ln"><span class="t">VR% = <span class="frac"><span>|<i>V</i><sub>2,no-load</sub>| − |<i>V</i><sub>2,rated</sub>|</span><span>|<i>V</i><sub>2,rated</sub>|</span></span> × 100</span></div>
   </div>
 
   <h2>6. Transmission Lines &amp; ABCD Two-Port Parameters</h2>
-  <p>Two-port matrix relationship: $[V_S; I_S] = [A, B; C, D] \cdot [V_R; I_R]$. By reciprocity, $AD - BC = 1$.</p>
+  <p>Two-port matrix relationship: <span class="m">[<i>V</i><sub>S</sub>; <i>I</i><sub>S</sub>] = [<i>A</i>, <i>B</i>; <i>C</i>, <i>D</i>] · [<i>V</i><sub>R</sub>; <i>I</i><sub>R</sub>]</span>. By reciprocity, <span class="m"><i>AD</i> − <i>BC</i> = 1</span>.</p>
   <ul>
-    <li><strong>Short Line (&lt; 80 km):</strong> $A=1, B=Z, C=0, D=1$.</li>
-    <li><strong>Medium Line Nominal &Pi; (80&ndash;250 km):</strong> $A = D = 1 + YZ/2, B = Z, C = Y(1 + YZ/4)$.</li>
+    <li><strong>Short Line (&lt; 80 km):</strong> <span class="m"><i>A</i> = 1, <i>B</i> = <i>Z</i>, <i>C</i> = 0, <i>D</i> = 1</span>.</li>
+    <li><strong>Medium Line Nominal &Pi; (80&ndash;250 km):</strong> <span class="m"><i>A</i> = <i>D</i> = 1 + <i>YZ</i>/2, <i>B</i> = <i>Z</i>, <i>C</i> = <i>Y</i>(1 + <i>YZ</i>/4)</span>.</li>
     <li><strong>Long Line Distributed Hyperbolic (&gt; 250 km):</strong>
       <div class="eq">
-        &gamma; = &radic;(z &middot; y) = &alpha; + j&beta;, &nbsp;&nbsp; Z<sub>c</sub> = &radic;(z / y)<br>
-        A = D = cosh(&gamma;l), &nbsp; B = Z<sub>c</sub> &middot; sinh(&gamma;l), &nbsp; C = (1 / Z<sub>c</sub>) &middot; sinh(&gamma;l)
+        <div class="ln"><span class="t"><i>γ</i> = √(<i>zy</i>) = <i>α</i> + j<i>β</i></span><span class="t"><i>Z</i><sub>c</sub> = √(<i>z</i>/<i>y</i>)</span></div>
+        <div class="ln"><span class="t"><i>A</i> = <i>D</i> = cosh(<i>γl</i>)</span><span class="t"><i>B</i> = <i>Z</i><sub>c</sub> sinh(<i>γl</i>)</span><span class="t"><i>C</i> = <span class="frac"><span>1</span><span><i>Z</i><sub>c</sub></span></span> sinh(<i>γl</i>)</span></div>
       </div>
     </li>
   </ul>
-  <p><strong>Ferranti Effect:</strong> At no load ($I_R = 0$), $V_{R,nl} = V_S / A$. Because $\cosh(\gamma l) < 1$ on low-loss capacitive lines, receiving voltage rises above sending voltage ($V_R > V_S$).</p>
-  <p><strong>Surge Impedance Loading:</strong> $SIL = V_{LL}^2 / |Z_c|$ MW. Loading a line at SIL produces a flat voltage profile.</p>
+  <p><strong>Ferranti Effect:</strong> At no load (<span class="m"><i>I</i><sub>R</sub> = 0</span>), <span class="m"><i>V</i><sub>R,nl</sub> = <i>V</i><sub>S</sub>/<i>A</i></span>. Because <span class="m">cosh(<i>γl</i>) &lt; 1</span> on low-loss capacitive lines, receiving voltage rises above sending voltage (<span class="m"><i>V</i><sub>R</sub> &gt; <i>V</i><sub>S</sub></span>).</p>
+  <p><strong>Surge Impedance Loading:</strong> <span class="m"><i>SIL</i> = <i>V</i><sub>LL</sub><sup>2</sup>/|<i>Z</i><sub>c</sub>|</span> MW. Loading a line at SIL produces a flat voltage profile.</p>
 
   <h2>7. Per-Unit System</h2>
   <div class="eq">
-    Z<sub>base</sub> = (V<sub>base,LL</sub>)&sup2; / S<sub>base,3&phi;</sub> &nbsp; [&Omega;], &nbsp;&nbsp; I<sub>base</sub> = S<sub>base,3&phi;</sub> / (&radic;3 &middot; V<sub>base,LL</sub>) &nbsp; [A]<br>
-    Z<sub>pu</sub><sup>new</sup> = Z<sub>pu</sub><sup>old</sup> &middot; (V<sub>base</sub><sup>old</sup> / V<sub>base</sub><sup>new</sup>)&sup2; &middot; (S<sub>base</sub><sup>new</sup> / S<sub>base</sub><sup>old</sup>)
+    <div class="ln">
+      <span class="t"><i>Z</i><sub>base</sub> = <span class="frac"><span><i>V</i><sub>base,LL</sub><sup>2</sup></span><span><i>S</i><sub>base,3φ</sub></span></span> [Ω]</span>
+      <span class="t"><i>I</i><sub>base</sub> = <span class="frac"><span><i>S</i><sub>base,3φ</sub></span><span>√3 <i>V</i><sub>base,LL</sub></span></span> [A]</span>
+    </div>
+    <div class="ln"><span class="t"><i>Z</i><sub>pu</sub><sup>new</sup> = <i>Z</i><sub>pu</sub><sup>old</sup> · (<span class="frac"><span><i>V</i><sub>base</sub><sup>old</sup></span><span><i>V</i><sub>base</sub><sup>new</sup></span></span>)<sup>2</sup> · <span class="frac"><span><i>S</i><sub>base</sub><sup>new</sup></span><span><i>S</i><sub>base</sub><sup>old</sup></span></span></span></div>
   </div>
 
   <h2>8. Power Flow (Gauss-Seidel)</h2>
-  <p>Buses are categorized into <strong>Slack</strong> ($|V|, \delta$ fixed), <strong>PV Generator</strong> ($P, |V|$ fixed), and <strong>PQ Load</strong> ($P, Q$ fixed). Real and reactive power injections relate to the Bus Admittance Matrix $\mathbf{Y}_{bus}$:</p>
+  <p>Buses are categorized into <strong>Slack</strong> (<span class="m">|<i>V</i>|, <i>δ</i></span> fixed), <strong>PV Generator</strong> (<span class="m"><i>P</i>, |<i>V</i>|</span> fixed), and <strong>PQ Load</strong> (<span class="m"><i>P</i>, <i>Q</i></span> fixed). Real and reactive power injections relate to the Bus Admittance Matrix <span class="m"><b>Y</b><sub>bus</sub></span>:</p>
   <div class="eq">
-    V<sub>i</sub><sup>(k+1)</sup> = (1 / Y<sub>ii</sub>) &middot; [ (P<sub>i</sub> &minus; jQ<sub>i</sub>) / (V<sub>i</sub><sup>(k)</sup>)* &minus; &sum;<sub>j &ne; i</sub> Y<sub>ij</sub> V<sub>j</sub> ]
+    <div class="ln"><span class="t"><i>V</i><sub>i</sub><sup>(k+1)</sup> = <span class="frac"><span>1</span><span><i>Y</i><sub>ii</sub></span></span> [ <span class="frac"><span><i>P</i><sub>i</sub> − j<i>Q</i><sub>i</sub></span><span>(<i>V</i><sub>i</sub><sup>(k)</sup>)*</span></span> − ∑<sub>j ≠ i</sub> <i>Y</i><sub>ij</sub><i>V</i><sub>j</sub> ]</span></div>
   </div>
 
   <h2>9. Fault Analysis &amp; Fortescue Symmetrical Components</h2>
-  <p>Unbalanced 3-phase phasors $[V_a, V_b, V_c]$ decompose into Zero, Positive, and Negative sequence components $[V_0, V_1, V_2]$ via operator $a = 1 \angle 120^\circ$:</p>
+  <p>Unbalanced 3-phase phasors <span class="m">[<i>V</i><sub>a</sub>, <i>V</i><sub>b</sub>, <i>V</i><sub>c</sub>]</span> decompose into Zero, Positive, and Negative sequence components <span class="m">[<i>V</i><sub>0</sub>, <i>V</i><sub>1</sub>, <i>V</i><sub>2</sub>]</span> via operator <span class="m"><i>a</i> = 1 ∠ 120°</span>:</p>
   <div class="eq">
-    <b>V</b><sub>abc</sub> = <b>A</b> &middot; <b>V</b><sub>012</sub>, &nbsp;&nbsp; <b>V</b><sub>012</sub> = <b>A</b><sup>&minus;1</sup> &middot; <b>V</b><sub>abc</sub><br>
-    where <b>A</b> = [1, 1, 1; 1, a&sup2;, a; 1, a, a&sup2;], &nbsp; a = &minus;0.5 + j(&radic;3/2)
+    <div class="ln"><span class="t"><b>V</b><sub>abc</sub> = <b>A</b> · <b>V</b><sub>012</sub></span><span class="t"><b>V</b><sub>012</sub> = <b>A</b><sup>−1</sup> · <b>V</b><sub>abc</sub></span></div>
+    <div class="ln"><span class="t">where <b>A</b> = [1, 1, 1; 1, <i>a</i><sup>2</sup>, <i>a</i>; 1, <i>a</i>, <i>a</i><sup>2</sup>]</span><span class="t"><i>a</i> = −0.5 + j(√3/2)</span></div>
   </div>
-  <table>
+  <div class="tw"><table>
     <thead><tr><th>Fault Type</th><th>Sequence Network Connection</th><th>Fault Current Equation</th></tr></thead>
     <tbody>
-      <tr><td><strong>3-Phase Symmetrical</strong></td><td>Positive sequence only ($Z_1$)</td><td>$I_f = V_f / (Z_1 + Z_f)$</td></tr>
-      <tr><td><strong>Single Line-to-Ground (SLG)</strong></td><td>$Z_1, Z_2, Z_0$ in SERIES</td><td>$I_f = 3 I_{a0} = 3 V_f / (Z_1 + Z_2 + Z_0 + 3Z_f)$</td></tr>
-      <tr><td><strong>Line-to-Line (L-L)</strong></td><td>$Z_1$ and $Z_2$ in PARALLEL ($Z_0$ open)</td><td>$I_f = \sqrt{3} V_f / (Z_1 + Z_2 + Z_f)$</td></tr>
-      <tr><td><strong>Double Line-to-Ground (DLG)</strong></td><td>$Z_1$ in series with $(Z_2 \parallel (Z_0 + 3Z_f))$</td><td>$I_f = I_b + I_c = 3 I_{a0}$</td></tr>
+      <tr><td><strong>3-Phase Symmetrical</strong></td><td>Positive sequence only (<span class="m"><i>Z</i><sub>1</sub></span>)</td><td><span class="m"><i>I</i><sub>f</sub> = <i>V</i><sub>f</sub>/(<i>Z</i><sub>1</sub> + <i>Z</i><sub>f</sub>)</span></td></tr>
+      <tr><td><strong>Single Line-to-Ground (SLG)</strong></td><td><span class="m"><i>Z</i><sub>1</sub>, <i>Z</i><sub>2</sub>, <i>Z</i><sub>0</sub></span> in SERIES</td><td><span class="m"><i>I</i><sub>f</sub> = 3 <i>I</i><sub>a0</sub> = 3 <i>V</i><sub>f</sub>/(<i>Z</i><sub>1</sub> + <i>Z</i><sub>2</sub> + <i>Z</i><sub>0</sub> + 3<i>Z</i><sub>f</sub>)</span></td></tr>
+      <tr><td><strong>Line-to-Line (L-L)</strong></td><td><span class="m"><i>Z</i><sub>1</sub></span> and <span class="m"><i>Z</i><sub>2</sub></span> in PARALLEL (<span class="m"><i>Z</i><sub>0</sub></span> open)</td><td><span class="m"><i>I</i><sub>f</sub> = √3 <i>V</i><sub>f</sub>/(<i>Z</i><sub>1</sub> + <i>Z</i><sub>2</sub> + <i>Z</i><sub>f</sub>)</span></td></tr>
+      <tr><td><strong>Double Line-to-Ground (DLG)</strong></td><td><span class="m"><i>Z</i><sub>1</sub></span> in series with (<span class="m"><i>Z</i><sub>2</sub> ∥ (<i>Z</i><sub>0</sub> + 3<i>Z</i><sub>f</sub>)</span>)</td><td><span class="m"><i>I</i><sub>f</sub> = <i>I</i><sub>b</sub> + <i>I</i><sub>c</sub> = 3 <i>I</i><sub>a0</sub></span></td></tr>
     </tbody>
-  </table>
+  </table></div>
 
   <div class="ref-box">
     <strong>Academic Attribution &amp; References:</strong>

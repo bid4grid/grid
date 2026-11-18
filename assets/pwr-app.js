@@ -29,7 +29,7 @@
   var TOPIC_GUIDES = {
     basics: {
       title: "3-Phase Power Fundamentals",
-      models: "Models complex power (S = P + jQ), power factor (cos φ), 3-phase line vs. phase relationships (Wye & Delta), and sizing shunt capacitor banks (kvar) to counteract inductive motor lag.",
+      models: "Models complex power (S = P + jQ), power factor (cos φ), 3-phase line vs. phase relationships (Wye & Delta), and total 3-phase capacitor-bank sizing in kvar. The Wye/Delta selector describes the load connection; capacitance in farads is not calculated.",
       why: [
         "<strong>Utility Surcharges:</strong> Utilities penalize commercial and industrial customers if their power factor drops below 0.90–0.95 due to wasted reactive current.",
         "<strong>Capacity Release:</strong> Correcting power factor from 0.75 to 0.95 cuts total line current by ~21%, freeing up existing transformer and switchgear capacity without capital upgrades.",
@@ -38,7 +38,7 @@
     },
     gen: {
       title: "Synchronous Generators & Power-Angle (P-δ) Stability",
-      models: "Models cylindrical vs. salient-pole synchronous machines (two-reaction theory with Xd and Xq), field excitation EMF (Eg), and steady-state torque angle (δ) across the power curve P(δ).",
+      models: "Models cylindrical vs. salient-pole synchronous machines (two-reaction theory with Xd and Xq), field excitation EMF (Eg), and steady-state torque angle (δ). The P(δ) curve shows total 3-phase power using per-phase equations, with constant Eg and stator resistance neglected in the power-angle relation.",
       why: [
         "<strong>Grid Synchronism & Pole Slipping:</strong> If the rotor torque angle δ exceeds the stability limit (~65° for salient, 90° for round), the magnetic link snaps, poles slip, and massive mechanical torque rips the turbine shaft.",
         "<strong>Voltage & Reactive Grid Support:</strong> Generators are the grid's primary voltage anchors. Adjusting field excitation current directly injects or absorbs MVARs across the transmission network.",
@@ -47,7 +47,7 @@
     },
     xfmr: {
       title: "Power Transformers & Equivalent Circuit Testing",
-      models: "Extracts primary/secondary T-equivalent circuit parameters (Req, Xeq, Rc, Xm) from Open-Circuit and Short-Circuit tests, calculating dynamic Voltage Regulation (VR%) and full-load efficiency (η%).",
+      models: "Extracts T-equivalent parameters from Open-Circuit and Short-Circuit tests. The shunt branch comes from the low-voltage test, the series branch from the high-voltage test, and the series values are referred to the low-voltage side for the circuit. Displayed efficiency is at full load (m = 1) and 0.8 lagging power factor.",
       why: [
         "<strong>Testing Huge Units Safely:</strong> You cannot test a 100 MVA utility transformer by hooking up a city-sized load in a factory bay. OC and SC tests capture the entire physical model using under 2% rated power.",
         "<strong>Voltage Regulation at Motor Terminals:</strong> Transformer internal leakage reactance (Xeq) causes secondary voltage to drop when feeding inductive loads; calculating VR% ensures voltages stay within ±5% standards.",
@@ -56,7 +56,7 @@
     },
     lines: {
       title: "Transmission Lines & Per-Unit System",
-      models: "Calculates two-port ABCD parameter matrices for Short (< 80 km), Medium (80–250 km Pi/T), and Long (> 250 km hyperbolic cosh/sinh) lines, no-load Ferranti effect, SIL, and multi-zone per-unit scaling.",
+      models: "Calculates two-port ABCD parameter matrices for Short (< 80 km), Medium (80–250 km Pi/T), and Long (> 250 km hyperbolic cosh/sinh) lines, no-load Ferranti effect, SIL, and multi-zone per-unit scaling. Ferranti rise uses voltage magnitudes; displayed SIL uses V_LL²/|Zc| as a lossless-line approximation (V_LL in kV gives MW).",
       why: [
         "<strong>Ferranti Overvoltage Destroys Equipment:</strong> Long high-voltage lines have large ground capacitance. At night or under light load, capacitive charging current causes receiving-end voltage to spike (Vr > Vs), damaging bushings unless shunt reactors absorb the excess VARs.",
         "<strong>Surge Impedance Loading (SIL):</strong> The natural line loading where reactive generation (B) balances reactive consumption (X). Operating at SIL gives an ideal flat voltage profile from sending to receiving end.",
@@ -65,7 +65,7 @@
     },
     flow: {
       title: "Power Flow Analysis (Load Flow & Grid Dispatch)",
-      models: "Assembles the Bus Admittance Matrix (Y_bus), categorizes Slack (Swing), PV Generator, and PQ Load buses, and iteratively solves non-linear power flow using the Gauss-Seidel algorithm to determine voltages, angles, and line losses.",
+      models: "Assembles the Bus Admittance Matrix (Y_bus), categorizes Slack (Swing), PV Generator, and PQ Load buses, and solves power flow using Gauss-Seidel. P and Q are net scheduled injections (generation minus load); PV buses update Q each iteration and restore the specified voltage magnitude while retaining the updated angle.",
       why: [
         "<strong>Interconnection Studies:</strong> Before permitting a new solar farm, wind plant, or hyperscale data center, grid operators run load flow to guarantee line thermal ratings and substation voltages are not violated.",
         "<strong>Contingency (N-1) Reliability:</strong> Grid operators must prove that if any single critical line or transformer trips, remaining parallel circuits can absorb redirected megawatt flows without cascading blackouts.",
@@ -74,9 +74,9 @@
     },
     faults: {
       title: "Fault Analysis & Fortescue Symmetrical Components",
-      models: "Computes subtransient symmetrical 3-phase faults, applies Fortescue symmetrical components (A^-1 matrix) to split unbalanced systems into Zero (Z0), Positive (Z1), and Negative (Z2) networks for SLG, L-L, and DLG faults.",
+      models: "Uses a pre-fault phase voltage of 1.0 pu by default and supplied sequence impedances to compute 3-phase, SLG, L-L, and DLG faults with Fortescue symmetrical components. Displayed fault current is a magnitude; interpret it as subtransient only when the supplied positive-sequence impedance represents subtransient impedance.",
       why: [
-        "<strong>Circuit Breaker Interrupting Ratings:</strong> Substation circuit breakers must safely extinguish extreme short-circuit currents (e.g. 25 kA, 40 kA, 63 kA). Under-sizing a breaker causes violent catastrophic explosion during a fault.",
+        "<strong>Circuit Breaker Interrupting Ratings:</strong> Breakers are rated to interrupt the maximum fault current and for momentary/close-and-latch duty. The initial subtransient current is a basis for calculating the fault current, not the breaker rating by itself.",
         "<strong>70% of Real-World Faults are SLG:</strong> Tree contacts, lightning, and insulator flashovers almost always affect a single phase to ground. Symmetrical components allow asymmetrical faults to be solved as simple single-phase networks.",
         "<strong>Protective Relay Tripping (ANSI 51N / 67N):</strong> Ground overcurrent relays detect zero-sequence current (3·Ia0), and negative-sequence relays detect unbalanced phase loss, tripping breakers before generators and motors overheat."
       ]
@@ -728,8 +728,8 @@
       notice.textContent = 'Gauss-Seidel load flow converged within 4 iterations with tolerance 1e-4. Real and reactive branch power flows balanced.';
     } else if (tabId === 'faults') {
       t1.innerHTML = '<b>' + state.faultType.toUpperCase() + '</b><span>Fault Class</span>';
-      t2.innerHTML = '<b>' + (window.lastFaultIf || 4.29).toFixed(3) + ' pu</b><span>Fault Current</span>';
-      t3.innerHTML = '<b>' + (window.lastFaultKa || 1.80).toFixed(2) + ' kA</b><span>Subtransient kA</span>';
+      t2.innerHTML = '<b>' + (window.lastFaultIf || 4.29).toFixed(3) + ' pu</b><span>Magnitude</span>';
+      t3.innerHTML = '<b>' + (window.lastFaultKa || 1.80).toFixed(2) + ' kA</b><span>Magnitude</span>';
       t4.className = 'pwr-tile hot';
       t4.innerHTML = '<b>' + (window.lastFaultMva || 428.6).toFixed(1) + ' MVA</b><span>Short Circuit</span>';
       t5.innerHTML = '<b>j0.20 pu</b><span>Pos Sequence Z1</span>';
@@ -868,7 +868,7 @@
       "Leakage jXeq (Low Voltage): " + Xeq_lv.toFixed(4) + " Ω\n" +
       "Core Loss (P_core):       " + Poc.toFixed(0) + " W\n" +
       "Full-Load Copper Loss:    " + Psc.toFixed(0) + " W\n\n" +
-      "Full-Load Efficiency:    " + perf.efficiency_pct.toFixed(2) + " %\n" +
+      "Full-Load Efficiency (0.8 lag): " + perf.efficiency_pct.toFixed(2) + " %\n" +
       "Voltage Regulation:       " + perf.voltage_reg_pct.toFixed(2) + " %";
     document.getElementById('res-xfmr').textContent = resText;
 
@@ -908,7 +908,7 @@
       "Sending End Current (Is): " + lineSol.Is_mag.toFixed(1) + " A ∠ " + lineSol.Is_angle_deg.toFixed(2) + "°\n" +
       "Voltage Regulation (VR):  " + lineSol.voltageRegulation_pct.toFixed(2) + " %\n" +
       "Ferranti No-Load Vr:     " + lineSol.Vr_nl_LL_kV.toFixed(1) + " kV (Rise: +" + lineSol.ferrantiRise_kV.toFixed(1) + " kV)\n" +
-      "Surge Impedance Loading:  " + lineSol.SIL_MW.toFixed(1) + " MW\n" +
+      "SIL (lossless approximation): " + lineSol.SIL_MW.toFixed(1) + " MW\n" +
       "Characteristic Zc:        " + lineSol.Zc_mag.toFixed(1) + " Ω\n" +
       "Transmission Efficiency:  " + lineSol.eff_pct.toFixed(2) + " %";
     document.getElementById('res-line').textContent = resText;
@@ -983,8 +983,8 @@
 
     var resText =
       "Fault Type:              " + type.toUpperCase() + "\n" +
-      "Fault Current (If):      " + faultRes.If_pu.toFixed(4) + " pu\n" +
-      "Fault Current (kA):      " + faultRes.If_kA.toFixed(2) + " kA\n" +
+      "Fault Current Magnitude: " + faultRes.If_pu.toFixed(4) + " pu\n" +
+      "Fault Current Magnitude: " + faultRes.If_kA.toFixed(2) + " kA\n" +
       "Short-Circuit SCMVA:     " + (mva * faultRes.If_pu).toFixed(1) + " MVA\n" +
       "Positive Sequence Z1:    j" + z1.toFixed(2) + " pu\n" +
       "Negative Sequence Z2:    j" + z2.toFixed(2) + " pu\n" +

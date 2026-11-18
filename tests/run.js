@@ -197,6 +197,7 @@ function createMockCanvas(width, height) {
   let minX = Infinity, maxX = -Infinity;
   let minY = Infinity, maxY = -Infinity;
   const text = [];
+  const lines = [];
 
   function record(x1, y1, x2, y2) {
     if (x1 < minX) minX = x1;
@@ -224,6 +225,8 @@ function createMockCanvas(width, height) {
     lineTo(x, y) {
       if (this.strokeStyle === 'rgba(0,0,0,0.05)') return; // ignore CAD grid
       this._path = this._path || [];
+      const start = this._path[this._path.length - 1];
+      if (start) lines.push({ start, end: [x, y], color: this.strokeStyle });
       this._path.push([x, y]);
       record(x, y, x, y);
     },
@@ -254,7 +257,8 @@ function createMockCanvas(width, height) {
     height,
     getContext() { return ctx; },
     getBounds() { return { minX, maxX, minY, maxY }; },
-    getText() { return text; }
+    getText() { return text; },
+    getLines() { return lines; }
   };
 }
 
@@ -299,6 +303,21 @@ verifyDiagramFit("Synchronous Machine Phasor Diagram", c => {
     { label: 'Vc', vec: [-138, 240], color: '#0284c7' }
   ]);
 });
+
+const phasorCanvas = createMockCanvas(850, 420);
+draw.drawPhasorDiagram(phasorCanvas, [
+  { label: 'Va', vec: [277.1, 0], unit: 'V', color: '#dc2626' },
+  { label: 'Vb', vec: [-138.55, 0], unit: 'V', color: '#0284c7' },
+  { label: 'Ia (lag)', vec: [600, -530], unit: 'A', color: '#16a34a' }
+]);
+const arrowLength = color => {
+  const line = phasorCanvas.getLines().find(l => l.color === color && l.start[0] === 425 && l.start[1] === 220);
+  return Math.hypot(line.end[0] - line.start[0], line.end[1] - line.start[1]);
+};
+assertClose(arrowLength('#dc2626'), arrowLength('#16a34a'), 1e-9, "Voltage and current use separate scales");
+assertClose(arrowLength('#0284c7'), arrowLength('#dc2626') / 2, 1e-9, "Voltage phasors retain relative magnitudes");
+ok(phasorCanvas.getText().includes('Separate scales; outer ring: 277.10 V / 800.56 A'), "Phasor diagram identifies both scales");
+ok(phasorCanvas.getText().includes('Ia (lag) (800.56 A ∠ -41.5°)'), "Phasor diagram preserves current magnitude and angle with units");
 
 verifyDiagramFit("Generator Power-Angle Curve", c => {
   draw.drawPowerAngleCurve(c, {

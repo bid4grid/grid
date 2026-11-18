@@ -802,10 +802,10 @@
         ? '3Φ DELTA (Δ): V_PHASE = ' + vll + ' V, I_LINE = ' + sys3ph.I_line.toFixed(1) + ' A (I_PHASE = ' + (sys3ph.I_line / Math.sqrt(3)).toFixed(1) + ' A)'
         : '3Φ WYE (Y): V_PHASE = ' + sys3ph.V_phase.toFixed(1) + ' V, I_LINE = I_PHASE = ' + sys3ph.I_line.toFixed(1) + ' A';
       draw.drawPhasorDiagram(canvas, [
-        { vec: Va, label: 'Va', color: '#dc2626' },
-        { vec: Vb, label: 'Vb', color: '#d97706' },
-        { vec: Vc, label: 'Vc', color: '#0284c7' },
-        { vec: Ia, label: 'Ia (lag)', color: '#16a34a' }
+        { vec: Va, label: 'Va', unit: 'V', color: '#dc2626' },
+        { vec: Vb, label: 'Vb', unit: 'V', color: '#d97706' },
+        { vec: Vc, label: 'Vc', unit: 'V', color: '#0284c7' },
+        { vec: Ia, label: 'Ia (lag)', unit: 'A', color: '#16a34a' }
       ], title);
     } else {
       draw.drawPowerTriangle(canvas, P, pfRes.Q1_kvar, pfRes.Q2_kvar, loadData);

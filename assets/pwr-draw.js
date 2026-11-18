@@ -619,12 +619,22 @@
       ctx.fillText(ang + '°', tx, ty);
     }
 
-    // Find max vector magnitude to scale
-    var maxMag = 1e-6;
+    var maxByUnit = {};
     vectors.forEach(function (v) {
       var mag = Math.sqrt(v.vec[0] * v.vec[0] + v.vec[1] * v.vec[1]);
-      if (mag > maxMag) maxMag = mag;
+      var unit = v.unit || '';
+      maxByUnit[unit] = Math.max(maxByUnit[unit] || 1e-6, mag);
     });
+
+    var units = Object.keys(maxByUnit);
+    if (units.length > 1) {
+      ctx.fillStyle = t.muted;
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText('Separate scales; outer ring: ' + units.map(function (unit) {
+        return maxByUnit[unit].toFixed(2) + ' ' + unit;
+      }).join(' / '), 24, 44);
+    }
 
     // Plot vectors
     ctx.lineWidth = 2.5;
@@ -632,7 +642,7 @@
       var vx = v.vec[0], vy = v.vec[1];
       var mag = Math.sqrt(vx * vx + vy * vy);
       var ang = Math.atan2(vy, vx);
-      var len = (mag / maxMag) * maxR;
+      var len = (mag / maxByUnit[v.unit || '']) * maxR;
       var px = cx + len * Math.cos(ang);
       var py = cy - len * Math.sin(ang);
 
@@ -649,7 +659,7 @@
         // Pointing to the right (like Va at 0 deg) -> text starts cleanly to the right of arrowhead
         ctx.textAlign = 'left';
         lx = px + 12;
-        ly = py + 4;
+        ly = py - 8;
       } else if (cosA < -0.15) {
         // Pointing to the left -> text ends to the left of arrowhead
         ctx.textAlign = 'right';
@@ -661,7 +671,7 @@
         lx = px;
         ly = sinA > 0 ? py - 12 : py + 18;
       }
-      ctx.fillText(v.label + ' (' + mag.toFixed(2) + ' ∠ ' + (ang * 180 / Math.PI).toFixed(1) + '°)', lx, ly);
+      ctx.fillText(v.label + ' (' + mag.toFixed(2) + (v.unit ? ' ' + v.unit : '') + ' ∠ ' + (ang * 180 / Math.PI).toFixed(1) + '°)', lx, ly);
     });
   }
 

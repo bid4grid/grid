@@ -16,7 +16,7 @@
   var draw = window.PWRDraw;
 
   var state = {
-    activeTab: 'basics', // 'basics', 'gen', 'xfmr', 'lines', 'flow', 'faults'
+    activeTab: 'basics', // 'basics', 'gen', 'xfmr', 'lines', 'flow', 'faults', 'theory'
     basicsView: 'sld', // 'sld' (default), 'triangle', 'phasor'
     flowView: 'sld', // 'sld' (default), 'ybus'
     connType: 'wye', // 'wye' or 'delta'
@@ -131,11 +131,11 @@
             <span class="pwr-tab-full">Fault Analysis</span>
             <span class="pwr-tab-short">Faults</span>
           </button>
-          <a href="assets/pwr-help.html" target="_blank" class="pwr-nav-guide" title="Open Technical Theory &amp; Formulas" aria-label="Technical Theory and Formulas">
+          <button type="button" class="pwr-nav-guide" data-tab="theory" aria-label="Technical Theory and Formulas">
             <span class="pwr-tab-icon">📖</span>
-            <span class="pwr-guide-full">Technical Theory &amp; Formulas</span>
-            <span class="pwr-guide-short">Theory</span>
-          </a>
+            <span class="pwr-tab-full">Technical Theory &amp; Formulas</span>
+            <span class="pwr-tab-short">Theory</span>
+          </button>
         </nav>
       </div>
 
@@ -510,6 +510,18 @@
             </div>
           </div>
         </div>
+
+        <div class="pwr-tab-pane" id="pane-theory" style="display:none;">
+          <div class="card pwr-theory-card">
+            <h2 class="card-title">Technical Theory &amp; Formulas</h2>
+            <iframe
+              class="pwr-theory-frame"
+              src="assets/pwr-help.html"
+              title="Power Systems Technical Theory and Formulas"
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
       </main>
     `;
 
@@ -532,6 +544,9 @@
     document.querySelectorAll('.pwr-tab-pane').forEach(function (p) {
       p.style.display = p.id === 'pane-' + tabId ? 'block' : 'none';
     });
+    document.getElementById('pwr-metric-tiles').style.display = tabId === 'theory' ? 'none' : '';
+    document.getElementById('pwr-topic-card').style.display = tabId === 'theory' ? 'none' : '';
+    document.getElementById('pwr-notice-box').style.display = tabId === 'theory' ? 'none' : '';
     updateTopicGuide(tabId);
     updateTilesForTab(tabId);
   }

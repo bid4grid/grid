@@ -61,26 +61,7 @@ body.pwr-standalone,
 }
 
 .pwr-nav-guide {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
   margin-left: auto;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: var(--radius-sm);
-  color: #ffffff;
-  padding: 8px 12px;
-  font-size: 12.5px;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.15s;
-}
-
-.pwr-nav-guide:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.65);
 }
 
 /* Sticky Navigation Bar */
@@ -126,10 +107,6 @@ body.pwr-standalone,
   gap: 6px;
 }
 
-.pwr-guide-short {
-  display: none;
-}
-
 .pwr-nav button:hover {
   background: rgba(255, 255, 255, 0.15);
   color: #ffffff;
@@ -160,6 +137,23 @@ body.pwr-standalone,
   max-width: 1400px;
   margin: 0 auto;
   padding: 18px 16px 48px;
+}
+
+.pwr-theory-card {
+  padding: 16px;
+}
+
+.pwr-theory-card .card-title {
+  margin: 0 0 12px;
+}
+
+.pwr-theory-frame {
+  display: block;
+  width: 100%;
+  min-height: 75vh;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: #f8fafc;
 }
 
 /* Status / Parameter Summary Tiles (Signature Look) */
@@ -645,19 +639,7 @@ button.btn-primary:hover {
   }
 
   .pwr-nav .pwr-nav-guide {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 auto;
-    gap: 4px;
-    min-width: 48px;
     margin-left: 0;
-    padding: 7px 9px 6px;
-    font-size: 10px;
-    line-height: 1.1;
-    border-radius: 9px;
-    text-align: center;
   }
 
   .pwr-nav .pwr-tab-icon {
@@ -670,14 +652,6 @@ button.btn-primary:hover {
   }
 
   .pwr-nav .pwr-tab-short {
-    display: block;
-  }
-
-  .pwr-nav .pwr-guide-full {
-    display: none;
-  }
-
-  .pwr-nav .pwr-guide-short {
     display: block;
   }
 

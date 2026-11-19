@@ -21,7 +21,7 @@ Comprehensive engineering analysis suite covering fundamental through advanced p
    * **CAD Diagrams:** Approximate equivalent circuit with lumped series impedance and shunt branch, referred to the low-voltage side. Enter rated high/low voltages and test readings; full-load losses are scaled from the measured test conditions.
 
 4. **Transmission Lines & Per-Unit System**
-   * **Calculations:** Short, Medium Nominal $\pi$, Medium Nominal $T$, and Long Line (Hyperbolic $\sinh/\cosh$) ABCD transmission parameter matrices, Ferranti effect receiving-end no-load voltage rise, Surge Impedance Loading (SIL), and multi-zone Per-Unit base conversions.
+   * **Calculations:** Short, Medium Nominal $\pi$, Medium Nominal $T$, and Long Line (Hyperbolic $\sinh/\cosh$) ABCD transmission parameter matrices, Ferranti effect receiving-end no-load voltage rise, Surge Impedance Loading (SIL), and multi-zone Per-Unit base conversions. The line form accepts load power factor and lagging/leading behavior plus per-km shunt conductance and susceptance (in μS/km); defaults are 0.9 lagging, 0 conductance, and 3.3 μS/km susceptance.
    * **CAD Diagrams:** No-load voltage profile from sending end ($x=0$) to receiving end ($x=L$), using the selected model and holding sending voltage fixed. Nominal Pi and T models represent their shunt elements at the ends or midpoint. Length ranges are guidelines; unusual selections are flagged without changing the model.
 
 5. **Power Flow Analysis (Load Flow)**

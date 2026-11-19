@@ -60,7 +60,7 @@
     },
     lines: {
       title: "Transmission Lines & Per-Unit System",
-      models: "Calculates the selected short, medium (nominal Pi/T), or long-line model. Typical length guidelines are under 80 km for short, 80–250 km for medium, and over 250 km for long; these are not hard limits. The graph shows the selected model's no-load voltage profile with sending voltage held fixed. SIL uses V_LL²/|Zc| as a lossless-line approximation.",
+      models: "Calculates the selected short, medium (nominal Pi/T), or long-line model. Set receiving-load power factor and lagging/leading behavior, plus line shunt conductance G and susceptance B in μS/km. Defaults are 0.9 lagging, G = 0, and B = 3.3 μS/km. Typical length guidelines are under 80 km for short, 80–250 km for medium, and over 250 km for long; these are not hard limits. The graph shows the selected model's no-load voltage profile with sending voltage held fixed. SIL uses V_LL²/|Zc| as a lossless-line approximation.",
       why: [
         "<strong>Ferranti Overvoltage Destroys Equipment:</strong> Long high-voltage lines have large ground capacitance. At night or under light load, capacitive charging current causes receiving-end voltage to spike (Vr > Vs), damaging bushings unless shunt reactors absorb the excess VARs.",
         "<strong>Surge Impedance Loading (SIL):</strong> The natural line loading where reactive generation (B) balances reactive consumption (X). Operating at SIL gives an ideal flat voltage profile from sending to receiving end.",
@@ -403,9 +403,34 @@
                 <div class="pwr-input-group"><label>Vr (kV)</label><input type="number" id="line-vr" value="220"></div>
               </div>
 
+              <div class="pwr-input-row">
+                <div class="pwr-input-group">
+                  <label>Receiving Load Pr (MW)</label>
+                  <input type="number" id="line-pr" value="150">
+                </div>
+                <div class="pwr-input-group">
+                  <label>Load PF (0–1)</label>
+                  <input type="number" id="line-pf" min="0.01" max="1" step="0.01" value="0.9">
+                </div>
+              </div>
+
+              <div class="pwr-input-row">
+                <div class="pwr-input-group">
+                  <label>Load PF Type</label>
+                  <select id="line-pf-type">
+                    <option value="lagging" selected>Lagging</option>
+                    <option value="leading">Leading</option>
+                  </select>
+                </div>
+                <div class="pwr-input-group">
+                  <label>Shunt Conductance G (μS/km)</label>
+                  <input type="number" id="line-g" min="0" step="0.1" value="0">
+                </div>
+              </div>
+
               <div class="pwr-input-group">
-                <label>Receiving Load Pr (MW)</label>
-                <input type="number" id="line-pr" value="150">
+                <label>Shunt Susceptance B (μS/km; + capacitive, − inductive)</label>
+                <input type="number" id="line-b" step="0.1" value="3.3">
               </div>
 
               <button class="btn-primary" id="btn-calc-line">Solve Line &amp; Voltage Profile</button>
@@ -987,27 +1012,41 @@
     var x = parseFloat(document.getElementById('line-x').value);
     var vr = parseFloat(document.getElementById('line-vr').value);
     var pr = parseFloat(document.getElementById('line-pr').value);
-    if (![len, r, x, vr, pr].every(Number.isFinite) ||
-        len <= 0 || vr <= 0 || r < 0 || x < 0 || (r === 0 && x === 0) || pr < 0) {
+    var pf = parseFloat(document.getElementById('line-pf').value);
+    var pfType = document.getElementById('line-pf-type').value;
+    var g_uS_km = parseFloat(document.getElementById('line-g').value);
+    var b_uS_km = parseFloat(document.getElementById('line-b').value);
+    if (![len, r, x, vr, pr, pf, g_uS_km, b_uS_km].every(Number.isFinite) ||
+        len <= 0 || vr <= 0 || r < 0 || x < 0 || (r === 0 && x === 0) ||
+        pr < 0 || pf <= 0 || pf > 1 || g_uS_km < 0 ||
+        (pfType !== 'lagging' && pfType !== 'leading')) {
       state.lineResult = null;
-      document.getElementById('res-line').textContent = 'Enter a positive length and receiving voltage, nonnegative load and line parameters, and a nonzero line impedance.';
+      document.getElementById('res-line').textContent = 'Enter positive length and receiving voltage, nonnegative load and line resistance/reactance, nonzero line impedance, load PF in (0, 1], nonnegative shunt conductance, and a numeric shunt susceptance.';
       var invalidCanvas = document.getElementById('canvas-lines');
       if (invalidCanvas) invalidCanvas.getContext('2d').clearRect(0, 0, invalidCanvas.width, invalidCanvas.height);
       if (state.activeTab === 'lines') updateTilesForTab('lines');
       return;
     }
 
-    var lineSol = core.solveTransmissionLine(model, r, x, 0, 3.3e-6, len, vr, pr, 0.9, true);
+    var lineSol = core.solveTransmissionLine(
+      model, r, x, g_uS_km * 1e-6, b_uS_km * 1e-6, len, vr, pr, pf, pfType === 'lagging'
+    );
     var modelNames = { short: 'Short', medium_pi: 'Medium nominal Pi', medium_t: 'Medium nominal T', long: 'Long' };
     var outsideRange = model === 'short' ? len >= 80 :
       model === 'long' ? len <= 250 : len < 80 || len > 250;
     var warning = outsideRange ? 'Warning: ' + modelNames[model] + ' model selected for ' + len +
       ' km. Typical ranges are short <80 km, medium 80–250 km, and long >250 km; the selected model is still used.' : '';
-    state.lineResult = { length: len, vr: vr, load: pr, modelName: modelNames[model], solution: lineSol, warning: warning };
+    state.lineResult = {
+      length: len, vr: vr, load: pr, pf: pf, pfType: pfType,
+      g_uS_km: g_uS_km, b_uS_km: b_uS_km,
+      modelName: modelNames[model], solution: lineSol, warning: warning
+    };
 
     var resText =
       "Selected Model:           " + modelNames[model] + "\n" +
       (warning ? warning + "\n\n" : "") +
+      "Receiving Load PF:        " + pf.toFixed(2) + " " + pfType + "\n" +
+      "Shunt Admittance:         G = " + g_uS_km.toFixed(3) + ", B = " + b_uS_km.toFixed(3) + " μS/km\n" +
       "Sending End Voltage (Vs): " + lineSol.Vs_LL_kV.toFixed(1) + " kV ∠ " + lineSol.Vs_angle_deg.toFixed(2) + "°\n" +
       "Sending End Current (Is): " + lineSol.Is_mag.toFixed(1) + " A ∠ " + lineSol.Is_angle_deg.toFixed(2) + "°\n" +
       "Voltage Regulation (VR):  " + lineSol.voltageRegulation_pct.toFixed(2) + " %\n" +

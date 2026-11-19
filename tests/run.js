@@ -137,6 +137,15 @@ const shortLong = core.solveTransmissionLine('long', 0.08, 0.48, 0, 3.3e-6, 40, 
 ok(Math.abs(shortLong.ABCD[0][0] - 1) > 1e-5, "Long model remains selected below 80 km");
 const noLoadLine = core.solveTransmissionLine('short', 0.08, 0.48, 0, 3.3e-6, 50, 220, 0, 0.9, true);
 assertClose(noLoadLine.Is_mag, 0, 1e-9, "Zero receiving load produces zero current in the short-line model");
+const configurableLine = core.solveTransmissionLine('medium_pi', 0.08, 0.48, 2.1e-6, 4.2e-6, 120, 110, 80, 0.82, false);
+const customZ = [9.6, 57.6];
+const customY = [120 * 2.1e-6, 120 * 4.2e-6];
+const customA = core.cadd([1, 0], core.cscale(core.cmul(customZ, customY), 0.5));
+const customC = core.cadd(customY, core.cmul(customZ, core.cmul(core.cscale(customY, 0.5), core.cscale(customY, 0.5))));
+assertComplexClose(configurableLine.ABCD[0], customA, 1e-9, "Medium Pi model uses configured line shunt admittance");
+assertComplexClose(configurableLine.ABCD[2], customC, 1e-9, "Medium Pi model includes configured shunt conductance and susceptance");
+const sameLineLagging = core.solveTransmissionLine('medium_pi', 0.08, 0.48, 2.1e-6, 4.2e-6, 120, 110, 80, 0.82, true);
+ok(Math.abs(configurableLine.Is_mag - sameLineLagging.Is_mag) > 0.01, "Leading and lagging load power factors produce different sending current");
 
 // 6. Per-Unit System (Section 7)
 console.log("\n6. Per-Unit System (Section 7)");

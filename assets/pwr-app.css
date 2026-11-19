@@ -60,18 +60,18 @@ body.pwr-standalone,
   line-height: 1.4;
 }
 
-.pwr-watch-video {
+.pwr-btn-action.pwr-watch-video {
   min-height: 38px;
   padding: 0 16px;
   color: #ffffff;
-  background: var(--primary);
-  border-color: var(--primary);
+  background: #087f5b;
+  border-color: #087f5b;
 }
 
-.pwr-watch-video:hover {
+.pwr-btn-action.pwr-watch-video:hover {
   color: #ffffff;
-  background: #162c4a;
-  border-color: #162c4a;
+  background: #066448;
+  border-color: #066448;
 }
 
 .pwr-nav-guide {
@@ -678,7 +678,7 @@ button.btn-primary:hover {
     padding-right: 50px;
   }
 
-  .pwr-watch-video {
+  .pwr-btn-action.pwr-watch-video {
     position: absolute;
     top: 0;
     right: 0;

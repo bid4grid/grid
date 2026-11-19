@@ -216,7 +216,26 @@
     var elCust = document.getElementById('sync-cust');
     if (elSub) elSub.innerHTML = 'Substation: <strong>' + state.dist_sub_kV + ' kV GrdY</strong>';
     if (elFeeder) elFeeder.innerHTML = 'Feeder: <strong>' + state.feeder_len_miles + ' mi ' + (state.feeder_type === 'overhead' ? 'Overhead ACSR' : 'Underground UG') + '</strong> (' + state.feeder_load_MVA + ' MVA)';
-    if (elCust) elCust.innerHTML = 'Customer: <strong>' + state.customer_load_kW + ' kW (' + (state.service_type === 'residential_split' ? '1φ 120/240V' : '3φ 480V') + ')</strong>';
+    if (elCust) elCust.innerHTML = 'Customer: <strong>' + state.customer_load_kW + ' kW (' + state.cascadeResult.distTransformer.service_label + ')</strong>';
+    var elPoleVoltage = document.getElementById('pole-field-voltage');
+    if (elPoleVoltage) elPoleVoltage.textContent = state.polekV;
+  }
+
+  function updateTabSharing() {
+    var descriptions = {
+      cascade: 'Master settings also appear in V-Profile; some values are used by Pole and Banks.',
+      profile: 'All settings are shared with Cascade.',
+      pole: 'Substation voltage is shared with Cascade and Banks; other pole settings are independent.',
+      padmount: 'Independent example: primary voltage is fixed at 13.2 kV; other settings are local.',
+      riser: 'Independent, fixed hardware example; Cascade settings do not change this diagram.',
+      bank: 'Substation voltage is shared. Cascade load changes set the bank load; bank edits do not change Cascade.',
+      highleg: 'Cascade load changes set this example load; High-Leg edits do not change Cascade.',
+      network: 'Independent network example with separate feeder and load settings; primary voltage is fixed at 13.2 kV.',
+      split: 'Independent residential example with separate loads and service settings. The neutral-current tile refers to this example.',
+      spec: 'Grid SLD uses the master model; some apparatus views use the Pole or Padmount example settings.'
+    };
+    var badge = document.getElementById('dist-sync-badge');
+    if (badge) badge.textContent = descriptions[state.activeTab] || '';
   }
 
   function updateMetricTiles() {
@@ -233,10 +252,10 @@
 
     if (elTileGen) elTileGen.innerHTML = '<b>' + c.gen.voltage_kV + ' kV / ' + c.transmission.voltage_send_kV + ' kV</b><span>Gen &amp; Transmission</span><small>' + c.transmission.length_miles.toFixed(0) + ' mi (' + c.transmission.current_A.toFixed(0) + ' A)</small>';
     if (elTileFeeder) elTileFeeder.innerHTML = '<b>' + c.feeder.end_kV.toFixed(2) + ' kV</b><span>Feeder End Voltage</span><small>' + c.feeder.length_miles.toFixed(1) + ' mi ' + (c.feeder.type === 'overhead' ? 'Overhead' : 'UG Cable') + '</small>';
-    if (elTileMeter) elTileMeter.innerHTML = '<b>' + c.customerMeter.terminal_V.toFixed(1) + ' V</b><span>Customer Service</span><small>Nominal: ' + c.customerMeter.nominal_V + ' V</small>';
+    if (elTileMeter) elTileMeter.innerHTML = '<b>' + c.customerMeter.terminal_V.toFixed(1) + ' V</b><span>Customer Service (L-N)</span><small>Nominal: ' + c.customerMeter.nominal_V + ' V</small>';
     if (elTileDrop) elTileDrop.innerHTML = '<b>' + c.customerMeter.total_pct_drop.toFixed(2) + ' %</b><span>Total Voltage Drop</span><small>ANSI ' + c.customerMeter.ansi.code + ' (' + c.customerMeter.ansi.status.split('(')[0] + ')</small>';
     if (elTileLoss) elTileLoss.innerHTML = '<b>' + (c.feeder.p_loss_kW + c.serviceDrop.p_loss_kW).toFixed(1) + ' kW</b><span>Total Line Losses</span><small>Feeder: ' + c.feeder.p_loss_kW.toFixed(1) + ' kW</small>';
-    if (elTileNeutral) elTileNeutral.innerHTML = '<b>' + s.I_N.toFixed(1) + ' A</b><span>Neutral Unbalance</span><small>L1=' + s.I_L1.toFixed(0) + 'A | L2=' + s.I_L2.toFixed(0) + 'A</small>';
+    if (elTileNeutral) elTileNeutral.innerHTML = '<b>' + s.I_N.toFixed(1) + ' A</b><span>Split-Phase Neutral</span><small>L1=' + s.I_L1.toFixed(0) + 'A | L2=' + s.I_L2.toFixed(0) + 'A</small>';
   }
 
   function redrawActiveCanvas() {
@@ -353,9 +372,9 @@
     html += '    <span class="dist-sync-sep">•</span>';
     html += '    <span id="sync-feeder">Feeder: <strong>' + state.feeder_len_miles + ' mi ' + (state.feeder_type === 'overhead' ? 'Overhead ACSR' : 'Underground UG') + '</strong> (' + state.feeder_load_MVA + ' MVA)</span>';
     html += '    <span class="dist-sync-sep">•</span>';
-    html += '    <span id="sync-cust">Customer: <strong>' + state.customer_load_kW + ' kW (' + (state.service_type === 'residential_split' ? '1φ 120/240V' : '3φ 480V') + ')</strong></span>';
+    html += '    <span id="sync-cust">Customer: <strong>' + state.customer_load_kW + ' kW (' + state.cascadeResult.distTransformer.service_label + ')</strong></span>';
     html += '  </div>';
-    html += '  <div class="dist-sync-badge">⚡ Synchronized Across All 10 CAD Tabs</div>';
+    html += '  <div class="dist-sync-badge" id="dist-sync-badge" aria-live="polite"></div>';
     html += '</div>';
 
     // 4. Six Signature Metric Tiles
@@ -383,7 +402,7 @@
         html += '<div class="dist-tab-pane" id="pane-theory" style="display:' + (state.activeTab === 'theory' ? 'block' : 'none') + ';">';
         html += '  <div class="card dist-theory-card">';
         html += '    <h2 class="card-title">Technical Theory &amp; Formulas</h2>';
-        html += '    <iframe class="dist-theory-frame" src="assets/dist-help.html" title="Distribution Systems Technical Theory and Formulas" loading="lazy"></iframe>';
+        html += '    <iframe class="dist-theory-frame" src="assets/dist-help.html?v=2" title="Distribution Systems Technical Theory and Formulas" loading="lazy"></iframe>';
         html += '  </div>';
         html += '</div>';
         return;
@@ -425,7 +444,7 @@
     html += '    <button type="button" class="dist-btn-action" id="btn-close-walkthrough" aria-label="Close walkthrough">Close</button>';
     html += '  </div>';
     html += '  <video id="walkthrough-video" controls playsinline preload="metadata">';
-    html += '    <source src="assets/walkthrough.mp4" type="video/mp4">';
+    html += '    <source src="assets/dist-walkthrough.mp4?v=2" type="video/mp4">';
     html += '    Your browser does not support HTML video.';
     html += '  </video>';
     html += '  <p class="dist-video-status" id="walkthrough-status" aria-live="polite"></p>';
@@ -441,6 +460,7 @@
 
     // Initial update
     updateTopicGuide();
+    updateTabSharing();
     updateMetricTiles();
     redrawActiveCanvas();
   }
@@ -562,7 +582,7 @@
 
       h += '<div style="background:#faf8f5;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:12px;line-height:1.5;margin-top:10px">';
       h += '  <strong>Field Recognition:</strong><br>';
-      h += '  • <strong>Top Conductors:</strong> ' + state.polekV + ' kV 3φ ACSR on 8ft crossarm.<br>';
+      h += '  • <strong>Top Conductors:</strong> <span id="pole-field-voltage">' + state.polekV + '</span> kV 3φ ACSR on 8ft crossarm.<br>';
       h += '  • <strong>Protective Cutout:</strong> 100 A expulsion cutout + MOV arrester.<br>';
       h += '  • <strong>Transformer Can:</strong> 50 kVA step-down unit.<br>';
       h += '  • <strong>Neutral Space:</strong> System MGN &amp; triplex service drop.<br>';
@@ -633,7 +653,7 @@
       h += '  </div>';
       h += '  <div class="dist-input-group">';
       h += '    <label>3φ Load <span class="unit">kW</span></label>';
-      h += '    <input type="number" id="ctrl-bankLoadKW" data-field="bankLoadKW" step="5" min="10" max="300" value="' + state.bankLoadKW + '">';
+      h += '    <input type="number" id="ctrl-bankLoadKW" data-field="bankLoadKW" step="1" min="1" max="1000" value="' + state.bankLoadKW + '">';
       h += '  </div>';
       h += '</div>';
       cBank.innerHTML = h;
@@ -651,14 +671,14 @@
       var i_3ph = (state.bankLoadKW * 1000) / (Math.sqrt(3) * 240 * 0.90);
       h += '<div class="dist-input-group">';
       h += '  <label>Commercial 3φ Load <span class="unit" id="lbl-highleg-load">' + state.bankLoadKW + ' kW (' + i_3ph.toFixed(1) + ' A @ 240V)</span></label>';
-      h += '  <input type="range" id="ctrl-highleg-range" min="10" max="300" step="5" value="' + state.bankLoadKW + '">';
+      h += '  <input type="range" id="ctrl-highleg-range" min="1" max="1000" step="1" value="' + state.bankLoadKW + '">';
       h += '  <small style="color:var(--muted)">Adjust slider to watch dynamic amperage change on diagram</small>';
       h += '</div>';
 
       h += '<div class="dist-input-row" style="margin-top:8px">';
       h += '  <div class="dist-input-group">';
       h += '    <label>Load Power <span class="unit">kW</span></label>';
-      h += '    <input type="number" id="ctrl-highleg-num" step="5" min="10" max="300" value="' + state.bankLoadKW + '">';
+      h += '    <input type="number" id="ctrl-highleg-num" step="1" min="1" max="1000" value="' + state.bankLoadKW + '">';
       h += '  </div>';
       h += '  <div class="dist-input-group">';
       h += '    <label>Bank Rating</label>';
@@ -929,6 +949,7 @@
       });
 
       var isTheory = tabId === 'theory';
+      updateTabSharing();
       var elTiles = document.querySelector('.dist-tiles');
       var elGuide = document.querySelector('.dist-guide-card');
       var elSync = document.getElementById('dist-sync-banner');
@@ -937,6 +958,7 @@
       if (elSync) elSync.style.display = isTheory ? 'none' : '';
 
       if (!isTheory) {
+        if (tabId === 'spec') renderInteractiveSpecPanel();
         updateTopicGuide();
         redrawActiveCanvas();
       }
@@ -1036,11 +1058,13 @@
         });
 
         // Cross-module parameter propagation
-        if (field === 'dist_sub_kV') {
+        if (field === 'dist_sub_kV' || field === 'polekV') {
           state.polekV = val;
+          state.dist_sub_kV = val;
           document.querySelectorAll('[data-field="polekV"]').forEach(function (p) { p.value = val; });
+          document.querySelectorAll('[data-field="dist_sub_kV"]').forEach(function (p) { p.value = val; });
         }
-        if (field === 'customer_load_kW') {
+        if (field === 'customer_load_kW' || field === 'bankLoadKW') {
           state.bankLoadKW = val;
           document.querySelectorAll('[data-field="bankLoadKW"]').forEach(function (b) { b.value = val; });
           var elHLNum = document.getElementById('ctrl-highleg-num');
@@ -1064,9 +1088,12 @@
     var elHLLbl = document.getElementById('lbl-highleg-load');
 
     function onHLChange(val) {
+      if (isNaN(val)) return;
       state.bankLoadKW = val;
       if (elHLRange) elHLRange.value = val;
       if (elHLNum) elHLNum.value = val;
+      var elBankLoad = document.getElementById('ctrl-bankLoadKW');
+      if (elBankLoad) elBankLoad.value = val;
       var i_3ph = (val * 1000) / (Math.sqrt(3) * 240 * 0.90);
       if (elHLLbl) elHLLbl.innerText = val + ' kW (' + i_3ph.toFixed(1) + ' A @ 240V)';
       recalculate();

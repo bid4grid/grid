@@ -361,6 +361,7 @@
     // 6. Local Distribution Transformer Stage
     // Can be Single-Phase 120/240V (residential) or Three-Phase 277/480V or 120/208V (commercial)
     var service_type = config.service_type || 'residential_split'; // 'residential_split', 'commercial_480', 'commercial_208'
+    var service_label = service_type === 'residential_split' ? '1φ 120/240V' : (service_type === 'commercial_480' ? '3φ 480V' : '3φ 208V');
     var xfmr_kVA = config.xfmr_kVA || (service_type === 'residential_split' ? 50.0 : 500.0);
     var xfmr_z_pct = config.xfmr_z_pct || (service_type === 'residential_split' ? 2.1 : 5.75);
 
@@ -369,7 +370,7 @@
 
     // Transformer internal voltage regulation drop at rated load (~ Z% * cos(phi))
     var xfmr_drop_pct = (xfmr_z_pct * 0.90) * (config.xfmr_load_pct ? config.xfmr_load_pct / 100.0 : 0.75);
-    var sec_xfmr_out_V = sec_nominal_V * (1.0 - (feeder_drop.pct_drop / 100.0) - (xfmr_drop_pct / 100.0));
+    var sec_xfmr_out_V = Math.max(0, sec_nominal_V * (1.0 - (feeder_drop.pct_drop / 100.0) - (xfmr_drop_pct / 100.0)));
 
     // 7. Secondary Triplex & Service Drop Lateral
     var sec_len_ft = config.sec_len_ft || 150.0; // 150 ft triplex / lateral
@@ -384,7 +385,7 @@
 
     var sec_drop = calcVoltageDrop({
       phaseType: (service_type === 'residential_split') ? '1phase' : '3phase',
-      voltage: sec_nominal_V,
+      voltage: sec_nominal_LL_V,
       current_A: cust_I,
       length_km: sec_len_km,
       material: sec_mat,
@@ -393,7 +394,7 @@
     });
 
     // Customer Meter Terminal Voltage
-    var meter_V = Math.max(0, sec_xfmr_out_V - sec_drop.v_drop_V);
+    var meter_V = Math.max(0, sec_xfmr_out_V - sec_drop.v_drop_V / (service_type === 'residential_split' ? 2 : Math.sqrt(3)));
     var total_pct_drop = ((sec_nominal_V - meter_V) / sec_nominal_V) * 100.0;
     var ansi = evaluateANSI(meter_V, sec_nominal_V);
 
@@ -487,6 +488,7 @@
       // Stage 6: Distribution Transformer
       distTransformer: {
         service_type: service_type,
+        service_label: service_label,
         primary_kV: feeder_end_kV,
         secondary_nominal_V: sec_nominal_V,
         secondary_nominal_LL_V: sec_nominal_LL_V,
@@ -499,6 +501,8 @@
       serviceDrop: {
         length_ft: sec_len_ft,
         conductor: sec_drop.conductor.name,
+        size_key: sec_cond_key,
+        material: sec_mat,
         current_A: cust_I,
         v_drop_V: sec_drop.v_drop_V,
         pct_drop: sec_drop.pct_drop,
@@ -748,13 +752,14 @@
 
       result.name = 'Open-Delta (V-V Bank) 2-Transformer Service';
       result.sec_VLL = 240.0;
-      result.sec_VLN = 120.0; // from the center-tapped lighter can
+      result.sec_VLN = null;
       result.total_bank_kVA = open_kVA;
       result.derating_pct = 57.74; // (sqrt(3) / 3) * 100
       result.utilization_pct = 86.60; // (sqrt(3) / 2) * 100
       result.line_I_A = line_I;
-      result.phase_shift_deg = 30;
-      result.application = 'Supplies 3φ power using only 2 cans. Frequently installed when single-phase loads dominate with modest 3-phase motor demands';
+      result.phase_shift_deg = 0;
+      result.has_neutral = false;
+      result.application = 'Two-transformer, three-wire 3φ service; center-tapped variants are not modeled';
     } else {
       // Delta-Delta 3-wire ungrounded or corner-grounded
       result.name = '240V / 480V 3-Wire Delta-Delta';

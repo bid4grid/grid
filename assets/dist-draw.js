@@ -15,7 +15,7 @@
     primary: '#1f3a5f',
     accent: '#e07a3f',
     text: '#1e293b',
-    muted: '#64748b',
+    muted: '#475569',
     busbar: '#0f172a',
     phaseA: '#dc2626',
     phaseB: '#d97706',
@@ -25,6 +25,7 @@
     warning: '#d97706',
     danger: '#dc2626',
     cadBlue: '#0284c7',
+    textBlue: '#075985',
     transPurple: '#7c3aed'
   };
 
@@ -123,13 +124,13 @@
 
     // Header Title
     ctx.fillStyle = t.primary;
-    ctx.font = 'bold 12px monospace';
+    ctx.font = '500 12px monospace';
     ctx.textAlign = 'left';
     ctx.fillText('IEEE COMPLETE VOLTAGE CASCADE SINGLE LINE DIAGRAM (IEEE STD 315 / IEC 60617)', 20, 24);
 
     ctx.fillStyle = t.muted;
     ctx.font = '9.5px monospace';
-    ctx.fillText('End-to-End Voltage Path: Generation (13.8kV) → GSU → Transmission (230kV) → Substation (13.2kV) → Service (120/240V)', 20, 38);
+    ctx.fillText('Voltage Path: Generation (' + cascade.gen.voltage_kV + 'kV) → GSU → Transmission (' + cascade.gsu.secondary_kV + 'kV) → Substation (' + cascade.substation.bus_kV + 'kV) → Service (' + cascade.distTransformer.service_label + ')', 20, 38);
 
     // ==========================================
     // FOUR SUBTLE VOLTAGE ZONE BANDS (Clean, Light, No Dark Fills)
@@ -146,8 +147,8 @@
     ctx.strokeRect(z1X, zoneY, z1W, zoneH);
     ctx.setLineDash([]);
     ctx.fillStyle = t.primary;
-    ctx.font = 'bold 8.5px monospace';
-    ctx.fillText('ZONE 1: GENERATION (13.8 kV)', z1X + 8, zoneY + 14);
+    ctx.font = '500 8.5px monospace';
+    ctx.fillText('ZONE 1: GEN (' + cascade.gen.voltage_kV + ' kV)', z1X + 8, zoneY + 14);
 
     // Zone 2: HV Transmission (230 kV)
     var z2X = z1X + z1W + 6, z2W = 195;
@@ -158,7 +159,7 @@
     ctx.strokeRect(z2X, zoneY, z2W, zoneH);
     ctx.setLineDash([]);
     ctx.fillStyle = t.transPurple;
-    ctx.fillText('ZONE 2: TRANSMISSION (230 kV)', z2X + 8, zoneY + 14);
+    ctx.fillText('ZONE 2: TRANS (' + cascade.gsu.secondary_kV + ' kV)', z2X + 8, zoneY + 14);
 
     // Zone 3: Primary Distribution (13.2 kV)
     var z3X = z2X + z2W + 6, z3W = 240;
@@ -168,8 +169,8 @@
     ctx.setLineDash([4, 4]);
     ctx.strokeRect(z3X, zoneY, z3W, zoneH);
     ctx.setLineDash([]);
-    ctx.fillStyle = t.cadBlue;
-    ctx.fillText('ZONE 3: PRIMARY DISTRIBUTION (13.2 kV)', z3X + 8, zoneY + 14);
+    ctx.fillStyle = t.textBlue;
+    ctx.fillText('ZONE 3: PRIMARY (' + cascade.substation.bus_kV + ' kV)', z3X + 8, zoneY + 14);
 
     // Zone 4: Utilization (120/240 V)
     var z4X = z3X + z3W + 6, z4W = w - z4X - 16;
@@ -179,8 +180,8 @@
     ctx.setLineDash([4, 4]);
     ctx.strokeRect(z4X, zoneY, z4W, zoneH);
     ctx.setLineDash([]);
-    ctx.fillStyle = '#16a34a';
-    ctx.fillText('ZONE 4: CUSTOMER (120/240V)', z4X + 8, zoneY + 14);
+    ctx.fillStyle = '#15803d';
+    ctx.fillText('ZONE 4: CUSTOMER', z4X + 8, zoneY + 14);
 
     var y = 175; // Main horizontal power flow axis
 
@@ -203,7 +204,7 @@
     ctx.stroke();
 
     ctx.fillStyle = t.primary;
-    ctx.font = 'bold 9px monospace';
+    ctx.font = '500 9px monospace';
     ctx.textAlign = 'center';
     ctx.fillText('G1 Gen', genX, y - 24);
     ctx.fillStyle = t.muted;
@@ -240,11 +241,11 @@
     // GSU Transformer (Interlocking Circles)
     drawTransformerSymbol(ctx, gsuX, y, 11, t.accent);
     ctx.fillStyle = t.accent;
-    ctx.font = 'bold 9px monospace';
+    ctx.font = '500 9px monospace';
     ctx.fillText('GSU T1', gsuX, y - 24);
     ctx.fillStyle = t.muted;
     ctx.font = '7.5px monospace';
-    ctx.fillText('13.8/230 kV', gsuX, y + 30);
+    ctx.fillText(cascade.gsu.primary_kV + '/' + cascade.gsu.secondary_kV + ' kV', gsuX, y + 30);
 
     // Wire to Bus 1
     var bus1X = z2X + 14;
@@ -266,7 +267,7 @@
     ctx.stroke();
 
     ctx.fillStyle = t.transPurple;
-    ctx.font = 'bold 8px monospace';
+    ctx.font = '500 8px monospace';
     ctx.fillText('BUS 1', bus1X, y - 54);
     ctx.fillText(cascade.gsu.secondary_kV + ' kV', bus1X, y + 60);
 
@@ -295,7 +296,7 @@
     ctx.stroke();
 
     ctx.fillStyle = t.transPurple;
-    ctx.font = 'bold 8.5px monospace';
+    ctx.font = '500 8.5px monospace';
     ctx.fillText('HV LINE', towerX, y - 25);
     ctx.fillStyle = t.muted;
     ctx.font = '7.5px monospace';
@@ -317,12 +318,12 @@
     ctx.stroke();
 
     drawTransformerSymbol(ctx, subTX, y, 11, t.cadBlue);
-    ctx.fillStyle = t.cadBlue;
-    ctx.font = 'bold 9px monospace';
+    ctx.fillStyle = t.textBlue;
+    ctx.font = '500 9px monospace';
     ctx.fillText('Sub Xfmr', subTX, y - 24);
     ctx.fillStyle = t.muted;
     ctx.font = '7.5px monospace';
-    ctx.fillText('230/13.2kV', subTX, y + 30);
+    ctx.fillText(cascade.gsu.secondary_kV + '/' + cascade.substation.bus_kV + 'kV', subTX, y + 30);
 
     // Substation Bus 2 (13.2 kV Medium-Voltage Busbar)
     var bus2X = z3X + 76;
@@ -339,8 +340,8 @@
     ctx.lineTo(bus2X, y + 48);
     ctx.stroke();
 
-    ctx.fillStyle = t.cadBlue;
-    ctx.font = 'bold 8px monospace';
+    ctx.fillStyle = t.textBlue;
+    ctx.font = '500 8px monospace';
     ctx.fillText('BUS 2', bus2X, y - 54);
     ctx.fillText(cascade.substation.bus_kV + ' kV', bus2X, y + 60);
 
@@ -354,38 +355,40 @@
     ctx.stroke();
 
     ctx.strokeRect(recX - 8, y - 8, 16, 16);
-    ctx.fillStyle = t.cadBlue;
-    ctx.font = 'bold 8px monospace';
+    ctx.fillStyle = t.textBlue;
+    ctx.font = '500 8px monospace';
     ctx.fillText('R', recX, y + 2.5);
     ctx.font = '7px monospace';
     ctx.fillStyle = t.muted;
     ctx.fillText('Recloser', recX, y - 12);
 
-    // Primary Feeder Pole Line
+    // Primary feeder, shown as overhead pole or underground cable
     var poleX = z3X + 180;
     ctx.strokeStyle = t.cadBlue;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(recX + 8, y);
-    ctx.lineTo(poleX - 12, y);
-    ctx.moveTo(poleX + 12, y);
     ctx.lineTo(z3X + z3W, y);
     ctx.stroke();
 
-    // Pole crossarm symbol
     ctx.lineWidth = 1.8;
     ctx.beginPath();
-    ctx.moveTo(poleX, y - 18); ctx.lineTo(poleX, y + 8);
-    ctx.moveTo(poleX - 10, y - 12); ctx.lineTo(poleX + 10, y - 12);
+    if (cascade.feeder.type === 'overhead') {
+      ctx.moveTo(poleX, y - 18); ctx.lineTo(poleX, y + 8);
+      ctx.moveTo(poleX - 10, y - 12); ctx.lineTo(poleX + 10, y - 12);
+    } else {
+      ctx.moveTo(poleX - 10, y - 5); ctx.lineTo(poleX + 10, y - 5);
+      ctx.moveTo(poleX - 10, y + 5); ctx.lineTo(poleX + 10, y + 5);
+    }
     ctx.stroke();
 
-    ctx.fillStyle = t.cadBlue;
-    ctx.font = 'bold 8.5px monospace';
-    ctx.fillText('FEEDER', poleX, y - 24);
+    ctx.fillStyle = t.textBlue;
+    ctx.font = '500 8.5px monospace';
+    ctx.fillText('FEEDER', poleX, y + 38);
     ctx.fillStyle = t.muted;
     ctx.font = '7.5px monospace';
-    ctx.fillText(cascade.feeder.length_miles.toFixed(1) + ' mi ' + (cascade.feeder.type === 'overhead' ? '3φ OH' : '3φ UG'), poleX, y + 24);
-    ctx.fillText(cascade.feeder.current_A.toFixed(0) + 'A | ' + cascade.feeder.end_kV.toFixed(2) + 'kV', poleX, y + 36);
+    ctx.fillText(cascade.feeder.length_miles.toFixed(1) + ' mi ' + (cascade.feeder.type === 'overhead' ? '3φ OH' : '3φ UG'), poleX, y + 50);
+    ctx.fillText(cascade.feeder.current_A.toFixed(0) + 'A | ' + cascade.feeder.end_kV.toFixed(2) + 'kV', poleX, y + 62);
 
     drawArrow(ctx, poleX + 16, y, poleX + 38, y, t.cadBlue, 6);
 
@@ -403,12 +406,12 @@
 
     drawTransformerSymbol(ctx, distTX, y, 10, t.accent);
     ctx.fillStyle = t.accent;
-    ctx.font = 'bold 8.5px monospace';
+    ctx.font = '500 8.5px monospace';
     ctx.fillText('Dist Xfmr', distTX, y - 22);
     ctx.fillStyle = t.muted;
     ctx.font = '7.5px monospace';
     ctx.fillText(cascade.distTransformer.rating_kVA + ' kVA', distTX, y + 26);
-    ctx.fillText(cascade.distTransformer.service_type === 'residential_split' ? '1φ 120/240V' : '3φ 480V', distTX, y + 38);
+    ctx.fillText(cascade.distTransformer.service_label, distTX, y + 38);
 
     // Service Drop / Lateral to Meter
     var meterX = z4X + 105;
@@ -427,9 +430,9 @@
     ctx.stroke();
 
     ctx.fillStyle = cascade.customerMeter.ansi.color;
-    ctx.font = 'bold 7.5px monospace';
+    ctx.font = '500 7.5px monospace';
     ctx.fillText('kWh', meterX, y - 2);
-    ctx.font = 'bold 8.5px monospace';
+    ctx.font = '500 8.5px monospace';
     ctx.fillText(cascade.customerMeter.terminal_V.toFixed(1) + ' V', meterX, y + 24);
     ctx.fillStyle = t.muted;
     ctx.font = '7.5px monospace';
@@ -445,9 +448,16 @@
     ctx.stroke();
 
     ctx.strokeRect(pnlX - 4, y - 16, 8, 32);
-    ctx.fillStyle = '#64748b';
-    ctx.font = 'bold 7.5px monospace';
+    ctx.fillStyle = t.muted;
+    ctx.font = '500 7.5px monospace';
     ctx.fillText('PANEL', pnlX - 1, y - 22);
+
+    ctx.textAlign = 'left';
+    ctx.font = '500 8px monospace';
+    ctx.fillStyle = t.text;
+    ctx.fillText('SERVICE: ' + cascade.serviceDrop.length_ft + ' ft | ' +
+      cascade.serviceDrop.size_key.replace('_', ' ') + ' ' + (cascade.serviceDrop.material === 'al' ? 'Al' : 'Cu'), z4X + 8, y + 74);
+    ctx.fillText('CUSTOMER LOAD: ' + cascade.customerMeter.load_kW + ' kW', z4X + 8, y + 88);
 
     // ==========================================
     // ACTIVE EQUIPMENT LOT HIGHLIGHTING (Bid4Grid Interactive Focus)
@@ -488,7 +498,7 @@
       var cleanLabel = activeTarget.label.split('(')[0].trim();
       var lotText = '📍 SELECTED LOT: ' + cleanLabel;
 
-      ctx.font = 'bold 8.5px system-ui, -apple-system, sans-serif';
+      ctx.font = '500 8.5px system-ui, -apple-system, sans-serif';
       var textMetrics = ctx.measureText(lotText);
       var textW = textMetrics ? textMetrics.width : (lotText.length * 6.0);
       var chipW = Math.max(220, Math.ceil(textW) + 30);
@@ -505,7 +515,7 @@
       ctx.stroke();
 
       ctx.fillStyle = '#b45309';
-      ctx.font = 'bold 8.5px system-ui, -apple-system, sans-serif';
+      ctx.font = '500 8.5px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(lotText, chipX + chipW / 2, chipY + chipH / 2);
@@ -529,12 +539,12 @@
     ctx.fillRect(16, specY, cardW, 36);
     ctx.strokeRect(16, specY, cardW, 36);
     ctx.fillStyle = isCard0 ? '#d97706' : t.transPurple;
-    ctx.font = 'bold 8px monospace';
+    ctx.font = '500 8px monospace';
     ctx.textAlign = 'left';
     ctx.fillText('SUBSTATION APPARATUS (IEEE C37.04)' + (isCard0 ? ' ★' : ''), 24, specY + 14);
     ctx.fillStyle = t.muted;
     ctx.font = '7.5px monospace';
-    ctx.fillText('IEEE C37.04 230kV Breaker | 25 MVA Δ-Yg Xfmr', 24, specY + 27);
+    ctx.fillText('Grid: ' + cascade.gsu.secondary_kV + ' kV | Substation: ' + cascade.substation.mva_rating + ' MVA', 24, specY + 27);
 
     // Card 2
     ctx.fillStyle = isCard1 ? '#eff6ff' : '#f8fafc';
@@ -542,12 +552,12 @@
     ctx.lineWidth = isCard1 ? 2 : 1;
     ctx.fillRect(16 + cardW + 8, specY, cardW, 36);
     ctx.strokeRect(16 + cardW + 8, specY, cardW, 36);
-    ctx.fillStyle = isCard1 ? '#d97706' : t.cadBlue;
-    ctx.font = 'bold 8px monospace';
+    ctx.fillStyle = isCard1 ? '#d97706' : t.textBlue;
+    ctx.font = '500 8px monospace';
     ctx.fillText('FEEDER PROTECTION (IEEE C37.60)' + (isCard1 ? ' ★' : ''), 24 + cardW + 8, specY + 14);
     ctx.fillStyle = t.muted;
     ctx.font = '7.5px monospace';
-    ctx.fillText('S&C Vista Recloser (15.5kV, 12.5kA) | 336 ACSR', 24 + cardW + 8, specY + 27);
+    ctx.fillText('Feeder: ' + cascade.feeder.conductor, 24 + cardW + 8, specY + 27);
 
     // Card 3
     ctx.fillStyle = isCard2 ? '#eff6ff' : '#f8fafc';
@@ -556,7 +566,7 @@
     ctx.fillRect(16 + (cardW + 8) * 2, specY, cardW, 36);
     ctx.strokeRect(16 + (cardW + 8) * 2, specY, cardW, 36);
     ctx.fillStyle = isCard2 ? '#d97706' : '#16a34a';
-    ctx.font = 'bold 8px monospace';
+    ctx.font = '500 8px monospace';
     ctx.fillText('SERVICE COMPLIANCE (ANSI C84.1)' + (isCard2 ? ' ★' : ''), 24 + (cardW + 8) * 2, specY + 14);
     ctx.fillStyle = t.muted;
     ctx.font = '7.5px monospace';
@@ -576,7 +586,7 @@
 
     // Header banner
     ctx.fillStyle = t.primary;
-    ctx.font = 'bold 12px monospace';
+    ctx.font = '500 12px monospace';
     ctx.textAlign = 'left';
     ctx.fillText('ANSI C84.1 FEEDER VOLTAGE PROFILE & REGULATION ENVELOPE', 20, 24);
 
@@ -585,7 +595,10 @@
     ctx.fillText('Normalized per-unit voltage from substation busbar (0 mi) down to customer service meter', 20, 38);
 
     var gx = 85, gy = 58, gw = w - 145, gh = h - 128;
-    var pu_min = 0.90;
+    var lowest_pu = Math.min(cascade.feeder.end_kV / cascade.feeder.send_kV,
+      cascade.distTransformer.voltage_out_V / cascade.distTransformer.secondary_nominal_V,
+      cascade.customerMeter.terminal_V / cascade.customerMeter.nominal_V);
+    var pu_min = Math.min(0.90, Math.max(0, Math.floor((lowest_pu - 0.02) * 20) / 20));
     var pu_max = 1.06;
 
     function yForPU(pu) {
@@ -623,7 +636,9 @@
     ctx.fillStyle = t.muted;
     ctx.font = '8.5px monospace';
     ctx.textAlign = 'right';
-    [1.06, 1.05, 1.00, 0.95, 0.917, 0.90].forEach(function (pu) {
+    var ticks = [1.06, 1.05, 1.00, 0.95, 0.917, 0.90];
+    if (pu_min < 0.90) ticks.push(pu_min);
+    ticks.forEach(function (pu) {
       var y = yForPU(pu);
       ctx.fillText(pu.toFixed(3) + ' pu', gx - 8, y + 3);
       ctx.strokeStyle = '#e2e8f0';
@@ -635,11 +650,11 @@
     });
 
     ctx.textAlign = 'right';
-    ctx.fillStyle = '#16a34a';
-    ctx.font = 'bold 8px monospace';
-    ctx.fillText('ANSI Range A (±5%)', gx + gw - 8, yForPU(1.03));
-    ctx.fillStyle = '#d97706';
-    ctx.fillText('ANSI Range B (-8.3% / +5.8%)', gx + gw - 8, yForPU(0.93));
+    ctx.fillStyle = '#15803d';
+    ctx.font = '500 8px monospace';
+    ctx.fillText('ANSI Range A (±5%)', gx + gw - 8, 24);
+    ctx.fillStyle = '#b45309';
+    ctx.fillText('ANSI Range B (-8.3% / +5.8%)', gx + gw - 8, 38);
 
     var p0 = { x: gx, y: yForPU(1.00), label: 'Substation (1.00 pu)' };
     var feeder_end_pu = cascade.feeder.end_kV / cascade.feeder.send_kV;
@@ -648,7 +663,7 @@
 
     var xfmr_out_pu = cascade.distTransformer.voltage_out_V / cascade.distTransformer.secondary_nominal_V;
     var x_xfmr = gx + gw * 0.76;
-    var p2 = { x: x_xfmr, y: yForPU(xfmr_out_pu), label: 'Xfmr' };
+    var p2 = { x: x_xfmr, y: yForPU(xfmr_out_pu), label: 'Xfmr (' + xfmr_out_pu.toFixed(3) + ' pu)' };
 
     var cust_pu = cascade.customerMeter.terminal_V / cascade.customerMeter.nominal_V;
     var x_meter = gx + gw;
@@ -672,12 +687,15 @@
       ctx.fill();
       ctx.stroke();
 
+      var labelX = gx + idx * gw / 4 + 10;
+      ctx.fillStyle = (idx === 3) ? cascade.customerMeter.ansi.color : t.cadBlue;
+      ctx.beginPath();
+      ctx.arc(labelX - 6, gy + 8, 2.5, 0, Math.PI * 2);
+      ctx.fill();
       ctx.fillStyle = t.text;
-      ctx.font = 'bold 8px monospace';
-      ctx.textAlign = (idx === 3) ? 'right' : ((idx === 0) ? 'left' : 'center');
-      var labelX = (idx === 3) ? pt.x - 8 : ((idx === 0) ? pt.x + 8 : pt.x);
-      var labelY = (idx % 2 === 0) ? pt.y - 10 : pt.y + 16;
-      ctx.fillText(pt.label, labelX, labelY);
+      ctx.font = '500 8px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(pt.label, labelX, gy + 11);
     });
 
     ctx.fillStyle = t.muted;
@@ -700,7 +718,7 @@
 
     // Header banner
     ctx.fillStyle = t.primary;
-    ctx.font = 'bold 12px monospace';
+    ctx.font = '500 12px monospace';
     ctx.textAlign = 'left';
     ctx.fillText('RESIDENTIAL 120/240-V SPLIT-PHASE SYSTEM & CENTER-TAP PHYSICS', 20, 24);
 
@@ -722,7 +740,7 @@
     ctx.stroke();
 
     ctx.fillStyle = t.primary;
-    ctx.font = 'bold 8.5px monospace';
+    ctx.font = '500 8.5px monospace';
     ctx.textAlign = 'right';
     ctx.fillText('MV (H1)', txX - 50, txY - 62);
     ctx.fillText('Neutral (H2)', txX - 50, txY + 68);
@@ -754,12 +772,13 @@
     drawGroundSymbol(ctx, txX + 70, txY, 12);
 
     ctx.fillStyle = t.primary;
-    ctx.font = 'bold 9px monospace';
+    ctx.font = '500 9px monospace';
     ctx.textAlign = 'left';
     ctx.fillText('L1 (X1) ── ' + splitData.v_L1_N.toFixed(1) + ' V', txX + 48, txY - 68);
     ctx.fillStyle = t.ground;
-    ctx.fillText('N (X2 / MGN) (I_N=' + splitData.I_N.toFixed(1) + 'A)', txX + 78, txY - 4);
-    ctx.fillStyle = t.cadBlue;
+    ctx.fillText('N (X2 / MGN)', txX + 78, txY - 4);
+    ctx.fillText('I_N=' + splitData.I_N.toFixed(1) + ' A', txX + 78, txY + 18);
+    ctx.fillStyle = t.textBlue;
     ctx.fillText('L2 (X3) ── ' + splitData.v_L2_N.toFixed(1) + ' V', txX + 48, txY + 78);
 
     // 240V Span bracket (Ending at x = 360, leaving 100px gap before phasor diagram)
@@ -773,7 +792,7 @@
     ctx.stroke();
 
     ctx.fillStyle = t.primary;
-    ctx.font = 'bold 9px monospace';
+    ctx.font = '500 9px monospace';
     ctx.textAlign = 'left';
     ctx.fillText('240V = ' + splitData.v_L1_L2.toFixed(1) + 'V', txX + 192, txY - 4);
     ctx.font = '7.5px monospace';
@@ -783,7 +802,7 @@
     ctx.fillStyle = t.primary;
     ctx.font = '8px monospace';
     ctx.fillText('L1: ' + splitData.I_L1.toFixed(1) + ' A', txX + 115, txY - 32);
-    ctx.fillStyle = t.cadBlue;
+    ctx.fillStyle = t.textBlue;
     ctx.fillText('L2: ' + splitData.I_L2.toFixed(1) + ' A', txX + 115, txY + 40);
 
     // ==========================================
@@ -814,13 +833,13 @@
     // V_L1-N Phasor (Points Right at 0°, Navy)
     drawArrow(ctx, pcX, pcY, pcX + v1_len, pcY, t.primary, 7);
     ctx.fillStyle = t.primary;
-    ctx.font = 'bold 8.5px monospace';
+    ctx.font = '500 8.5px monospace';
     ctx.textAlign = 'left';
     ctx.fillText('V_L1=' + splitData.v_L1_N.toFixed(1) + 'V ∠0°', pcX + v1_len + 6, pcY - 4);
 
     // V_L2-N Phasor (Points Left at 180°, Blue)
     drawArrow(ctx, pcX, pcY, pcX - v2_len, pcY, t.cadBlue, 7);
-    ctx.fillStyle = t.cadBlue;
+    ctx.fillStyle = t.textBlue;
     ctx.textAlign = 'right';
     ctx.fillText('V_L2=' + splitData.v_L2_N.toFixed(1) + 'V ∠180°', pcX - v2_len - 6, pcY - 4);
 
@@ -840,7 +859,7 @@
 
     // I_L2 Vector (Lagging ~23° up-left)
     drawArrow(ctx, pcX, pcY, pcX - i2_len * 0.92, pcY - i2_len * 0.39, t.cadBlue, 5);
-    ctx.fillStyle = t.cadBlue;
+    ctx.fillStyle = t.textBlue;
     ctx.textAlign = 'right';
     ctx.fillText('I_2=' + splitData.I_L2.toFixed(0) + 'A', pcX - i2_len * 0.92 - 3, pcY - i2_len * 0.39 - 4);
 
@@ -854,7 +873,7 @@
 
     // Top Dynamic Equation (Updates live with load changes!)
     ctx.fillStyle = t.text;
-    ctx.font = 'bold 9px monospace';
+    ctx.font = '500 9px monospace';
     ctx.textAlign = 'center';
     ctx.fillText('DYNAMIC PHASOR SUBTRACTION:', pcX, pcY - rad - 20);
     ctx.font = '8px monospace';
@@ -864,11 +883,11 @@
     // Bottom Live Neutral Cancellation Status
     if (splitData.I_N < 1.0) {
       ctx.fillStyle = '#16a34a';
-      ctx.font = 'bold 8.5px monospace';
+      ctx.font = '500 8.5px monospace';
       ctx.fillText('✓ BALANCED: NEUTRAL CURRENT I_N = 0.0 A (100% CANCELLED)', pcX, pcY + rad + 22);
     } else {
       ctx.fillStyle = (splitData.unbalance_A > 20) ? t.warning : '#16a34a';
-      ctx.font = 'bold 8.5px monospace';
+      ctx.font = '500 8.5px monospace';
       ctx.fillText('NEUTRAL CURRENT I_N = |I_1 - I_2| = ' + splitData.I_N.toFixed(1) + ' A (' + (splitData.I_L1 > splitData.I_L2 ? 'Leg 1 Heavy' : 'Leg 2 Heavy') + ')', pcX, pcY + rad + 22);
     }
 
@@ -888,7 +907,7 @@
 
     // Header banner
     ctx.fillStyle = t.primary;
-    ctx.font = 'bold 12px monospace';
+    ctx.font = '500 12px monospace';
     ctx.textAlign = 'left';
     var headerTitle = hasXfmr
       ? 'OVERHEAD TRANSFORMER POLE FRAMING & NESC CLEARANCE ELEVATION'
@@ -949,7 +968,7 @@
       ctx.stroke();
 
       ctx.fillStyle = color || t.text;
-      ctx.font = 'bold 8.5px monospace';
+      ctx.font = '500 8.5px monospace';
       ctx.textAlign = 'right';
       ctx.fillText(ftStr, dimX - 8, y + 3);
 
@@ -973,8 +992,8 @@
     drawArrow(ctx, brkX, (armY + mgnY) / 2 - 10, brkX, armY + 2, '#0284c7', 4);
     drawArrow(ctx, brkX, (armY + mgnY) / 2 + 10, brkX, mgnY - 2, '#0284c7', 4);
 
-    ctx.fillStyle = '#0284c7';
-    ctx.font = 'bold 7.5px monospace';
+    ctx.fillStyle = t.textBlue;
+    ctx.font = '500 7.5px monospace';
     ctx.textAlign = 'right';
     ctx.fillText('↕ 48" Rule 235', brkX - 6, (armY + mgnY) / 2 - 2);
     ctx.font = '6.5px monospace';
@@ -992,7 +1011,7 @@
     drawArrow(ctx, brkX, (mgnY + commsY) / 2 + 8, brkX, commsY - 2, '#d97706', 4);
 
     ctx.fillStyle = '#d97706';
-    ctx.font = 'bold 7.5px monospace';
+    ctx.font = '500 7.5px monospace';
     ctx.textAlign = 'right';
     ctx.fillText('↕ 40" Rule 238', brkX - 6, (mgnY + commsY) / 2 - 2);
     ctx.font = '6.5px monospace';
@@ -1122,7 +1141,7 @@
 
       // Leader callout for Secondary Drop
       ctx.fillStyle = t.accent;
-      ctx.font = 'bold 7.5px monospace';
+      ctx.font = '500 7.5px monospace';
       ctx.textAlign = 'left';
       ctx.fillText('120/240V Service Drop', px + 125, xfY - 16);
       ctx.font = '6.5px monospace';
@@ -1145,7 +1164,7 @@
     ctx.stroke();
 
     ctx.fillStyle = '#475569';
-    ctx.font = 'bold 7.5px monospace';
+    ctx.font = '500 7.5px monospace';
     ctx.textAlign = 'left';
     ctx.fillText('System Neutral (MGN)', px + 30, mgnY + 3);
 
@@ -1159,7 +1178,7 @@
     ctx.setLineDash([]);
 
     ctx.fillStyle = '#b45309';
-    ctx.font = 'bold 7px monospace';
+    ctx.font = '500 7px monospace';
     ctx.textAlign = 'left';
     ctx.fillText('40" Safety Space (Empty Zone)', px + 22, (mgnY + commsY) / 2);
 
@@ -1178,7 +1197,7 @@
     ctx.stroke();
 
     ctx.fillStyle = '#1e293b';
-    ctx.font = 'bold 7.5px monospace';
+    ctx.font = '500 7.5px monospace';
     ctx.textAlign = 'left';
     ctx.fillText('Telecom Strand (Fiber/Coax)', px + 30, commsY + 3);
 
@@ -1187,17 +1206,17 @@
     ctx.lineWidth = 1.2;
     ctx.beginPath();
     ctx.moveTo(px + 6, armY);
-    ctx.lineTo(px + 6, groundY + 28);
+    ctx.lineTo(px + 6, groundY + 12);
     ctx.stroke();
-    drawGroundSymbol(ctx, px + 6, groundY + 28, 12);
+    drawGroundSymbol(ctx, px + 6, groundY + 12, 12);
 
     // Component Callouts on the hardware (Cutout & Can)
     if (hasXfmr) {
       ctx.fillStyle = t.primary;
-      ctx.font = 'bold 7.5px monospace';
+      ctx.font = '500 7.5px monospace';
       ctx.textAlign = 'right';
-      ctx.fillText('100A Expulsion Cutout →', cutX - 6, cutY_pos);
-      ctx.fillText('50 kVA Can (28ft) →', xfX - xfW / 2 - 4, xfY);
+      ctx.fillText('100A Expulsion Cutout →', brkX - 10, cutY_pos);
+      ctx.fillText('50 kVA Can (28ft) →', brkX - 10, xfY);
     }
 
     // ==========================================
@@ -1211,7 +1230,7 @@
     ctx.strokeRect(cardX, cardY, cardW, cardH);
 
     ctx.fillStyle = t.primary;
-    ctx.font = 'bold 10px monospace';
+    ctx.font = '500 10px monospace';
     ctx.textAlign = 'left';
     ctx.fillText('POLE HARDWARE & SPECIFICATIONS', cardX + 14, cardY + 20);
 
@@ -1233,13 +1252,13 @@
       ctx.font = '8px monospace';
       ctx.fillText(sp.label + ':', cardX + 14, sy);
       ctx.fillStyle = t.text;
-      ctx.font = 'bold 8.5px monospace';
+      ctx.font = '500 8.5px monospace';
       ctx.fillText(sp.val, cardX + 120, sy);
       sy += 22;
     });
 
     ctx.fillStyle = t.accent;
-    ctx.font = 'bold 8.5px monospace';
+    ctx.font = '500 8.5px monospace';
     ctx.fillText('BID4GRID APPARATUS SOURCING:', cardX + 14, cardY + 270);
     ctx.fillStyle = t.text;
     ctx.font = '8px monospace';
@@ -1266,7 +1285,7 @@
 
     // Header banner
     ctx.fillStyle = t.primary;
-    ctx.font = 'bold 12px monospace';
+    ctx.font = '500 12px monospace';
     ctx.textAlign = 'left';
     var title = isJunction
       ? 'PRIMARY SECTIONALIZING / JUNCTION CABINET (GEORGIA POWER SPEC)'
@@ -1310,7 +1329,7 @@
 
     // Color Badge on Enclosure Top
     ctx.fillStyle = isGray ? '#475569' : '#15803d';
-    ctx.font = 'bold 7.5px monospace';
+    ctx.font = '500 7.5px monospace';
     ctx.textAlign = 'right';
     ctx.fillText(isGray ? 'FINISH: ANSI 70 LIGHT GRAY (GA POWER SPEC)' : 'FINISH: MUNSELL 7GY 3.29/1.5 GREEN', encX + encW - 12, encY + 16);
 
@@ -1334,7 +1353,7 @@
       // -------------------------------------------------------------
       ctx.textAlign = 'left';
       ctx.fillStyle = t.primary;
-      ctx.font = 'bold 9px monospace';
+      ctx.font = '500 9px monospace';
       ctx.fillText('200A 4-WAY JUNCTION BUS (PHASE A/B)', encX + 16, encY + 22);
       ctx.font = '7.5px monospace';
       ctx.fillStyle = t.muted;
@@ -1370,14 +1389,15 @@
         });
 
         ctx.fillStyle = t.primary;
-        ctx.font = 'bold 7px monospace';
-        ctx.fillText(jPhase + ' 4-WAY BUS', encX + 35, jy - 4);
+        ctx.font = '500 7px monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(jPhase, encX - 5, jy + 13);
       }
 
       // Right Compartment: Parking Stands & Ground Bus
       ctx.textAlign = 'left';
       ctx.fillStyle = t.primary;
-      ctx.font = 'bold 9px monospace';
+      ctx.font = '500 9px monospace';
       ctx.fillText('PARKING STANDS & MGN BUS', divX + 16, encY + 22);
       ctx.font = '7.5px monospace';
       ctx.fillStyle = t.muted;
@@ -1391,7 +1411,7 @@
         ctx.strokeRect(divX + 35, py, 130, 36);
 
         ctx.fillStyle = t.primary;
-        ctx.font = 'bold 7.5px monospace';
+        ctx.font = '500 7.5px monospace';
         ctx.fillText('STANDBY POST ' + (p + 1), divX + 45, py + 16);
         ctx.fillStyle = t.muted;
         ctx.font = '6.5px monospace';
@@ -1401,12 +1421,12 @@
       // -------------------------------------------------------------
       // LEFT COMPARTMENT: HIGH-VOLTAGE
       // -------------------------------------------------------------
-      var isLoop = padData ? (padData.loopFeed !== false) : true;
-      var kvaVal = (padData && padData.kVA) ? padData.kVA : 500;
+      var isLoop = padData ? padData.isLoopFeed : true;
+      var kvaVal = padData ? padData.rating_kVA : 500;
 
       ctx.textAlign = 'left';
       ctx.fillStyle = t.primary;
-      ctx.font = 'bold 9px monospace';
+      ctx.font = '500 9px monospace';
       ctx.fillText('HIGH-VOLTAGE (HV) SIDE', encX + 16, encY + 20);
       ctx.font = '7.5px monospace';
       ctx.fillStyle = t.muted;
@@ -1430,7 +1450,7 @@
         ];
       }
 
-      hBushings.forEach(function (b) {
+      hBushings.forEach(function (b, i) {
         ctx.fillStyle = '#e2e8f0';
         ctx.fillRect(b.x - 14, b.y - 12, 28, 24);
         ctx.strokeStyle = '#94a3b8';
@@ -1448,13 +1468,17 @@
 
         ctx.strokeStyle = b.col;
         ctx.lineWidth = 2.5;
+        var row = isLoop ? Math.floor(i / 2) : i;
+        var cableX = isLoop ? encX + (i % 2 === 0 ? 10 : 67) + row * 7 : encX + 10 + row * 10;
         ctx.beginPath();
         ctx.moveTo(b.x, b.y + 9);
-        ctx.lineTo(b.x, encY + encH + 20);
+        ctx.lineTo(b.x, b.y + 16);
+        ctx.lineTo(cableX, b.y + 16);
+        ctx.lineTo(cableX, encY + encH + 20);
         ctx.stroke();
 
         ctx.fillStyle = t.primary;
-        ctx.font = 'bold 7px monospace';
+        ctx.font = '500 7px monospace';
         ctx.textAlign = 'center';
         ctx.fillText(b.label, b.x, b.y - 14);
       });
@@ -1485,7 +1509,7 @@
       // -------------------------------------------------------------
       ctx.textAlign = 'left';
       ctx.fillStyle = t.primary;
-      ctx.font = 'bold 9px monospace';
+      ctx.font = '500 9px monospace';
       var rightTitle = isSwitchgear ? 'VACUUM INTERRUPTER / SCADA' : 'LOW-VOLTAGE (LV) SIDE';
       ctx.fillText(rightTitle, divX + 16, encY + 20);
       ctx.font = '7.5px monospace';
@@ -1524,7 +1548,7 @@
           ctx.stroke();
 
           ctx.fillStyle = t.primary;
-          ctx.font = 'bold 7.5px monospace';
+          ctx.font = '500 7.5px monospace';
           ctx.textAlign = 'center';
           ctx.fillText(sp.label, sp.x, sy - 30);
         });
@@ -1560,8 +1584,8 @@
           ctx.lineWidth = 1.2;
           ctx.strokeRect(divX + 40, vy, 110, 36);
 
-          ctx.fillStyle = '#0284c7';
-          ctx.font = 'bold 8px monospace';
+          ctx.fillStyle = t.textBlue;
+          ctx.font = '500 8px monospace';
           ctx.textAlign = 'center';
           ctx.fillText('VACUUM BOTTLE ' + (v + 1), divX + 95, vy + 16);
           ctx.fillStyle = t.muted;
@@ -1580,7 +1604,7 @@
     ctx.strokeRect(cardX, cardY, cardW, cardH);
 
     ctx.fillStyle = t.primary;
-    ctx.font = 'bold 10px monospace';
+    ctx.font = '500 10px monospace';
     ctx.textAlign = 'left';
     ctx.fillText('PADMOUNT SPECIFICATIONS & RATINGS', cardX + 14, cardY + 20);
 
@@ -1619,13 +1643,13 @@
       ctx.font = '8px monospace';
       ctx.fillText(sp.label + ':', cardX + 14, py);
       ctx.fillStyle = t.text;
-      ctx.font = 'bold 8.5px monospace';
+      ctx.font = '500 8.5px monospace';
       ctx.fillText(sp.val, cardX + 115, py);
       py += 22;
     });
 
     ctx.fillStyle = t.accent;
-    ctx.font = 'bold 8.5px monospace';
+    ctx.font = '500 8.5px monospace';
     ctx.fillText('BID4GRID PROCUREMENT DATASHEET:', cardX + 14, cardY + 268);
     ctx.fillStyle = t.text;
     ctx.font = '8px monospace';
@@ -1652,7 +1676,7 @@
 
     // Header banner
     ctx.fillStyle = t.primary;
-    ctx.font = 'bold 12px monospace';
+    ctx.font = '500 12px monospace';
     ctx.textAlign = 'left';
     ctx.fillText('OVERHEAD-TO-UNDERGROUND RISER POLE TRANSITION (TOPIC 6)', 20, 24);
 
@@ -1769,7 +1793,7 @@
     ctx.strokeRect(cardX, cardY, cardW, cardH);
 
     ctx.fillStyle = t.primary;
-    ctx.font = 'bold 10px monospace';
+    ctx.font = '500 10px monospace';
     ctx.textAlign = 'left';
     ctx.fillText('RISER POLE PHYSICS & COMPONENTS', cardX + 14, cardY + 20);
 
@@ -1784,7 +1808,7 @@
     var ry = cardY + 44;
     specsRiser.forEach(function (sp) {
       ctx.fillStyle = t.primary;
-      ctx.font = 'bold 8.5px monospace';
+      ctx.font = '500 8.5px monospace';
       ctx.fillText(sp.h + ':', cardX + 14, ry);
       ry += 15;
       ctx.fillStyle = '#334155';
@@ -1794,7 +1818,7 @@
     });
 
     ctx.fillStyle = t.accent;
-    ctx.font = 'bold 8.5px monospace';
+    ctx.font = '500 8.5px monospace';
     ctx.fillText('BID4GRID APPARATUS SOURCING:', cardX + 14, cardY + 268);
     ctx.fillStyle = t.text;
     ctx.font = '8px monospace';
@@ -1811,174 +1835,120 @@
   function drawTransformerBank(canvas, bankData) {
     var c = initCanvas(canvas);
     var ctx = c.ctx, w = c.w, h = c.h, t = c.t;
+    var wye = [['A', 'N'], ['B', 'N'], ['C', 'N']];
+    var connections = {
+      wye_wye: { name: 'WYE - WYE', primary: wye, secondary: wye },
+      delta_wye: { name: 'DELTA - WYE', primary: [['A', 'C'], ['B', 'A'], ['C', 'B']], secondary: wye },
+      open_delta: { name: 'OPEN DELTA - OPEN DELTA', primary: [['A', 'B'], ['B', 'C']], secondary: [['A', 'B'], ['B', 'C']] }
+    };
+    var selected = connections[bankData.bank_type];
+    if (!selected) throw new Error('Unsupported transformer bank diagram: ' + bankData.bank_type);
 
     ctx.fillStyle = t.primary;
-    ctx.font = 'bold 12px monospace';
+    ctx.font = '500 12px monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('3-PHASE TRANSFORMER BANK WIRING SCHEMATIC: ' + bankData.name.toUpperCase(), 20, 24);
-
+    ctx.fillText('3-PHASE TRANSFORMER BANK CONNECTIONS: ' + selected.name, 20, 24);
     ctx.fillStyle = t.muted;
-    ctx.font = '9.5px monospace';
-    ctx.fillText('Banking Single-Phase Units: Bushing Connections, Jumper Routing & Capacity', 20, 38);
+    ctx.font = '9px monospace';
+    ctx.fillText('Matched T numbers are separate windings of the same transformer; H1 and X1 are corresponding polarity ends.', 20, 39);
 
-    var isOpenDelta = bankData.bank_type === 'open_delta';
-    var numCans = isOpenDelta ? 2 : 3;
-
-    var busY = [60, 72, 84];
-    var busCols = [t.phaseA, t.phaseB, t.phaseC];
-    var busNames = ['Phase A (13.2 kV)', 'Phase B', 'Phase C'];
-
-    for (var b = 0; b < 3; b++) {
-      ctx.strokeStyle = busCols[b];
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(35, busY[b]);
-      ctx.lineTo(480, busY[b]);
-      ctx.stroke();
-
-      ctx.fillStyle = busCols[b];
-      ctx.font = 'bold 7.5px monospace';
-      ctx.textAlign = 'left';
-      ctx.fillText(busNames[b], 40, busY[b] - 3);
-    }
-
-    var canXs = [110, 240, 370];
-    var canY = 195, canW = 75, canH = 95;
-
-    for (var i = 0; i < 3; i++) {
-      var cx = canXs[i];
-      var isMissing = isOpenDelta && i === 2;
-
-      if (isMissing) {
-        ctx.strokeStyle = '#cbd5e1';
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([4, 4]);
-        ctx.strokeRect(cx - canW / 2, canY - canH / 2, canW, canH);
-        ctx.setLineDash([]);
-
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = 'bold 8.5px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText('CAN 3 OMITTED', cx, canY);
-        ctx.font = '7.5px monospace';
-        ctx.fillText('(V-V Open-Delta)', cx, canY + 14);
-        ctx.fillText('57.7% Bank kVA', cx, canY + 26);
-        continue;
-      }
+    function drawSide(x, title, branches, prefix) {
+      var busX = { A: x + 26, B: x + 48, C: x + 70, N: x + 340 };
+      var colors = { A: t.phaseA, B: t.phaseB, C: t.phaseC };
+      var isWye = branches[0][1] === 'N';
 
       ctx.fillStyle = '#f8fafc';
-      ctx.fillRect(cx - canW / 2, canY - canH / 2, canW, canH);
-      ctx.strokeStyle = '#475569';
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(cx - canW / 2, canY - canH / 2, canW, canH);
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1;
+      ctx.fillRect(x, 52, 396, 279);
+      ctx.strokeRect(x, 52, 396, 279);
+      ctx.fillStyle = t.primary;
+      ctx.font = '500 10px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(title, x + 12, 68);
 
-      ctx.fillStyle = '#cbd5e1';
-      ctx.fillRect(cx - canW / 2 - 3, canY - canH / 2 - 4, canW + 6, 5);
-
-      ctx.fillStyle = '#94a3b8';
-      ctx.fillRect(cx - 20, canY - canH / 2 - 14, 8, 10);
-      ctx.fillRect(cx + 12, canY - canH / 2 - 14, 8, 10);
-
-      ctx.strokeStyle = busCols[i % 3];
-      ctx.lineWidth = 1.8;
-      ctx.beginPath();
-      ctx.moveTo(cx - 16, canY - canH / 2 - 14);
-      ctx.lineTo(cx - 16, busY[i % 3]);
-      ctx.stroke();
-
-      ctx.fillStyle = '#cbd5e1';
-      [-18, 0, 18].forEach(function (ox) {
-        ctx.fillRect(cx + ox - 3, canY + 8, 6, 9);
+      ['A', 'B', 'C'].forEach(function (phase) {
+        ctx.strokeStyle = colors[phase];
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(busX[phase], 86);
+        ctx.lineTo(busX[phase], 304);
+        ctx.stroke();
+        ctx.fillStyle = phase === 'C' ? t.textBlue : colors[phase];
+        ctx.font = '500 9px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(phase, busX[phase], 82);
       });
 
-      ctx.fillStyle = t.primary;
-      ctx.font = 'bold 8.5px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText('CAN ' + (i + 1), cx, canY - 20);
-      ctx.font = '7.5px monospace';
-      ctx.fillText(bankData.can_kVA + ' kVA', cx, canY - 8);
-      ctx.fillStyle = t.muted;
-      ctx.fillText('H1  H2', cx, canY - canH / 2 + 12);
-      ctx.fillText('X1 X2 X3', cx, canY + 28);
+      if (isWye) {
+        ctx.strokeStyle = t.ground;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(busX.N, 105);
+        ctx.lineTo(busX.N, 302);
+        ctx.stroke();
+        ctx.fillStyle = t.ground;
+        ctx.font = '500 9px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(prefix === 'H' ? 'N pri' : 'N sec', busX.N, 99);
+        drawGroundSymbol(ctx, busX.N, 302, 12);
+      }
+
+      branches.forEach(function (branch, i) {
+        var y = 124 + i * 74;
+        var start = x + 145, end = x + 205, returnX = x + 330;
+        ctx.strokeStyle = t.primary;
+        ctx.lineWidth = 1.7;
+        ctx.beginPath();
+        ctx.moveTo(busX[branch[0]], y);
+        ctx.lineTo(start, y);
+        for (var loop = 0; loop < 4; loop++) {
+          var lx = start + loop * 15;
+          ctx.bezierCurveTo(lx, y - 10, lx + 15, y - 10, lx + 15, y);
+        }
+        ctx.lineTo(isWye ? busX.N : returnX, y);
+        if (!isWye) {
+          ctx.lineTo(returnX, y + 22);
+          ctx.lineTo(busX[branch[1]], y + 22);
+        }
+        ctx.stroke();
+
+        [ [busX[branch[0]], y], [busX[branch[1]], isWye ? y : y + 22] ].forEach(function (point) {
+          ctx.fillStyle = t.primary;
+          ctx.beginPath();
+          ctx.arc(point[0], point[1], 3, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        ctx.fillStyle = t.primary;
+        ctx.font = '500 9px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('T' + (i + 1), (start + end) / 2, y - 16);
+        ctx.font = '8px monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(prefix + '1 •', start - 4, y - 7);
+        ctx.textAlign = 'left';
+        ctx.fillText(prefix + '2', end + 4, y - 7);
+      });
+
+      if (branches.length === 2) {
+        ctx.fillStyle = t.muted;
+        ctx.font = '9px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('No third winding (open A-C side)', x + 220, 290);
+      }
     }
 
-    var secBusY = [310, 322, 334, 346];
-    var secCols = [t.phaseA, t.phaseB, t.phaseC, t.ground];
-    var secNames = ['Sec A (' + bankData.sec_VLL.toFixed(0) + 'V)', 'Sec B', 'Sec C', 'Neutral (0V)'];
+    drawSide(16, 'PRIMARY  ' + bankData.primary_kV + ' kV L-L', selected.primary, 'H');
+    drawSide(438, 'SECONDARY  ' + bankData.sec_VLL.toFixed(0) + ' V L-L', selected.secondary, 'X');
 
-    for (var s = 0; s < 4; s++) {
-      ctx.strokeStyle = secCols[s];
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(35, secBusY[s]);
-      ctx.lineTo(480, secBusY[s]);
-      ctx.stroke();
-
-      ctx.fillStyle = secCols[s];
-      ctx.font = 'bold 7px monospace';
-      ctx.textAlign = 'left';
-      ctx.fillText(secNames[s], 40, secBusY[s] - 3);
-    }
-
-    for (var j = 0; j < numCans; j++) {
-      var cx = canXs[j];
-      ctx.strokeStyle = secCols[j % 3];
-      ctx.lineWidth = 1.8;
-      ctx.beginPath();
-      ctx.moveTo(cx - 18, canY + 17);
-      ctx.lineTo(cx - 18, secBusY[j % 3]);
-      ctx.stroke();
-
-      ctx.strokeStyle = t.ground;
-      ctx.beginPath();
-      ctx.moveTo(cx, canY + 17);
-      ctx.lineTo(cx, secBusY[3]);
-      ctx.stroke();
-    }
-
-    var cardX = 510, cardY = 56, cardW = 320, cardH = 310;
-    ctx.fillStyle = '#f8fafc';
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.lineWidth = 1.2;
-    ctx.fillRect(cardX, cardY, cardW, cardH);
-    ctx.strokeRect(cardX, cardY, cardW, cardH);
-
-    ctx.fillStyle = t.primary;
-    ctx.font = 'bold 10px monospace';
+    ctx.fillStyle = t.muted;
+    ctx.font = '9px monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('BANK RATINGS & APPLICATION', cardX + 14, cardY + 20);
+    ctx.fillText('Dots on buses are junctions; crossings without dots are not connected. Wye neutrals are grounded.', 20, 348);
+    ctx.fillText('Two-terminal windings shown; center taps, delta grounding and protection are not shown.', 20, 363);
 
-    var specsList = [
-      { label: 'Bank Type', val: bankData.name.split('(')[0] },
-      { label: 'Primary Voltage', val: bankData.primary_kV + ' kV 3-Phase' },
-      { label: 'Secondary Voltage', val: bankData.sec_VLL.toFixed(0) + ' V Line-to-Line' },
-      { label: 'Unit Cans', val: bankData.num_cans + ' × ' + bankData.can_kVA + ' kVA Cans' },
-      { label: 'Total Capacity', val: bankData.total_bank_kVA.toFixed(1) + ' kVA' },
-      { label: 'Full Load Current', val: bankData.line_I_A.toFixed(1) + ' A (3φ Load)' },
-      { label: 'Phase Shift', val: bankData.phase_shift_deg + '° (Primary-Sec)' },
-      { label: 'Bank Loading', val: bankData.loading_pct.toFixed(1) + '% of Capacity' }
-    ];
-
-    var sy = cardY + 42;
-    specsList.forEach(function (sp) {
-      ctx.fillStyle = t.muted;
-      ctx.font = '8px monospace';
-      ctx.fillText(sp.label + ':', cardX + 14, sy);
-      ctx.fillStyle = t.text;
-      ctx.font = 'bold 8.5px monospace';
-      ctx.fillText(sp.val, cardX + 115, sy);
-      sy += 22;
-    });
-
-    ctx.fillStyle = t.accent;
-    ctx.font = 'bold 8.5px monospace';
-    ctx.fillText('BID4GRID APPARATUS SOURCING:', cardX + 14, cardY + 268);
-    ctx.fillStyle = t.text;
-    ctx.font = '8px monospace';
-    ctx.fillText('Utility-Grade 1φ Pole Cans (IEEE C57.12.20)', cardX + 14, cardY + 284);
-    ctx.fillText('IEEE C57.12.20 Banking Assemblies', cardX + 14, cardY + 298);
-
-    var teleText = 'TRANSFORMER BANK: ' + bankData.num_cans + ' × ' + bankData.can_kVA + 'kVA Cans | Total: ' + bankData.total_bank_kVA.toFixed(1) + 'kVA | Sec: ' + bankData.sec_VLL.toFixed(0) + 'V | Load: ' + bankData.load_kW + 'kW (' + bankData.loading_pct.toFixed(1) + '%)';
+    var teleText = bankData.num_cans + ' × ' + bankData.can_kVA + ' kVA | Bank: ' + bankData.total_bank_kVA.toFixed(1) + ' kVA | Load: ' + bankData.load_kW + ' kW | Line current: ' + bankData.line_I_A.toFixed(1) + ' A | Loading: ' + bankData.loading_pct.toFixed(1) + '% | LV shift: ' + bankData.phase_shift_deg + '°';
     drawTelemetryBar(ctx, w, h, teleText);
   }
 
@@ -1990,7 +1960,7 @@
     var ctx = c.ctx, w = c.w, h = c.h, t = c.t;
 
     ctx.fillStyle = t.primary;
-    ctx.font = 'bold 12px monospace';
+    ctx.font = '500 12px monospace';
     ctx.textAlign = 'left';
     ctx.fillText('240V 4-WIRE HIGH-LEG (WILD-LEG) DELTA SERVICE (NEC 110.15 / TOPIC 11)', 20, 24);
 
@@ -2003,7 +1973,7 @@
     var load_pct = (bankData && bankData.loading_pct) ? bankData.loading_pct : 66.7;
     var bank_kVA = (bankData && bankData.total_bank_kVA) ? bankData.total_bank_kVA : 150;
 
-    var txX = 220, txY = 195, side = 175;
+    var txX = 225, txY = 195, side = 175;
     var halfSide = side / 2;
     var alt = (side * Math.sqrt(3)) / 2;
 
@@ -2039,56 +2009,88 @@
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Vertex Terminals & Dynamic Amperage Badges (CLEAN SLATE & NAVY, NO HARSH RED!)
-    // Phase A (Clean Navy #1f3a5f instead of harsh red!)
+    // ==========================================
+    // VERTEX TERMINALS A, B, C & CLEAR AMBER/BLUE TEXT
+    // Generous spacing between circles & text, with bold legible letters!
+    // ==========================================
+
+    // Terminal Circle A (Navy with crisp white 'A')
     ctx.fillStyle = t.primary;
-    ctx.beginPath(); ctx.arc(pA.x, pA.y, 6.5, 0, Math.PI * 2); ctx.fill();
-    ctx.font = 'bold 10px system-ui, -apple-system, sans-serif';
-    ctx.textAlign = 'right';
-    ctx.fillText('Phase A (120V to N)', pA.x - 8, pA.y - 3);
-    ctx.fillStyle = '#0284c7';
-    ctx.font = 'bold 9px ui-monospace, Menlo, monospace';
-    ctx.fillText('I_A = ' + current_A.toFixed(1) + ' A', pA.x - 8, pA.y + 10);
+    ctx.beginPath(); ctx.arc(pA.x, pA.y, 8.5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '500 8.5px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('A', pA.x, pA.y);
 
-    // Phase C (Clean Azure Blue)
+    // Terminal Circle C (Azure Blue with crisp white 'C')
     ctx.fillStyle = t.phaseC;
-    ctx.beginPath(); ctx.arc(pC.x, pC.y, 6.5, 0, Math.PI * 2); ctx.fill();
-    ctx.textAlign = 'left';
-    ctx.fillText('Phase C (120V to N)', pC.x + 8, pC.y - 3);
-    ctx.font = 'bold 9px ui-monospace, Menlo, monospace';
-    ctx.fillText('I_C = ' + current_A.toFixed(1) + ' A', pC.x + 8, pC.y + 10);
+    ctx.beginPath(); ctx.arc(pC.x, pC.y, 8.5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '500 8.5px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('C', pC.x, pC.y);
 
-    // Neutral
+    // Terminal Circle B (High Leg - Designated Utility Orange with crisp white 'B')
+    ctx.fillStyle = '#d97706';
+    ctx.beginPath(); ctx.arc(pB.x, pB.y, 8.5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '500 8.5px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('B', pB.x, pB.y);
+
+    ctx.textBaseline = 'alphabetic'; // Reset baseline
+
+    // Text for Phase A (Ample room to the left: pA.x - 14)
+    ctx.fillStyle = t.primary;
+    ctx.font = '500 10px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('Phase A (120V to N)', pA.x - 14, pA.y - 4);
+    ctx.fillStyle = t.textBlue;
+    ctx.font = '500 9px ui-monospace, Menlo, monospace';
+    ctx.fillText('I_A = ' + current_A.toFixed(1) + ' A', pA.x - 14, pA.y + 10);
+
+    // Text for Phase C (Ample room to the right: pC.x + 14)
+    ctx.fillStyle = t.textBlue;
+    ctx.font = '500 10px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Phase C (120V to N)', pC.x + 14, pC.y - 4);
+    ctx.font = '500 9px ui-monospace, Menlo, monospace';
+    ctx.fillText('I_C = ' + current_A.toFixed(1) + ' A', pC.x + 14, pC.y + 10);
+
+    // Neutral Text
     ctx.fillStyle = t.ground;
     ctx.textAlign = 'center';
-    ctx.font = 'bold 9.5px system-ui, -apple-system, sans-serif';
+    ctx.font = '500 9.5px system-ui, -apple-system, sans-serif';
     ctx.fillText('Neutral N (0V)', pN.x, pN.y + 32);
 
-    // Phase B (High Leg - Designated Utility Orange #d97706)
-    ctx.fillStyle = '#d97706';
-    ctx.beginPath(); ctx.arc(pB.x, pB.y, 8, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 8px system-ui, -apple-system, sans-serif';
-    ctx.fillText('B', pB.x, pB.y + 3);
-
+    // Text for Phase B (Placed comfortably ABOVE the circle)
     ctx.fillStyle = '#b45309';
-    ctx.font = 'bold 11px system-ui, -apple-system, sans-serif';
-    ctx.fillText('PHASE B HIGH-LEG = 208 V to Neutral (Orange)', pB.x, pB.y - 18);
-    ctx.font = 'bold 9.5px ui-monospace, Menlo, monospace';
+    ctx.font = '500 11px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('PHASE B HIGH-LEG = 208 V to Neutral (Orange)', pB.x, pB.y - 27);
+    ctx.font = '500 9.5px ui-monospace, Menlo, monospace';
     ctx.fillStyle = '#d97706';
-    ctx.fillText('I_B = ' + current_A.toFixed(1) + ' A | V_BN = 120 × √3 = 208 V', pB.x, pB.y - 5);
+    ctx.fillText('I_B = ' + current_A.toFixed(1) + ' A | V_BN = 120 × √3 = 208 V', pB.x, pB.y - 14);
 
-    // Active 3-Phase Commercial Load Readout in Center of Delta
+    // Active 3-Phase Commercial Load Readout
     ctx.fillStyle = t.primary;
-    ctx.font = 'bold 10px system-ui, -apple-system, sans-serif';
-    ctx.fillText('3φ LOAD: ' + load_kW + ' kW', txX, pN.y - 20);
-    ctx.font = 'bold 9px ui-monospace, Menlo, monospace';
+    ctx.font = '500 10px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('3φ LOAD: ' + load_kW + ' kW', 24, pN.y - 45);
+    ctx.font = '500 9px ui-monospace, Menlo, monospace';
     ctx.fillStyle = t.muted;
-    ctx.fillText(load_pct.toFixed(1) + '% of ' + bank_kVA.toFixed(0) + ' kVA Bank', txX, pN.y - 8);
+    ctx.fillText(load_pct.toFixed(1) + '% of ' + bank_kVA.toFixed(0) + ' kVA Bank', 24, pN.y - 32);
 
     // Span Voltage Annotations
     ctx.fillStyle = t.primary;
-    ctx.font = 'bold 9px monospace';
+    ctx.font = '500 9px monospace';
+    ctx.textAlign = 'center';
     ctx.fillText('240V L-L', (pA.x + pB.x) / 2 - 25, (pA.y + pB.y) / 2);
     ctx.fillText('240V L-L', (pC.x + pB.x) / 2 + 25, (pC.y + pB.y) / 2);
 
@@ -2108,7 +2110,7 @@
 
     // Header with clean amber chip
     ctx.fillStyle = '#1e293b';
-    ctx.font = 'bold 11px system-ui, -apple-system, sans-serif';
+    ctx.font = '500 11px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'left';
     ctx.fillText('NEC 110.15 SAFETY & APPLICATION CODE', cardX + 14, cardY + 22);
 
@@ -2122,7 +2124,7 @@
     var wy = cardY + 44;
     warnings.forEach(function (wItem) {
       ctx.fillStyle = '#b45309';
-      ctx.font = 'bold 10px system-ui, -apple-system, sans-serif';
+      ctx.font = '500 10px system-ui, -apple-system, sans-serif';
       ctx.fillText(wItem.h, cardX + 14, wy);
       wy += 14;
 
@@ -2147,7 +2149,7 @@
     var ctx = c.ctx, w = c.w, h = c.h, t = c.t;
 
     ctx.fillStyle = t.primary;
-    ctx.font = 'bold 12px monospace';
+    ctx.font = '500 12px monospace';
     ctx.textAlign = 'left';
     ctx.fillText('URBAN SECONDARY NETWORK SYSTEM: MESH GRID & NETWORK PROTECTORS (TOPIC 7)', 20, 24);
 
@@ -2165,8 +2167,8 @@
     ctx.lineTo(480, 75);
     ctx.stroke();
 
-    ctx.fillStyle = f1.active ? t.phaseA : '#94a3b8';
-    ctx.font = 'bold 8px monospace';
+    ctx.fillStyle = f1.active ? t.phaseA : t.muted;
+    ctx.font = '500 8px monospace';
     ctx.textAlign = 'left';
     ctx.fillText('PRIMARY FEEDER 1 (13.2 kV) ── ' + f1.status.toUpperCase(), 40, 68);
 
@@ -2177,9 +2179,9 @@
     ctx.lineTo(480, 125);
     ctx.stroke();
 
-    ctx.fillStyle = f2.active ? t.phaseC : '#94a3b8';
-    ctx.font = 'bold 8px monospace';
-    ctx.fillText('PRIMARY FEEDER 2 (13.2 kV) ── ' + f2.status.toUpperCase(), 40, 118);
+    ctx.fillStyle = f2.active ? t.textBlue : t.muted;
+    ctx.font = '500 8px monospace';
+    ctx.fillText('PRIMARY FEEDER 2 (13.2 kV) ── ' + f2.status.toUpperCase(), 220, 118);
 
     var vXs = [140, 350];
     var vYs = 190, vW = 140, vH = 90;
@@ -2196,9 +2198,9 @@
       ctx.strokeRect(vx - vW / 2, vYs - vH / 2, vW, vH);
 
       ctx.fillStyle = t.muted;
-      ctx.font = 'bold 7.5px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText('STREET VAULT ' + (v + 1) + ' (Submersible)', vx, vYs - vH / 2 + 12);
+      ctx.font = '500 7.5px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText('VAULT ' + (v + 1), vx - vW / 2 + 6, vYs - vH / 2 + 12);
 
       drawTransformerSymbol(ctx, vx - 25, vYs + 4, 11, isFeederActive ? t.primary : '#94a3b8');
 
@@ -2210,7 +2212,8 @@
       ctx.fillRect(px - 14, py - 14, 28, 28);
 
       ctx.fillStyle = prot.reverse_power_trip ? '#b91c1c' : '#15803d';
-      ctx.font = 'bold 7px monospace';
+      ctx.font = '500 7px monospace';
+      ctx.textAlign = 'center';
       ctx.fillText(prot.reverse_power_trip ? 'TRIP' : 'ON', px, py + 2.5);
 
       ctx.strokeStyle = isFeederActive ? (v === 0 ? t.phaseA : t.phaseC) : '#94a3b8';
@@ -2218,6 +2221,12 @@
       ctx.beginPath();
       ctx.moveTo(vx - 25, v === 0 ? 75 : 125);
       ctx.lineTo(vx - 25, vYs - 7);
+      ctx.stroke();
+
+      ctx.strokeStyle = isFeederActive ? t.primary : '#94a3b8';
+      ctx.beginPath();
+      ctx.moveTo(vx - 8, py);
+      ctx.lineTo(px - 14, py);
       ctx.stroke();
 
       ctx.strokeStyle = prot.reverse_power_trip ? '#cbd5e1' : t.activeLine;
@@ -2237,9 +2246,9 @@
     ctx.stroke();
 
     ctx.fillStyle = t.text;
-    ctx.font = 'bold 8.5px monospace';
+    ctx.font = '500 8.5px monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('SECONDARY MESH GRID (120/208V REDUNDANT COLLECTOR)', 40, 328);
+    ctx.fillText('SECONDARY MESH GRID (120/208V REDUNDANT COLLECTOR)', 40, 376);
 
     var bXs = [80, 245, 420];
     bXs.forEach(function (bx) {
@@ -2250,12 +2259,12 @@
       ctx.strokeRect(bx - 22, 336, 44, 28);
 
       ctx.fillStyle = t.primary;
-      ctx.font = 'bold 7px monospace';
+      ctx.font = '500 7px monospace';
       ctx.textAlign = 'center';
       ctx.fillText('BUILDING', bx, 350);
       ctx.font = '6.5px monospace';
-      ctx.fillStyle = t.muted;
-      ctx.fillText('100% On', bx, 360);
+      ctx.fillStyle = netData.secondary_grid.grid_interrupted ? t.danger : t.muted;
+      ctx.fillText(netData.secondary_grid.grid_interrupted ? 'OUT' : '100% On', bx, 360);
 
       ctx.strokeStyle = t.busbar;
       ctx.lineWidth = 1.5;
@@ -2273,7 +2282,7 @@
     ctx.strokeRect(cardX, cardY, cardW, cardH);
 
     ctx.fillStyle = t.primary;
-    ctx.font = 'bold 10px monospace';
+    ctx.font = '500 10px monospace';
     ctx.textAlign = 'left';
     ctx.fillText('SECONDARY NETWORK TELEMETRY', cardX + 14, cardY + 20);
 
@@ -2286,7 +2295,7 @@
       { label: 'Transformer Load', val: g.load_per_xfmr_kVA.toFixed(0) + ' kVA (' + g.xfmr_load_pct.toFixed(1) + '%)' },
       { label: 'Protector Relay', val: 'Directional Reverse Power (P < 0)' },
       { label: 'Trip Speed', val: '2 to 5 Cycles (Ultra-Fast)' },
-      { label: 'Contingency Status', val: g.is_contingency_n_minus_1 ? 'N-1 Active (Zero Outage)' : 'Normal Dual Feed' }
+      { label: 'Contingency Status', val: g.grid_interrupted ? 'Interrupted (No Active Feeders)' : (g.is_contingency_n_minus_1 ? 'N-1 Active (Zero Outage)' : 'Normal Dual Feed') }
     ];
 
     var ny = cardY + 42;
@@ -2295,20 +2304,20 @@
       ctx.font = '8px monospace';
       ctx.fillText(sp.label + ':', cardX + 14, ny);
       ctx.fillStyle = t.text;
-      ctx.font = 'bold 8.5px monospace';
+      ctx.font = '500 8.5px monospace';
       ctx.fillText(sp.val, cardX + 120, ny);
       ny += 22;
     });
 
     ctx.fillStyle = t.accent;
-    ctx.font = 'bold 8.5px monospace';
+    ctx.font = '500 8.5px monospace';
     ctx.fillText('BID4GRID APPARATUS SOURCING:', cardX + 14, cardY + 268);
     ctx.fillStyle = t.text;
     ctx.font = '8px monospace';
     ctx.fillText('Submersible Transformers (IEEE C57.12.40)', cardX + 14, cardY + 284);
     ctx.fillText('Eaton CM52 / GE Protectors (IEEE C37.51)', cardX + 14, cardY + 298);
 
-    var teleText = 'SECONDARY NETWORK: ' + g.active_transformers + '/2 Feeders Active | ' + g.total_load_MVA + ' MVA Grid | Customer Continuity: 100% | N-1 Redundancy';
+    var teleText = 'SECONDARY NETWORK: ' + g.active_transformers + '/2 Feeders Active | ' + g.total_load_MVA + ' MVA Demand | Customer Continuity: ' + (g.grid_interrupted ? '0% (Interrupted)' : '100%') + (g.is_contingency_n_minus_1 ? ' | N-1 Active' : '');
     drawTelemetryBar(ctx, w, h, teleText);
   }
 

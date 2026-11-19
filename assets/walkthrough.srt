@@ -1,0 +1,376 @@
+1
+00:00:01,000 --> 00:00:04,080
+Power systems engineering is a lot of math:
+
+2
+00:00:04,180 --> 00:00:09,109
+complex power, per-unit bases, sequence
+networks, iterative solvers.
+
+3
+00:00:09,209 --> 00:00:13,842
+This calculator puts the whole toolkit in a
+single browser page.
+
+4
+00:00:13,942 --> 00:00:22,273
+Six modules, live diagrams that update as
+you type, and a theory page that shows the
+formulas behind every result.
+
+5
+00:00:22,373 --> 00:00:23,900
+Let's dive in!
+
+6
+00:00:26,000 --> 00:00:27,736
+First, the basics.
+
+7
+00:00:27,836 --> 00:00:34,564
+A plant draws 500 kilowatts at 0.75
+lagging, on a 480-volt system.
+
+8
+00:00:34,664 --> 00:00:40,071
+That low power factor means much of the
+current does no useful work.
+
+9
+00:00:40,171 --> 00:00:43,008
+The calculator draws the power triangle:
+
+10
+00:00:43,108 --> 00:00:46,900
+real power P, reactive Q, and apparent S.
+
+11
+00:00:47,000 --> 00:00:51,746
+Here, Q is 441 kilovars, and S is 667 kVA.
+
+12
+00:00:51,846 --> 00:00:54,463
+Now correct power factor to 0.95.
+
+13
+00:00:54,563 --> 00:00:59,823
+The formula subtracts the tangents of the
+two angles and multiplies by P.
+
+14
+00:00:59,923 --> 00:01:03,715
+That takes a capacitor bank of 277 kilovars.
+
+15
+00:01:03,815 --> 00:01:15,096
+Apparent power drops to about 526 kilovolt-
+amperes, and line current falls by roughly
+twenty-one percent, freeing capacity and
+avoiding utility surcharges.
+
+16
+00:01:15,196 --> 00:01:28,900
+Switch between wye and delta, and the line
+and phase quantities update, including the
+square-root-of-three relationships and the
+divide-by-three rule for converting delta
+impedance to wye.
+
+17
+00:01:31,000 --> 00:01:32,420
+Next, the generator!
+
+18
+00:01:32,520 --> 00:01:40,174
+This module solves for the internal voltage
+and the torque angle delta, and plots power
+against delta.
+
+19
+00:01:40,274 --> 00:01:47,015
+For a simple round-rotor machine, power
+follows a sine curve that peaks at ninety
+degrees.
+
+20
+00:01:47,115 --> 00:01:50,512
+That peak is the steady-state stability
+limit.
+
+21
+00:01:50,612 --> 00:01:55,909
+A salient-pole machine, like those in hydro
+plants, adds a second term:
+
+22
+00:01:56,009 --> 00:02:00,014
+reluctance power varying with sine of two delta.
+
+23
+00:02:00,114 --> 00:02:09,972
+Here it adds about twenty-six megawatts at
+its peak, and it moves the stability limit
+down to sixty-six degrees, at 96.4
+megawatts.
+
+24
+00:02:10,072 --> 00:02:17,270
+The operating point sits at 22.7 degrees and
+50 megawatts, leaving about 46 megawatts of
+margin.
+
+25
+00:02:17,370 --> 00:02:20,918
+Push the load up, and the point climbs the curve.
+
+26
+00:02:21,018 --> 00:02:28,900
+Cross the limit, and the rotor slips poles
+and loses synchronism, which puts violent
+torque on the shaft.
+
+27
+00:02:31,000 --> 00:02:31,798
+Transformers!
+
+28
+00:02:31,898 --> 00:02:37,465
+Shop load-testing isn't practical, so engineers run two simple tests.
+
+29
+00:02:37,565 --> 00:02:42,371
+The open-circuit test, on the low-voltage
+side, gives the shunt branch:
+
+30
+00:02:42,471 --> 00:02:44,858
+core loss and magnetizing reactance.
+
+31
+00:02:44,958 --> 00:02:49,972
+The short-circuit test, on the high-voltage
+side, gives the series branch:
+
+32
+00:02:50,072 --> 00:02:52,805
+winding resistance and leakage reactance.
+
+33
+00:02:52,905 --> 00:03:02,064
+Enter the readings and the app extracts all
+four values and draws an approximate
+equivalent circuit, referred to the low-
+voltage side.
+
+34
+00:03:02,164 --> 00:03:09,527
+From it we get full-load efficiency of 98.03
+percent at 0.8 lagging, and voltage
+regulation of 1.94 percent.
+
+35
+00:03:09,627 --> 00:03:16,023
+Regulation matters because leakage reactance
+drops the secondary voltage under inductive
+load.
+
+36
+00:03:16,123 --> 00:03:23,900
+And efficiency matters because a transformer
+runs around the clock for decades, so even a
+small core loss adds up.
+
+37
+00:03:26,000 --> 00:03:27,332
+Transmission lines!
+
+38
+00:03:27,432 --> 00:03:29,065
+Model choice by length:
+
+39
+00:03:29,165 --> 00:03:34,416
+short under 80 km, medium to 250, and long above that.
+
+40
+00:03:34,516 --> 00:03:37,882
+These are typical guidelines, not hard
+limits.
+
+41
+00:03:37,982 --> 00:03:47,151
+For long lines, hyperbolic equations give the ABCD parameters.
+
+42
+00:03:47,251 --> 00:03:51,522
+On this 300-kilometer line, the long model is active.
+
+43
+00:03:51,622 --> 00:03:54,838
+The graph shows the no-load voltage profile.
+
+44
+00:03:54,938 --> 00:04:04,785
+Voltage rises from 281.6 kilovolts sending to 303 at the far end, a 21.3 kV rise.
+
+45
+00:04:04,885 --> 00:04:09,683
+That's the Ferranti effect, caused by the
+line's own capacitance.
+
+46
+00:04:09,783 --> 00:04:13,075
+The surge impedance loading is 126
+megawatts:
+
+47
+00:04:13,175 --> 00:04:17,144
+the natural loading where the profile is
+ideally flat.
+
+48
+00:04:17,244 --> 00:04:20,234
+The same tab handles per-unit conversion.
+
+49
+00:04:20,334 --> 00:04:28,900
+A base impedance removes the transformer
+ratios, so a system spanning several voltage
+levels solves as one network.
+
+50
+00:04:31,000 --> 00:04:34,751
+Power flow answers the grid operator's
+question:
+
+51
+00:04:34,851 --> 00:04:41,810
+given where power is generated and consumed,
+what are the voltages and flows everywhere?
+
+52
+00:04:41,910 --> 00:04:44,056
+This is a three-bus network.
+
+53
+00:04:44,156 --> 00:04:45,901
+Bus 1 is the slack bus,
+
+54
+00:04:46,001 --> 00:04:49,993
+balancing the grid to fix voltage and angle.
+
+55
+00:04:50,093 --> 00:04:55,688
+Bus 2 is a generator with fixed output, 50
+megawatts, at 1.03 per unit.
+
+56
+00:04:55,788 --> 00:04:59,539
+Bus 3 draws 80 megawatts and 40 megavars.
+
+57
+00:04:59,639 --> 00:05:11,171
+The app builds the bus admittance matrix and
+solves with Gauss-Seidel, updating each bus
+voltage until the change drops below one in
+ten million.
+
+58
+00:05:11,271 --> 00:05:16,626
+It converges in ten iterations, and Bus 3
+settles at 0.965 per unit.
+
+59
+00:05:16,726 --> 00:05:22,964
+The slack generator supplies 33.2 megawatts,
+and line losses are 3.2 megawatts.
+
+60
+00:05:23,064 --> 00:05:28,900
+Increase the load on Bus 3 and watch the
+voltage sag and the losses climb.
+
+61
+00:05:31,000 --> 00:05:32,269
+Finally, faults!
+
+62
+00:05:32,369 --> 00:05:40,310
+Real faults are usually unbalanced, so the
+calculator uses Fortescue's symmetrical
+components:
+
+63
+00:05:40,410 --> 00:05:47,581
+any unbalanced set of three phasors splits
+into positive, negative and zero sequence.
+
+64
+00:05:47,681 --> 00:05:53,227
+Pick the fault type and the diagram rewires
+the networks to match.
+
+65
+00:05:53,327 --> 00:06:01,696
+A single line-to-ground fault connects all
+three in series, giving 4.29 per unit, or
+1.79 kiloamps.
+
+66
+00:06:01,796 --> 00:06:06,145
+A three-phase fault uses positive sequence:
+
+67
+00:06:06,245 --> 00:06:07,342
+giving 5 per unit.
+
+68
+00:06:07,442 --> 00:06:14,614
+A line-to-line fault puts positive and negative in parallel:
+
+69
+00:06:14,714 --> 00:06:15,812
+giving 4.33 per unit.
+
+70
+00:06:15,912 --> 00:06:22,399
+For a double line-to-ground fault, ground current is:
+
+71
+00:06:22,499 --> 00:06:23,596
+3.75 per unit.
+
+72
+00:06:23,696 --> 00:06:28,900
+These numbers size circuit breakers and set
+protective relays.
+
+73
+00:06:31,000 --> 00:06:36,333
+Every result in the calculator ties back to
+this page.
+
+74
+00:06:36,433 --> 00:06:50,418
+The theory guide explains each model,
+numbers every equation, and compares star
+and delta connections and the four fault
+types side by side.
+
+75
+00:06:50,518 --> 00:07:03,900
+It follows standard references, including
+Glover, Grainger and Stevenson, and Saadat,
+so you can check the work against the
+textbooks.
+
+76
+00:07:06,000 --> 00:07:14,706
+Six modules, live diagrams, verified math,
+and the theory beside it.
+
+77
+00:07:14,806 --> 00:07:23,900
+Open the calculator, change a number, and
+see what happens to the grid.

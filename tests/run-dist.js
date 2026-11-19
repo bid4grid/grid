@@ -119,11 +119,15 @@ ok(cascadeRes.bid4grid_specs.gsu_breaker.sample.includes('Substation Vacuum Brea
 ok(cascadeRes.bid4grid_specs.dist_xfmr.sample.includes('Utility-Grade'), 'Bid4Grid transformer spec matched');
 ok(cascadeRes.bid4grid_specs.voltage_regulator.sample.includes('32-Step Voltage Regulator'), 'Bid4Grid regulator spec matched');
 
-console.log('\n==========================================================');
-console.log('  ALL DISTRIBUTION TESTS PASSED: ' + passed + ' passed, ' + failed + ' failed.');
-console.log('==========================================================');
-
-if (failed > 0) process.exit(1);
+for (const [service, label, factor] of [
+  ['residential_split', '1φ 120/240V', 2],
+  ['commercial_480', '3φ 480V', Math.sqrt(3)],
+  ['commercial_208', '3φ 208V', Math.sqrt(3)]
+]) {
+  const c = core.solveGridCascade({ service_type: service, customer_load_kW: 12, sec_len_ft: 125 });
+  ok(c.distTransformer.service_label === label, service + ' reports the selected service');
+  assertClose(c.distTransformer.voltage_out_V - c.customerMeter.terminal_V, c.serviceDrop.v_drop_V / factor, 1e-8, service + ' converts line-to-line drop to line-to-neutral drop');
+}
 
 // 6. CAD Canvas Diagram Verification (850x420 Bounds)
 console.log('\n6. CAD Canvas Diagram Verification (850x420 Bounds)');
@@ -133,6 +137,12 @@ function createMockCanvas(width, height) {
   let minX = Infinity, maxX = -Infinity;
   let minY = Infinity, maxY = -Infinity;
   const text = [];
+  const textBoxes = [];
+  const segments = [];
+  const strokedSegments = [];
+  const nodes = [];
+  let currentPoint;
+  let path = [];
 
   function record(x1, y1, x2, y2) {
     if (x1 < minX) minX = x1;
@@ -153,15 +163,23 @@ function createMockCanvas(width, height) {
       record(x, y, x + w, y + h);
     },
     strokeRect(x, y, w, h) { record(x, y, x + w, y + h); },
-    beginPath() {},
-    moveTo(x, y) { record(x, y, x, y); },
-    lineTo(x, y) { record(x, y, x, y); },
+    beginPath() { path = []; currentPoint = undefined; },
+    moveTo(x, y) { currentPoint = [x, y]; record(x, y, x, y); },
+    lineTo(x, y) {
+      if (currentPoint) {
+        const segment = [currentPoint[0], currentPoint[1], x, y];
+        segments.push(segment);
+        path.push(segment);
+      }
+      currentPoint = [x, y];
+      record(x, y, x, y);
+    },
     roundRect(x, y, w, h) { record(x, y, x + w, y + h); },
-    bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y) { record(x, y, x, y); },
+    bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y) { currentPoint = [x, y]; record(x, y, x, y); },
     quadraticCurveTo(cpx, cpy, x, y) { record(x, y, x, y); },
-    arc(x, y, r) { record(x - r, y - r, x + r, y + r); },
+    arc(x, y, r) { nodes.push([x, y, r]); record(x - r, y - r, x + r, y + r); },
     closePath() {},
-    stroke() {},
+    stroke() { path.forEach(segment => strokedSegments.push({ segment, color: this.strokeStyle })); },
     fill() {},
     setLineDash() {},
     measureText(text) { return { width: text.length * 6.5 }; },
@@ -171,6 +189,11 @@ function createMockCanvas(width, height) {
       let left = x;
       if (this.textAlign === 'center') left = x - w / 2;
       else if (this.textAlign === 'right') left = x - w;
+      const fontSize = parseFloat(this.font.match(/([\d.]+)px/)[1]);
+      const labelWidth = text.length * fontSize * 0.6;
+      const labelLeft = this.textAlign === 'center' ? x - labelWidth / 2 :
+        (this.textAlign === 'right' ? x - labelWidth : x);
+      textBoxes.push({ text, box: [labelLeft, y - fontSize * 0.75, labelLeft + labelWidth, y + fontSize * 0.15] });
       record(left, y - 10, left + w, y + 4);
     },
     _text: text
@@ -180,7 +203,11 @@ function createMockCanvas(width, height) {
     width, height,
     getContext() { return ctx; },
     getBounds() { return { minX, maxX, minY, maxY }; },
-    getText() { return text; }
+    getText() { return text; },
+    getTextBoxes() { return textBoxes; },
+    getSegments() { return segments; },
+    getStrokedSegments() { return strokedSegments; },
+    getNodes() { return nodes; }
   };
 }
 
@@ -268,6 +295,7 @@ ok(openDelta.num_cans === 2, 'Open-Delta uses 2 cans');
 assertClose(openDelta.total_bank_kVA, 50 * Math.sqrt(3), 1e-2, 'Open-Delta capacity = sqrt(3) * 50 = 86.60 kVA');
 assertClose(openDelta.derating_pct, 57.74, 1e-2, 'Open-Delta derating is 57.74% of 3-can bank');
 assertClose(openDelta.utilization_pct, 86.60, 1e-2, 'Open-Delta utilization factor is 86.60%');
+ok(openDelta.phase_shift_deg === 0 && openDelta.has_neutral === false && openDelta.sec_VLN === null, 'Open-delta example is three-wire with matching primary/secondary phase connections');
 
 // 8.4 Secondary Network System & Reverse-Power Tripping
 const netNormal = core.solveSecondaryNetwork({
@@ -308,3 +336,178 @@ verifyDiagramFit('240V 4-Wire High-Leg Delta CAD', c => {
 verifyDiagramFit('Urban Secondary Network Mesh Grid CAD', c => {
   draw.drawSecondaryNetwork(c, netContingency);
 });
+
+console.log('\n10. Dynamic CAD Values');
+const dynamicCascade = core.solveGridCascade({
+  gen_kV: 24, gsu_hv_kV: 345, dist_sub_kV: 24.94, service_type: 'commercial_208'
+});
+const cascadeCanvas = createMockCanvas(850, 420);
+draw.drawGridCascade(cascadeCanvas, dynamicCascade, 'feeder');
+const cascadeText = cascadeCanvas.getText();
+ok(cascadeText.includes('24/345 kV'), 'Cascade GSU label reflects selected voltages');
+ok(cascadeText.includes('345/24.94kV'), 'Cascade substation label reflects selected voltages');
+ok(cascadeText.includes('3φ 208V'), 'Cascade service label reflects 208 V selection');
+
+const undergroundCascade = core.solveGridCascade({
+  feeder_type: 'underground', sec_len_ft: 350, sec_cond_key: '1/0_AWG',
+  customer_load_kW: 85, service_type: 'commercial_480', gsu_hv_kV: 345
+});
+const undergroundCanvas = createMockCanvas(850, 420);
+draw.drawGridCascade(undergroundCanvas, undergroundCascade);
+const undergroundText = undergroundCanvas.getText();
+ok(undergroundText.includes('SERVICE: 350 ft | 1/0 AWG Al') &&
+   undergroundText.includes('CUSTOMER LOAD: 85 kW'),
+  'Cascade shows selected service length, conductor size and customer load');
+ok(undergroundText.includes('Feeder: 500 kcmil Cu') &&
+   undergroundText.includes('Grid: 345 kV | Substation: 25 MVA'),
+  'Cascade specification cards reflect the selected feeder and grid voltage');
+const hasLine = (canvas, expected) =>
+  canvas.getSegments().some(segment => segment.every((value, index) => value === expected[index]));
+ok(hasLine(undergroundCanvas, [507, 175, 623, 175]) &&
+   hasLine(undergroundCanvas, [553, 170, 573, 170]) &&
+   !hasLine(undergroundCanvas, [563, 157, 563, 183]),
+  'Underground feeder uses a continuous line and cable symbol instead of a pole');
+ok(hasLine(cascadeCanvas, [507, 175, 623, 175]) &&
+   hasLine(cascadeCanvas, [563, 157, 563, 183]) &&
+   !hasLine(cascadeCanvas, [553, 170, 573, 170]),
+  'Overhead feeder uses a continuous line and pole symbol');
+
+const radialCanvas = createMockCanvas(850, 420);
+draw.drawPadmountEnclosure(radialCanvas, core.getHardwareModel('padmount', { loopFeed: false, kVA: 1500 }), 'transformer');
+ok(radialCanvas.getText().includes('Dead-Front Radial Feed (3 Bushings)'), 'Padmount CAD reflects radial feed selection');
+ok(radialCanvas.getText().includes('1500 kVA (3φ Padmount)'), 'Padmount CAD reflects selected rating');
+const loopCanvas = createMockCanvas(850, 420);
+draw.drawPadmountEnclosure(loopCanvas, core.getHardwareModel('padmount', { loopFeed: true, kVA: 150 }), 'transformer');
+ok(loopCanvas.getText().includes('Dead-Front 200A Loop Feed (6 Bushings)'), 'Padmount CAD reflects loop feed selection');
+ok(loopCanvas.getText().includes('150 kVA (3φ Padmount)'), 'Padmount CAD reflects a different rating');
+
+const bankCanvas = createMockCanvas(850, 420);
+draw.drawTransformerBank(bankCanvas, core.solveTransformerBank({ bank_type: 'wye_wye', primary_kV: 24.94 }));
+ok(bankCanvas.getText().includes('PRIMARY  24.94 kV L-L'), 'Bank CAD reflects selected primary voltage');
+
+function verifyBankConnections(type, expectedPrimary, expectedSecondary, expectedShift) {
+  const result = core.solveTransformerBank({ bank_type: type, can_kVA: 100, load_kW: 120 });
+  const canvas = createMockCanvas(850, 420);
+  draw.drawTransformerBank(canvas, result);
+  const segments = canvas.getSegments();
+  const nodes = canvas.getNodes();
+  const hasSegment = (x1, y1, x2, y2) => segments.some(s => s[0] === x1 && s[1] === y1 && s[2] === x2 && s[3] === y2);
+  const hasNode = (x, y) => nodes.some(p => p[0] === x && p[1] === y && p[2] === 3);
+  for (const [x, branches, prefix] of [[16, expectedPrimary, 'H'], [438, expectedSecondary, 'X']]) {
+    const bus = { A: x + 26, B: x + 48, C: x + 70, N: x + 340 };
+    branches.forEach(([from, to], i) => {
+      const y = 124 + i * 74;
+      const endY = to === 'N' ? y : y + 22;
+      ok(hasSegment(bus[from], y, x + 145, y) &&
+         (to === 'N' ? hasSegment(x + 205, y, bus.N, y) :
+           hasSegment(x + 205, y, x + 330, y) &&
+           hasSegment(x + 330, y, x + 330, endY) &&
+           hasSegment(x + 330, endY, bus[to], endY)) &&
+         hasNode(bus[from], y) && hasNode(bus[to], endY),
+      type + ' ' + prefix + ' T' + (i + 1) + ' connects ' + from + ' to ' + to);
+    });
+  }
+  ok(nodes.filter(p => p[2] === 3).length === 2 * (expectedPrimary.length + expectedSecondary.length),
+    type + ' marks only the winding junctions');
+  const phases = { A: [1, 0], B: [-0.5, -Math.sqrt(3) / 2], C: [-0.5, Math.sqrt(3) / 2], N: [0, 0] };
+  const difference = (a, b) => [a[0] - b[0], a[1] - b[1]];
+  const windingVoltage = ([from, to]) => difference(phases[from], phases[to]);
+  const primaryAB = difference(phases.A, phases.B);
+  const secondaryAB = type === 'open_delta'
+    ? windingVoltage(expectedPrimary[0])
+    : difference(windingVoltage(expectedPrimary[0]), windingVoltage(expectedPrimary[1]));
+  const angle = Math.atan2(secondaryAB[1], secondaryAB[0]) - Math.atan2(primaryAB[1], primaryAB[0]);
+  assertClose(angle * 180 / Math.PI, expectedShift, 1e-8, type + ' winding polarity produces the expected line-to-line phase shift');
+  ok(result.phase_shift_deg === expectedShift &&
+     canvas.getText().some(t => t.includes('LV shift: ' + expectedShift + '°')),
+  type + ' displays the phase shift for the shown polarity');
+}
+
+verifyBankConnections('wye_wye',
+  [['A', 'N'], ['B', 'N'], ['C', 'N']],
+  [['A', 'N'], ['B', 'N'], ['C', 'N']], 0);
+verifyBankConnections('delta_wye',
+  [['A', 'C'], ['B', 'A'], ['C', 'B']],
+  [['A', 'N'], ['B', 'N'], ['C', 'N']], -30);
+verifyBankConnections('open_delta',
+  [['A', 'B'], ['B', 'C']],
+  [['A', 'B'], ['B', 'C']], 0);
+
+const outageCanvas = createMockCanvas(850, 420);
+draw.drawSecondaryNetwork(outageCanvas, core.solveSecondaryNetwork({ feeder1_active: false, feeder2_active: false }));
+ok(outageCanvas.getText().includes('OUT'), 'Network CAD shows buildings out when both feeders are open');
+ok(outageCanvas.getText().includes('Interrupted (No Active Feeders)'), 'Network CAD identifies a complete outage');
+ok(outageCanvas.getText().some(t => t.includes('Customer Continuity: 0% (Interrupted)')), 'Network telemetry reports loss of continuity');
+
+const extremeCascade = core.solveGridCascade({
+  dist_sub_kV: 12.47, feeder_len_km: 25 * core.MILES_TO_KM, feeder_load_MVA: 25,
+  customer_load_kW: 1000, sec_len_ft: 500
+});
+ok(extremeCascade.distTransformer.voltage_out_V === 0, 'Transformer output does not become negative at extreme voltage drop');
+verifyDiagramFit('Voltage profile with extreme drop', c => {
+  draw.drawVoltageProfile(c, extremeCascade);
+});
+
+console.log('\n11. Diagram Label Clearance');
+function intersectsBox([x, y, endX, endY], [left, top, right, bottom]) {
+  const dx = endX - x, dy = endY - y;
+  let first = 0, last = 1;
+  for (const [direction, distance] of [
+    [-dx, x - left], [dx, right - x], [-dy, y - top], [dy, bottom - y]
+  ]) {
+    if (direction === 0) {
+      if (distance < 0) return false;
+    } else if (direction < 0) {
+      first = Math.max(first, distance / direction);
+    } else {
+      last = Math.min(last, distance / direction);
+    }
+  }
+  return first <= last;
+}
+
+function verifyClearLabels(name, render, selectLabel) {
+  const canvas = createMockCanvas(850, 420);
+  render(canvas);
+  const labels = canvas.getTextBoxes().filter(({ text }) => selectLabel(text));
+  const lines = canvas.getStrokedSegments().filter(({ color }) =>
+    !['rgba(0,0,0,0.05)', '#e2e8f0', '#cbd5e1'].includes(color));
+  const collisions = labels.filter(({ box }) =>
+    lines.some(({ segment }) => intersectsBox(segment, box)));
+  ok(labels.length > 0 && collisions.length === 0,
+    name + ' labels clear of lines' + (collisions.length ? ': ' + collisions.map(label => label.text).join(', ') : ''));
+}
+
+verifyClearLabels('Cascade feeder', c => draw.drawGridCascade(c, cascadeRes, 'feeder'), text => text === 'FEEDER');
+const selectedFeederLabels = cascadeCanvas.getTextBoxes().filter(({ text }) =>
+  text === 'FEEDER' || text.endsWith('3φ OH') || /\d+A \| [\d.]+kV/.test(text));
+ok(selectedFeederLabels.length === 3 && selectedFeederLabels.every(({ box }) => box[1] > 205),
+  'Selected feeder halo stays clear of the feeder labels');
+verifyClearLabels('Cascade service', c => draw.drawGridCascade(c, undergroundCascade),
+  text => text.startsWith('SERVICE:') || text.startsWith('CUSTOMER LOAD:'));
+verifyClearLabels('Pole callouts and telemetry', c => draw.drawPoleFraming(c, poleModel),
+  text => text.startsWith('100A Expulsion Cutout') || text.startsWith('50 kVA Can') || text.startsWith('OVERHEAD HARDWARE:'));
+for (const loopFeed of [true, false]) {
+  const model = core.getHardwareModel('padmount', { loopFeed });
+  for (const mode of ['transformer', 'switchgear']) {
+    verifyClearLabels('Padmount ' + mode + ' ' + (loopFeed ? 'loop' : 'radial'),
+      c => draw.drawPadmountEnclosure(c, model, mode), text => /^H[123][AB]?$/.test(text));
+  }
+}
+verifyClearLabels('Junction phase labels', c => draw.drawPadmountEnclosure(c, padModel, 'junction'),
+  text => /^PHASE [ABC]$/.test(text));
+verifyClearLabels('High-leg load', c => draw.drawHighLegDelta(c, highLeg),
+  text => text.startsWith('3φ LOAD:') || text.includes('% of 150 kVA Bank'));
+for (const network of [netNormal, netContingency, core.solveSecondaryNetwork({ feeder1_active: false, feeder2_active: false })]) {
+  verifyClearLabels('Secondary network', c => draw.drawSecondaryNetwork(c, network),
+    text => text.startsWith('PRIMARY FEEDER') || /^VAULT [12]$/.test(text) || text.startsWith('SECONDARY MESH GRID'));
+}
+for (const cascade of [cascadeRes, extremeCascade]) {
+  verifyClearLabels('Voltage profile', c => draw.drawVoltageProfile(c, cascade),
+    text => /^(Substation \(|Feeder \(|Xfmr \(|Meter \(|ANSI Range [AB])/.test(text));
+}
+verifyClearLabels('Split-phase neutral', c => draw.drawSplitPhaseDiagram(c, splitUnbal),
+  text => text.startsWith('N (X2') || text.startsWith('I_N='));
+
+console.log('\nDistribution tests: ' + passed + ' passed, ' + failed + ' failed.');
+if (failed > 0) process.exit(1);

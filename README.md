@@ -34,6 +34,14 @@ Comprehensive engineering analysis suite covering fundamental through advanced p
 
 ---
 
+### Distribution Systems CAD
+
+The Cascade and V-Profile tabs share their master inputs, including the substation voltage used by the pole and transformer bank. Changing the master customer load also sets the bank example's load; bank and high-leg controls share that example load but do not change the master load. The padmount, riser, network, and split-phase views are separate examples; padmount and network primary voltages are fixed at 13.2 kV. The neutral-current tile refers to the split-phase example, not the selected commercial service. A note in the master-model banner identifies the sharing behavior for the active tab.
+
+The Cascade diagram distinguishes overhead and underground feeders and displays the selected service length, conductor size, and customer load. Customer service voltage is shown line-to-neutral, and service-drop calculations convert line-to-line drop to line-to-neutral voltage.
+
+The transformer-bank diagram shows idealized two-terminal windings, with matching T numbers and corresponding H1/X1 polarity ends. Wye neutrals are grounded; the open-delta example is three-wire without a center tap. Delta grounding and protective equipment are omitted. Verify actual transformer terminal markings, polarity, grounding, and utility requirements before wiring equipment.
+
 ### Quick Start & Testing
 
 * **Run in browser:** Open `index.html` directly or run:
@@ -44,5 +52,6 @@ Comprehensive engineering analysis suite covering fundamental through advanced p
 * **Run Headless Core Tests:**
   ```bash
   node tests/run.js
+  node tests/run-dist.js
   ```
   *(Automated tests verify calculations and diagram rendering.)*

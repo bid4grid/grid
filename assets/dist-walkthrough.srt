@@ -1,0 +1,103 @@
+1
+00:00:00,667 --> 00:00:06,421
+Welcome to Distribution Systems CAD, an interactive guide to the path from the bulk grid to the customer meter.
+
+2
+00:00:07,125 --> 00:00:13,293
+We will follow the voltage cascade, examine the equipment, and connect each diagram to the engineering ideas behind it.
+
+3
+00:00:14,000 --> 00:00:20,294
+The cascade starts at generation, steps up for transmission, and returns to medium voltage at the distribution substation.
+
+4
+00:00:21,000 --> 00:00:27,911
+From there, a feeder and nearby transformer supply the customer. Change master inputs to update the shared model and results.
+
+5
+00:00:28,583 --> 00:00:34,429
+The pole view identifies primary conductors, the multi-grounded neutral, transformer, and triplex service.
+
+6
+00:00:35,125 --> 00:00:41,635
+It also calls out a fuse cutout and surge arrester. Clearances are educational; verify utility and NESC construction rules.
+
+7
+00:00:42,333 --> 00:00:48,347
+A padmount enclosure separates primary and secondary equipment. Choose a transformer or switchgear configuration.
+
+8
+00:00:49,042 --> 00:00:55,036
+Compare loop-feed and radial-feed layouts. Switchgear sectionalizes a circuit; it does not step voltage down.
+
+9
+00:00:55,708 --> 00:01:02,929
+Riser poles connect overhead primary lines to underground cable. A cutout provides fault protection and an arrester limits surges.
+
+10
+00:01:03,625 --> 00:01:09,632
+A stress-cone termination manages the electric field at the cable shield. Conduit protects the cable from mechanical damage.
+
+11
+00:01:10,333 --> 00:01:16,881
+Three single-phase transformer cans can form a three-phase bank. Compare wye-wye, delta-wye, and open-delta connections.
+
+12
+00:01:17,583 --> 00:01:24,609
+An open-delta bank uses two cans and provides about 57.7 percent of comparable closed-delta capacity.
+
+13
+00:01:25,292 --> 00:01:33,631
+In a 240-volt, four-wire high-leg delta, the center-tapped winding provides 120 volts from phases A and C to neutral.
+
+14
+00:01:34,333 --> 00:01:42,058
+The high leg measures about 208 volts to neutral. Identify it in orange; never connect a 120-volt load from B to neutral.
+
+15
+00:01:42,750 --> 00:01:49,075
+Urban secondary networks use multiple primary sources and network protectors to feed a shared low-voltage grid.
+
+16
+00:01:49,750 --> 00:01:56,434
+A protector can open for reverse power toward a faulted feeder. Remaining sources may continue service, depending on system design.
+
+17
+00:01:57,125 --> 00:02:03,699
+The voltage-profile view plots service voltage along the feeder and compares it with ANSI C84.1 ranges.
+
+18
+00:02:04,375 --> 00:02:14,240
+At a 120-volt base, Range A is 114 to 126 volts. Results depend on actual conductors, loads, and utility settings.
+
+19
+00:02:14,917 --> 00:02:22,188
+Residential split-phase service comes from one winding with a grounded center tap. Each leg measures 120 volts to neutral.
+
+20
+00:02:22,875 --> 00:02:30,074
+Between the legs, voltage is 240 volts. Balanced 120-volt loads cancel on neutral; the neutral carries their imbalance.
+
+21
+00:02:30,750 --> 00:02:36,876
+The specifications view organizes information for comparing transformers, switchgear, and protection devices.
+
+22
+00:02:37,583 --> 00:02:46,031
+Review voltage, current, capacity, impedance, interrupting duty, and options. These examples are not approved procurement specifications.
+
+23
+00:02:46,708 --> 00:02:53,533
+The theory section brings together formulas for three-phase current, feeder voltage drop, high-leg voltage, and neutral current.
+
+24
+00:02:54,208 --> 00:02:59,720
+Check each formula's units and assumptions before applying it. Diagrams are learning aids, not engineering studies.
+
+25
+00:03:00,417 --> 00:03:05,466
+That is the distribution path—from the substation through feeders and transformers to customer service.
+
+26
+00:03:06,167 --> 00:03:14,003
+Explore the tabs, adjust example inputs, and watch the diagrams respond. Use verified utility data and applicable codes for real design.

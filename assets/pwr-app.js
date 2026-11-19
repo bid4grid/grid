@@ -99,6 +99,10 @@
             <h1>Power Systems CAD Calculator</h1>
             <div class="subtitle">Interactive Power Systems Engineering Suite</div>
           </div>
+          <button type="button" class="pwr-btn-action pwr-watch-video" id="btn-watch-walkthrough" aria-label="Watch walkthrough">
+            <span class="pwr-watch-icon" aria-hidden="true">▶</span>
+            <span class="pwr-watch-label">Walkthrough</span>
+          </button>
         </div>
       </header>
 
@@ -527,6 +531,23 @@
           </div>
         </div>
       </main>
+
+      <dialog class="pwr-video-overlay" id="walkthrough-overlay" aria-labelledby="walkthrough-title">
+        <div class="pwr-video-header">
+          <div>
+            <h2 id="walkthrough-title">Power Systems Calculator Walkthrough</h2>
+            <p>Use the video controls to pause or adjust playback.</p>
+          </div>
+          <button type="button" class="pwr-btn-action" id="btn-close-walkthrough" aria-label="Close walkthrough">
+            Close
+          </button>
+        </div>
+        <video id="walkthrough-video" controls playsinline preload="metadata">
+          <source src="assets/walkthrough.mp4" type="video/mp4">
+          Your browser does not support HTML video.
+        </video>
+        <p class="pwr-video-status" id="walkthrough-status" aria-live="polite"></p>
+      </dialog>
     `;
 
     bindEvents();
@@ -567,6 +588,38 @@
   }
 
   function bindEvents() {
+    var walkthrough = document.getElementById('walkthrough-overlay');
+    var walkthroughVideo = document.getElementById('walkthrough-video');
+    var walkthroughStatus = document.getElementById('walkthrough-status');
+    var watchButton = document.getElementById('btn-watch-walkthrough');
+
+    watchButton.addEventListener('click', function () {
+      walkthroughVideo.volume = 0.15;
+      walkthrough.showModal();
+      document.getElementById('btn-close-walkthrough').focus();
+      walkthroughVideo.play().catch(function () {
+        walkthroughStatus.textContent = 'Playback did not start. Press Play in the video controls to try again.';
+      });
+    });
+
+    document.getElementById('btn-close-walkthrough').addEventListener('click', function () {
+      walkthrough.close();
+    });
+
+    walkthrough.addEventListener('click', function (event) {
+      if (event.target === walkthrough) walkthrough.close();
+    });
+
+    walkthrough.addEventListener('close', function () {
+      walkthroughVideo.pause();
+      walkthroughStatus.textContent = '';
+      watchButton.focus();
+    });
+
+    walkthroughVideo.addEventListener('playing', function () {
+      walkthroughStatus.textContent = '';
+    });
+
     // Navigation tabs
     document.querySelectorAll('.pwr-nav button').forEach(function (b) {
       b.addEventListener('click', function () {

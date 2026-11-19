@@ -60,8 +60,73 @@ body.pwr-standalone,
   line-height: 1.4;
 }
 
+.pwr-watch-video {
+  min-height: 38px;
+  padding: 0 16px;
+  color: #ffffff;
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.pwr-watch-video:hover {
+  color: #ffffff;
+  background: #162c4a;
+  border-color: #162c4a;
+}
+
 .pwr-nav-guide {
   margin-left: auto;
+}
+
+/* Walkthrough video dialog */
+.pwr-video-overlay {
+  width: min(920px, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100vh - 32px);
+  margin: auto;
+  padding: 20px;
+  border: 0;
+  border-radius: var(--radius);
+  background: #ffffff;
+  color: var(--ink);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.pwr-video-overlay::backdrop {
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.pwr-video-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.pwr-video-header h2 {
+  margin: 0 0 4px;
+  color: var(--primary);
+  font-size: 18px;
+}
+
+.pwr-video-header p,
+.pwr-video-status {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.pwr-video-overlay video {
+  display: block;
+  width: 100%;
+  max-height: calc(100vh - 150px);
+  background: #000000;
+  border-radius: var(--radius-sm);
+}
+
+.pwr-video-status:not(:empty) {
+  margin-top: 10px;
 }
 
 /* Sticky Navigation Bar */
@@ -603,9 +668,49 @@ button.btn-primary:hover {
   }
 
   .pwr-header-content {
+    position: relative;
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+  }
+
+  .pwr-header-content > div:first-child {
+    padding-right: 50px;
+  }
+
+  .pwr-watch-video {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 38px;
+    height: 38px;
+    min-height: 38px;
+    padding: 0;
+    border-radius: 50%;
+  }
+
+  .pwr-watch-label {
+    display: none;
+  }
+
+  .pwr-watch-icon {
+    font-size: 15px;
+  }
+
+  .pwr-video-overlay {
+    padding: 14px;
+  }
+
+  .pwr-video-header h2 {
+    font-size: 16px;
+  }
+
+  .pwr-video-header p {
+    display: none;
+  }
+
+  .pwr-video-overlay video {
+    max-height: 35vh;
   }
 
   .pwr-header .subtitle {

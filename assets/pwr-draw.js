@@ -797,7 +797,10 @@
     ctx.fillStyle = t.text;
     ctx.font = 'bold 12.5px -apple-system, monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('POWER TRANSFORMER EXACT T-EQUIVALENT (REFERRED TO LOW VOLTAGE / SECONDARY)', 20, 24);
+    ctx.fillText('APPROXIMATE TRANSFORMER EQUIVALENT CIRCUIT (REFERRED TO LOW VOLTAGE)', 20, 24);
+    ctx.fillStyle = t.muted;
+    ctx.font = '10px monospace';
+    ctx.fillText('Physical rated voltages: ' + (p.V1 !== undefined ? p.V1 : 2400) + ' V / ' + (p.V2 !== undefined ? p.V2 : 240) + ' V', 20, 43);
 
     var y = 160;
     var gy = 320;
@@ -810,10 +813,10 @@
     ctx.fillStyle = t.text;
     ctx.font = 'bold 11px monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('Primary Terminals (V1)', inX, y - 30);
+    ctx.fillText('Input (LV referred)', inX, y - 30);
     ctx.fillStyle = t.muted;
     ctx.font = '10px monospace';
-    ctx.fillText('Rated: 2400 V', inX, y - 16);
+    ctx.fillText('Rated: ' + (p.V2 !== undefined ? p.V2 : 240) + ' V', inX, y - 16);
 
     ctx.strokeStyle = t.primary;
     ctx.beginPath(); ctx.arc(inX, y, 4, 0, Math.PI * 2); ctx.stroke();
@@ -830,7 +833,7 @@
     ctx.fillStyle = t.text;
     ctx.font = 'bold 11px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('Req: ' + (p.Req || 0.0142).toFixed(4) + ' Ω', rx + 30, y - 16);
+    ctx.fillText('Req: ' + (p.Req !== undefined ? p.Req : 0.0142).toFixed(4) + ' Ω', rx + 30, y - 16);
     ctx.fillStyle = t.muted;
     ctx.font = '9.5px sans-serif';
     ctx.fillText('(Series Copper)', rx + 30, y + 24);
@@ -851,7 +854,7 @@
     ctx.fillStyle = t.text;
     ctx.font = 'bold 11px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('jXeq: j' + (p.Xeq || 0.0182).toFixed(4) + ' Ω', lx + 28, y - 16);
+    ctx.fillText('jXeq: j' + (p.Xeq !== undefined ? p.Xeq : 0.0182).toFixed(4) + ' Ω', lx + 28, y - 16);
     ctx.fillStyle = t.muted;
     ctx.font = '9.5px sans-serif';
     ctx.fillText('(Leakage Reactance)', lx + 28, y + 24);
@@ -954,7 +957,7 @@
     ctx.fillText('Secondary Output (V2)', secX + 16, y - 10);
     ctx.fillStyle = t.muted;
     ctx.font = '10px monospace';
-    ctx.fillText('Rated: 240 V (Full Load)', secX + 16, y + 4);
+    ctx.fillText('Rated: ' + (p.V2 !== undefined ? p.V2 : 240) + ' V (Full Load)', secX + 16, y + 4);
 
     // Load box across secondary terminals
     ctx.setLineDash([3, 3]);
@@ -984,27 +987,33 @@
     ctx.fillStyle = t.text;
     ctx.font = '10.5px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('T-Equivalent Model: Full-Load η = ' + effVal + '%  |  VR = ' + vrVal + '%  |  Pcore = ' + pcoreVal + ' W  |  Pcu = ' + pcuVal + ' W', w / 2, gy + 51);
+    ctx.fillText('Full-Load η = ' + effVal + '%  |  VR = ' + vrVal + '%  |  Rated Pcore = ' + pcoreVal + ' W  |  Full-Load Pcu = ' + pcuVal + ' W', w / 2, gy + 51);
   }
 
   // --- 6. TRANSMISSION LINE VOLTAGE PROFILE (FERRANTI EFFECT) ---
   function drawTransmissionLineDiagram(canvas, lineData) {
     var c = initCanvas(canvas);
     var ctx = c.ctx, w = c.w, h = c.h, t = c.t;
+    ctx.setLineDash([]);
 
     ctx.fillStyle = t.text;
     ctx.font = 'bold 12.5px -apple-system, monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('VOLTAGE PROFILE ALONG TRANSMISSION LINE (FERRANTI EFFECT & SURGE IMPEDANCE LOADING)', 20, 24);
+    ctx.fillText('NO-LOAD VOLTAGE PROFILE: SENDING END TO RECEIVING END', 20, 24);
 
     var margin = { top: 50, right: 40, bottom: 50, left: 65 };
     var plotW = w - margin.left - margin.right;
     var plotH = h - margin.top - margin.bottom;
 
     var profile = lineData.profile || [];
-    var maxV = lineData.Vr_nl_LL_kV * 1.08 || 250;
-    var minV = lineData.Vs_LL_kV * 0.90 || 180;
-    var rangeV = maxV - minV || 1;
+    var values = profile.map(function (pt) { return pt.V_nl; });
+    values.push(lineData.Vs_LL_kV, lineData.Vr_nl_LL_kV);
+    var highestV = Math.max.apply(null, values);
+    var lowestV = Math.min.apply(null, values);
+    var padding = Math.max(highestV * 0.08, 0.01);
+    var maxV = highestV + padding;
+    var minV = Math.max(0, lowestV - padding);
+    var rangeV = maxV - minV;
 
     // Axes
     ctx.strokeStyle = t.text;
@@ -1030,11 +1039,11 @@
     // Distance labels (Sending end 0 km -> Receiving end L km)
     ctx.textAlign = 'center';
     var totalLen = (profile[profile.length - 1] || {}).dist_km || 300;
-    for (var d = 0; d <= totalLen; d += totalLen / 5) {
-      var x = margin.left + (d / totalLen) * plotW;
+    for (var d = 0; d <= 5; d++) {
+      var x = margin.left + (d / 5) * plotW;
       ctx.strokeStyle = t.grid;
       ctx.beginPath(); ctx.moveTo(x, margin.top); ctx.lineTo(x, margin.top + plotH); ctx.stroke();
-      ctx.fillText(d.toFixed(0) + ' km', x, margin.top + plotH + 16);
+      ctx.fillText((totalLen * d / 5).toFixed(0) + ' km', x, margin.top + plotH + 16);
     }
     ctx.fillText('Line Distance from Sending End (km)', margin.left + plotW / 2, margin.top + plotH + 34);
 
@@ -1050,7 +1059,7 @@
       });
       ctx.stroke();
 
-      // Flat SIL line
+      // Sending-end voltage is a reference, not a calculated SIL profile.
       var pyVs = margin.top + plotH - ((lineData.Vs_LL_kV - minV) / rangeV) * plotH;
       ctx.setLineDash([4, 4]);
       ctx.strokeStyle = t.phaseC;
@@ -1058,12 +1067,15 @@
       ctx.moveTo(margin.left, pyVs);
       ctx.lineTo(margin.left + plotW, pyVs);
       ctx.stroke();
-      ctx.fillText('Sending Voltage Vs = ' + lineData.Vs_LL_kV.toFixed(1) + ' kV', margin.left + 110, pyVs - 8);
+      ctx.setLineDash([]);
+      ctx.fillStyle = t.phaseC;
+      ctx.textAlign = 'left';
+      ctx.fillText('Sending voltage reference: ' + lineData.Vs_LL_kV.toFixed(1) + ' kV', margin.left + 10, pyVs - 8);
 
       ctx.fillStyle = t.accent;
       ctx.font = 'bold 11px monospace';
       ctx.textAlign = 'right';
-      ctx.fillText('Ferranti Rise: Vr(no-load) = ' + lineData.Vr_nl_LL_kV.toFixed(1) + ' kV (+ ' + lineData.ferrantiRise_kV.toFixed(1) + ' kV)', margin.left + plotW, margin.top + 20);
+      ctx.fillText('No-load receiving voltage: ' + lineData.Vr_nl_LL_kV.toFixed(1) + ' kV', margin.left + plotW, margin.top + 20);
     }
   }
 
@@ -1081,29 +1093,29 @@
     ctx.fillStyle = t.text;
     ctx.font = 'bold 12.5px -apple-system, monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('3-BUS POWER FLOW NETWORK · NODAL INJECTIONS & DIRECTIONAL BRANCH FLOWS', 20, 24);
+    ctx.fillText('POWER FLOW: GENERATORS, LOAD AND LINE LOSSES', 20, 24);
+    ctx.fillStyle = t.muted;
+    ctx.font = '10px monospace';
+    ctx.fillText('Bus power: + supplied, − consumed. Line MW is measured at the sending end.', 20, 42);
 
-    // Compute total grid power balance
-    var p_loss_tot = 0;
-    if (lineFlows && lineFlows.length) {
-      lineFlows.forEach(function (lf) {
-        p_loss_tot += (lf.P_loss || 0);
-      });
-    }
+    var p_loss_tot = lineFlows.reduce(function (sum, line) { return sum + line.P_loss; }, 0) * 100;
+    var supply = 0, demand = 0;
+    buses.forEach(function (bus) {
+      if (bus.P >= 0) supply += bus.P * 100;
+      else demand -= bus.P * 100;
+    });
 
-    // Bus coordinates (Wider, larger triangle)
     var coords = [
-      { x: 190, y: 95, name: 'BUS 1 · SLACK', type: 'slack', color: '#1f3a5f' },
-      { x: 660, y: 95, name: 'BUS 2 · PV GEN', type: 'pv', color: '#0284c7' },
-      { x: 425, y: 290, name: 'BUS 3 · PQ LOAD', type: 'pq', color: '#dc2626' }
+      { x: 190, y: 105, name: 'BUS 1 · BALANCING GEN', color: '#1f3a5f' },
+      { x: 660, y: 105, name: 'BUS 2 · GENERATOR', color: '#0284c7' },
+      { x: 425, y: 275, name: 'BUS 3 · LOAD', color: '#dc2626' }
     ];
 
-    // 1. Transmission Lines: 1 clean condensed badge per line
     ctx.lineWidth = 2.8;
     branches.forEach(function (br, idx) {
       var c1 = coords[br.from - 1];
       var c2 = coords[br.to - 1];
-      var lf = (lineFlows && lineFlows[idx]) ? lineFlows[idx] : {};
+      var lf = lineFlows[idx];
 
       ctx.strokeStyle = '#475569';
       ctx.beginPath();
@@ -1111,45 +1123,33 @@
       ctx.lineTo(c2.x, c2.y);
       ctx.stroke();
 
-      var pFrom = (lf.P_from !== undefined ? lf.P_from * 100 : 0);
-      var pLoss = (lf.P_loss !== undefined ? lf.P_loss * 100 : 0);
+      var reversed = lf.P_from < 0;
+      var sendingBus = reversed ? br.to : br.from;
+      var receivingBus = reversed ? br.from : br.to;
+      var sent = (reversed ? lf.P_to : lf.P_from) * 100;
+      var bX = idx === 0 ? 425 : (idx === 1 ? 145 : 705);
+      var bY = idx === 0 ? 88 : 205;
+      var badgeText = 'Bus ' + sendingBus + ' → ' + receivingBus + ': ' + sent.toFixed(1) + ' MW sent';
+      var lossText = 'Line loss: ' + (lf.P_loss * 100).toFixed(2) + ' MW';
 
-      // Single crisp pill badge per line
-      var badgeText = '';
-      var bX, bY;
-
-      if (idx === 0) {
-        badgeText = 'Line 1–2: ' + pFrom.toFixed(1) + ' MW →  |  Loss: ' + pLoss.toFixed(2) + ' MW';
-        bX = 425;
-        bY = c1.y - 18;
-      } else if (idx === 1) {
-        badgeText = 'Line 1–3: ' + pFrom.toFixed(1) + ' MW ↘  |  Loss: ' + pLoss.toFixed(2) + ' MW';
-        bX = (c1.x + c2.x) / 2 - 70;
-        bY = (c1.y + c2.y) / 2;
-      } else {
-        badgeText = 'Line 2–3: ' + pFrom.toFixed(1) + ' MW ↙  |  Loss: ' + pLoss.toFixed(2) + ' MW';
-        bX = (c1.x + c2.x) / 2 + 70;
-        bY = (c1.y + c2.y) / 2;
-      }
-
-      ctx.font = 'bold 9.5px monospace';
-      var txtW = ctx.measureText(badgeText).width;
+      ctx.font = 'bold 10px monospace';
+      var txtW = Math.max(ctx.measureText(badgeText).width, ctx.measureText(lossText).width);
       ctx.fillStyle = '#ffffff';
       ctx.strokeStyle = '#fed7aa';
       ctx.lineWidth = 1;
-      ctx.fillRect(bX - txtW / 2 - 8, bY - 11, txtW + 16, 22);
-      ctx.strokeRect(bX - txtW / 2 - 8, bY - 11, txtW + 16, 22);
+      ctx.fillRect(bX - txtW / 2 - 8, bY - 17, txtW + 16, 36);
+      ctx.strokeRect(bX - txtW / 2 - 8, bY - 17, txtW + 16, 36);
 
       ctx.fillStyle = t.accent;
       ctx.textAlign = 'center';
-      ctx.fillText(badgeText, bX, bY + 4);
+      ctx.fillText(badgeText, bX, bY - 3);
+      ctx.font = '9px monospace';
+      ctx.fillText(lossText, bX, bY + 11);
     });
 
-    // 2. Substation Busbars & Condensed Injections
     buses.forEach(function (b, idx) {
       var pos = coords[idx];
 
-      // Heavy busbar
       ctx.strokeStyle = t.busbar;
       ctx.lineWidth = 7;
       ctx.beginPath();
@@ -1157,85 +1157,33 @@
       ctx.lineTo(pos.x + 52, pos.y);
       ctx.stroke();
 
-      var vMag = (b.V_mag || 1.0).toFixed(4);
-      var vAng = (b.V_angle_deg || 0).toFixed(2);
-
-      if (idx === 0) {
-        // Slack Bus G1
-        ctx.strokeStyle = t.primary;
-        ctx.lineWidth = 2.2;
-        ctx.beginPath(); ctx.arc(pos.x, pos.y - 24, 14, 0, Math.PI * 2); ctx.stroke();
-        ctx.fillStyle = t.primary;
-        ctx.font = 'bold 11px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('G1', pos.x, pos.y - 20);
-
-        ctx.fillStyle = pos.color;
-        ctx.font = 'bold 10.5px monospace';
-        ctx.fillText(pos.name, pos.x, pos.y - 44);
-
-        ctx.fillStyle = t.text;
-        ctx.font = 'bold 10px monospace';
-        ctx.fillText('|V1| = ' + vMag + ' pu ∠ ' + vAng + '°', pos.x, pos.y + 18);
-        ctx.fillStyle = t.muted;
-        ctx.font = '9px monospace';
-        ctx.fillText('Gen: 33.2 MW, 24.8 MVAR', pos.x, pos.y + 31);
-
-      } else if (idx === 1) {
-        // PV Bus G2
-        ctx.strokeStyle = t.primary;
-        ctx.lineWidth = 2.2;
-        ctx.beginPath(); ctx.arc(pos.x, pos.y - 24, 14, 0, Math.PI * 2); ctx.stroke();
-        ctx.fillStyle = t.primary;
-        ctx.font = 'bold 11px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('G2', pos.x, pos.y - 20);
-
-        ctx.fillStyle = pos.color;
-        ctx.font = 'bold 10.5px monospace';
-        ctx.fillText(pos.name, pos.x, pos.y - 44);
-
-        ctx.fillStyle = t.text;
-        ctx.font = 'bold 10px monospace';
-        ctx.fillText('|V2| = ' + vMag + ' pu ∠ ' + vAng + '°', pos.x, pos.y + 18);
-        ctx.fillStyle = t.muted;
-        ctx.font = '9px monospace';
-        ctx.fillText('Gen: 50.0 MW, 18.2 MVAR', pos.x, pos.y + 31);
-
-      } else {
-        // PQ Load Bus 3
-        drawArrow(ctx, pos.x, pos.y + 6, pos.x, pos.y + 32, t.phaseA, 8);
-
-        ctx.fillStyle = pos.color;
-        ctx.font = 'bold 10.5px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(pos.name, pos.x, pos.y - 14);
-
-        ctx.fillStyle = t.text;
-        ctx.font = 'bold 10px monospace';
-        ctx.fillText('|V3| = ' + vMag + ' pu ∠ ' + vAng + '°', pos.x, pos.y + 45);
-        ctx.fillStyle = t.phaseA;
-        ctx.font = 'bold 9.5px monospace';
-        ctx.fillText('Load: 80.0 MW, 40.0 MVAR', pos.x, pos.y + 58);
-      }
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(pos.x - 100, pos.y - 27, 200, 17);
+      ctx.fillRect(pos.x - 130, pos.y + 7, 260, 31);
+      ctx.textAlign = 'center';
+      ctx.fillStyle = pos.color;
+      ctx.font = 'bold 10.5px monospace';
+      ctx.fillText(pos.name, pos.x, pos.y - 16);
+      ctx.fillStyle = t.text;
+      ctx.font = 'bold 10px monospace';
+      ctx.fillText('Voltage: ' + b.V_mag.toFixed(4) + ' pu ∠ ' + b.V_angle_deg.toFixed(2) + '°', pos.x, pos.y + 18);
+      ctx.font = '9.5px monospace';
+      ctx.fillText('Net: ' + (b.P * 100).toFixed(1) + ' MW, ' + (b.Q * 100).toFixed(1) + ' megavars', pos.x, pos.y + 33);
     });
 
-    // 3. Center Dispatch Summary (Clean, single pill)
-    var sumX = 425, sumY = 195;
-    var sumText = 'Grid Balance: Total Gen 83.2 MW = Load 80.0 MW + Loss ' + (p_loss_tot * 100).toFixed(2) + ' MW';
-    ctx.font = 'bold 9.5px monospace';
-    var sumW = ctx.measureText(sumText).width;
+    var sumX = 425, sumY = 205;
     ctx.fillStyle = 'rgba(248, 250, 252, 0.95)';
     ctx.strokeStyle = '#cbd5e1';
     ctx.lineWidth = 1;
-    ctx.fillRect(sumX - sumW / 2 - 8, sumY - 11, sumW + 16, 22);
-    ctx.strokeRect(sumX - sumW / 2 - 8, sumY - 11, sumW + 16, 22);
-
+    ctx.fillRect(sumX - 135, sumY - 21, 270, 42);
+    ctx.strokeRect(sumX - 135, sumY - 21, 270, 42);
     ctx.fillStyle = t.text;
+    ctx.font = 'bold 10px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(sumText, sumX, sumY + 4);
+    ctx.fillText('SUPPLY ' + supply.toFixed(1) + ' MW', sumX, sumY - 3);
+    ctx.font = '9.5px monospace';
+    ctx.fillText('Demand ' + demand.toFixed(1) + ' MW + losses ' + p_loss_tot.toFixed(2) + ' MW', sumX, sumY + 12);
 
-    // 4. Bottom SCADA Telemetry Bar
     var dashY = h - 44;
     ctx.fillStyle = '#f8fafc';
     ctx.strokeStyle = '#e2e8f0';
@@ -1246,7 +1194,8 @@
     ctx.fillStyle = t.text;
     ctx.font = '9.5px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('SCADA TELEMETRY: 3-Bus Power Flow  |  Converged (4 iter)  |  Total Losses: ' + (p_loss_tot * 100).toFixed(2) + ' MW (3.8%)  |  Status: NORMAL', w / 2, dashY + 18);
+    var status = gsResult.converged ? 'Converged in ' + gsResult.iterations + ' iterations' : 'NOT CONVERGED — estimates only';
+    ctx.fillText(status + '  |  1.00 pu = reference voltage  |  MW: real power  |  megavars: reactive power', w / 2, dashY + 18);
   }
 
   // --- Y-BUS ADMITTANCE MATRIX & NODAL FORMULATION VIEW ---
@@ -1304,8 +1253,8 @@ function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
         ctx.fillStyle = t.text;
         ctx.font = '9px monospace';
         var signB = B >= 0 ? ' + j' : ' – j';
-        ctx.fillText('G: ' + G.toFixed(3) + ' S', x0 + 8, y0 + 34);
-        ctx.fillText('B: ' + signB + Math.abs(B).toFixed(3) + ' S', x0 + 8, y0 + 48);
+        ctx.fillText('G: ' + G.toFixed(3) + ' pu', x0 + 8, y0 + 34);
+        ctx.fillText('B: ' + signB + Math.abs(B).toFixed(3) + ' pu', x0 + 8, y0 + 48);
 
         // Magnitude & Angle
         ctx.fillStyle = t.muted;
@@ -1328,33 +1277,30 @@ function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 10.5px monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('⚡ POWER INJECTION SUMMARY', cardX + 10, cardY + 17);
+    ctx.fillText('CALCULATED BUS RESULTS', cardX + 10, cardY + 17);
 
-    var cy = cardY + 40;
-    var injections = [
-      { label: 'Bus 1 (Slack / Swing)', type: 'Generator', role: 'Voltage Reference', color: t.primary },
-      { label: 'Bus 2 (PV Generator)', type: 'Generator', role: 'Constant Voltage & Power', color: t.primary },
-      { label: 'Bus 3 (PQ Load)', type: 'Load', role: 'Constant Power Demand', color: t.accent }
-    ];
+    ctx.fillStyle = gsResult.converged ? t.primary : t.phaseA;
+    ctx.font = 'bold 9px monospace';
+    ctx.fillText(gsResult.converged ? 'Converged in ' + gsResult.iterations + ' iterations' : 'NOT CONVERGED - estimates only', cardX + 10, cardY + 41);
 
-    injections.forEach(function(inj) {
-      ctx.fillStyle = inj.color;
-      ctx.font = 'bold 9px monospace';
+    var labels = ['Bus 1: Balancing generator', 'Bus 2: Generator', 'Bus 3: Load'];
+    buses.forEach(function (bus, idx) {
+      var cy = cardY + 59 + idx * 61;
+      ctx.fillStyle = idx === 2 ? t.accent : t.primary;
+      ctx.font = 'bold 9.5px monospace';
       ctx.textAlign = 'left';
-      ctx.fillText(inj.label, cardX + 10, cy);
-      cy += 13;
+      ctx.fillText(labels[idx], cardX + 10, cy);
       ctx.fillStyle = t.text;
-      ctx.font = '8.5px monospace';
-      ctx.fillText(inj.type + ' - ' + inj.role, cardX + 15, cy);
-      cy += 18;
+      ctx.font = '9px monospace';
+      ctx.fillText('Voltage: ' + bus.V_mag.toFixed(4) + ' pu ∠ ' + bus.V_angle_deg.toFixed(2) + '°', cardX + 15, cy + 14);
+      ctx.fillText('Net: ' + (bus.P * 100).toFixed(2) + ' MW, ' + (bus.Q * 100).toFixed(2) + ' megavars', cardX + 15, cy + 28);
     });
 
-    // Legend at bottom
-    cy = cardY + cardH - 15;
     ctx.fillStyle = t.muted;
-    ctx.font = '8px monospace';
+    ctx.font = '9px monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('Y_bus encodes network topology & impedances', cardX + 10, cy);
+    ctx.fillText('Net power: + supplied, − consumed', cardX + 10, cardY + cardH - 15);
+    ctx.fillText('Y_bus depends on the fixed lines; power inputs change the bus results, not the matrix.', 20, 380);
   }
 
   function drawSequenceNetworks(canvas, faultType, Z0, Z1, Z2, faultRes) {
@@ -1362,9 +1308,9 @@ function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
     var c = initCanvas(canvas);
     var ctx = c.ctx, w = c.w, h = c.h, t = c.t;
 
-    var z1 = (Array.isArray(Z1) ? (Z1[1] !== undefined ? Math.abs(Z1[1]) : Math.abs(Z1[0])) : parseFloat(Z1)) || 0.20;
-    var z2 = (Array.isArray(Z2) ? (Z2[1] !== undefined ? Math.abs(Z2[1]) : Math.abs(Z2[0])) : parseFloat(Z2)) || 0.20;
-    var z0 = (Array.isArray(Z0) ? (Z0[1] !== undefined ? Math.abs(Z0[1]) : Math.abs(Z0[0])) : parseFloat(Z0)) || 0.30;
+    var z1 = Z1 === undefined ? 0.20 : (Array.isArray(Z1) ? Math.abs(Z1[1]) : parseFloat(Z1));
+    var z2 = Z2 === undefined ? 0.20 : (Array.isArray(Z2) ? Math.abs(Z2[1]) : parseFloat(Z2));
+    var z0 = Z0 === undefined ? 0.30 : (Array.isArray(Z0) ? Math.abs(Z0[1]) : parseFloat(Z0));
 
     var mva = (faultRes && faultRes.mva) ? faultRes.mva : ((faultRes && faultRes.SCMVA && faultRes.If_pu) ? (faultRes.SCMVA / faultRes.If_pu) : 100);
     var vll = (faultRes && faultRes.vll) ? faultRes.vll : 138;
@@ -1386,7 +1332,7 @@ function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
       va2_mag = 0;
       va0_mag = 0;
       if_pu = ia1_mag;
-      z_eq_str = 'j' + z1.toFixed(2) + ' pu';
+      z_eq_str = 'j' + z1 + ' pu';
       bndLine1 = 'Boundary: Va = Vb = Vc = 0';
       bndLine2 = 'Sequence: Ia1 = Vf/Z1, Ia2 = 0, Ia0 = 0';
       bndLine3 = 'Fault Current: If = Ia1 (Balanced)';
@@ -1399,10 +1345,10 @@ function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
       va2_mag = va1_mag;
       va0_mag = 0;
       if_pu = Math.sqrt(3) * ia1_mag;
-      z_eq_str = 'j' + (z1 + z2).toFixed(2) + ' pu';
+      z_eq_str = 'j' + Number((z1 + z2).toPrecision(4)) + ' pu';
       bndLine1 = 'Boundary: Ia = 0, Ib = -Ic, Vb = Vc';
       bndLine2 = 'Sequence: Ia1 = -Ia2 = Vf/(Z1+Z2), Ia0 = 0';
-      bndLine3 = 'Fault Current: If = √3 · Ia1 (Phase B-C)';
+      bndLine3 = 'Fault Current: |If| = √3 · |Ia1|';
     } else if (faultType === 'dlg') {
       typeTitle = 'DOUBLE LINE-TO-GROUND (DLG) FAULT';
       var z_par = (z2 * z0) / (z2 + z0);
@@ -1410,13 +1356,13 @@ function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
       va1_mag = 1.0 - z1 * ia1_mag;
       va2_mag = va1_mag;
       va0_mag = va1_mag;
-      ia2_mag = va2_mag / z2;
-      ia0_mag = va0_mag / z0;
+      ia2_mag = ia1_mag * z0 / (z2 + z0);
+      ia0_mag = ia1_mag * z2 / (z2 + z0);
       if_pu = 3 * ia0_mag;
-      z_eq_str = 'j' + (z1 + z_par).toFixed(3) + ' pu';
+      z_eq_str = 'j' + Number((z1 + z_par).toPrecision(4)) + ' pu';
       bndLine1 = 'Boundary: Ia = 0, Vb = 0, Vc = 0';
       bndLine2 = 'Sequence: Ia1 + Ia2 + Ia0 = 0 (Va1=Va2=Va0)';
-      bndLine3 = 'Fault Current: If(ground) = 3·Ia0';
+      bndLine3 = 'Ground Current: |If| = 3·|Ia0|';
     } else {
       typeTitle = 'SINGLE LINE-TO-GROUND (SLG) FAULT';
       var z_tot = z1 + z2 + z0;
@@ -1427,7 +1373,7 @@ function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
       va2_mag = z2 * ia2_mag;
       va0_mag = z0 * ia0_mag;
       if_pu = 3 * ia0_mag;
-      z_eq_str = 'j' + z_tot.toFixed(2) + ' pu';
+      z_eq_str = 'j' + Number(z_tot.toPrecision(4)) + ' pu';
       bndLine1 = 'Boundary: Ib = 0, Ic = 0, Va = 0';
       bndLine2 = 'Sequence: Ia1 = Ia2 = Ia0 = Vf/(Z1+Z2+Z0)';
       bndLine3 = 'Fault Current: If = Ia = 3·Ia0';
@@ -1437,6 +1383,14 @@ function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
       if_pu = faultRes.If_pu;
       if_kA = faultRes.If_kA;
       scmva = mva * if_pu;
+      if (faultRes.I012 && faultRes.V012) {
+        ia0_mag = Math.hypot(faultRes.I012[0][0], faultRes.I012[0][1]);
+        ia1_mag = Math.hypot(faultRes.I012[1][0], faultRes.I012[1][1]);
+        ia2_mag = Math.hypot(faultRes.I012[2][0], faultRes.I012[2][1]);
+        va0_mag = Math.hypot(faultRes.V012[0][0], faultRes.V012[0][1]);
+        va1_mag = Math.hypot(faultRes.V012[1][0], faultRes.V012[1][1]);
+        va2_mag = Math.hypot(faultRes.V012[2][0], faultRes.V012[2][1]);
+      }
     } else {
       if_kA = if_pu * I_base_kA;
       scmva = mva * if_pu;
@@ -1596,7 +1550,7 @@ function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
       ctx.fillStyle = net.color;
       ctx.font = 'bold 9px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText(net.zName + '=j' + net.zVal.toFixed(2), zX1 + zw / 2, yTop + 3.5);
+      ctx.fillText(net.zName + '=j' + net.zVal, zX1 + zw / 2, yTop + 3.5, zw - 4);
 
       // Top rail wire from impedance to Fault Terminal
       ctx.strokeStyle = t.primary;
@@ -1627,13 +1581,13 @@ function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
       ctx.fillStyle = t.muted;
       ctx.fillText(net.nName + ' (–)', termX - 6, yBot + 13);
 
-      // Sequence Current Arrow leaving terminal F
       if (net.iaVal > 0.001) {
-        drawArrow(ctx, termX - 30, yTop, termX - 10, yTop, net.color, 6);
+        var inward = (faultType === 'll' || faultType === 'dlg') && net.name !== 'POSITIVE (1)';
+        drawArrow(ctx, inward ? termX - 10 : termX - 30, yTop, inward ? termX - 30 : termX - 10, yTop, net.color, 6);
         ctx.fillStyle = net.color;
         ctx.font = 'bold 8px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText(net.name.slice(0, 3) + '=' + net.iaVal.toFixed(2), termX - 20, yTop - 4);
+        ctx.fillText('|I' + net.name.slice(-2, -1) + '|=' + net.iaVal.toFixed(2), termX - 30, yTop + 15);
       }
     });
 
@@ -1693,8 +1647,8 @@ function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
       ctx.fillStyle = t.accent;
       ctx.font = 'bold 8.5px monospace';
       ctx.textAlign = 'left';
-      ctx.fillText('Ia1 = –Ia2 (' + ia1_mag.toFixed(2) + ' pu)', llX2 + 8, (f1Y + n2Y) / 2);
-      ctx.fillText('Va1 = Va2 (' + va1_mag.toFixed(2) + ' pu)', llX2 + 8, (f1Y + n2Y) / 2 + 11);
+      ctx.fillText('Ia1 = –Ia2; |Ia1| = ' + ia1_mag.toFixed(2) + ' pu', llX2 + 8, (f1Y + n2Y) / 2);
+      ctx.fillText('Va1 = Va2; |Va1| = ' + va1_mag.toFixed(2) + ' pu', llX2 + 8, (f1Y + n2Y) / 2 + 11);
 
       // Zero sequence isolated
       ctx.fillStyle = t.muted;
@@ -1777,7 +1731,7 @@ function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
       ctx.font = 'bold 8.5px monospace';
       ctx.textAlign = 'left';
       ctx.fillText('Series: Ia1 = Ia2 = Ia0', lane3X + 8, (f1Y + n0Y) / 2 - 8);
-      ctx.fillText('If = 3·Ia0 = ' + if_pu.toFixed(2) + ' pu', lane3X + 8, (f1Y + n0Y) / 2 + 5);
+      ctx.fillText('|If| = 3·|Ia0| = ' + if_pu.toFixed(2) + ' pu', lane3X + 8, (f1Y + n0Y) / 2 + 5);
     }
 
     // ==========================================
@@ -1824,28 +1778,28 @@ function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
     // Subsection 2: Sequence Quantities
     ctx.fillStyle = t.text;
     ctx.font = 'bold 9.5px monospace';
-    ctx.fillText('Sequence Quantities (Thevenin Terminal):', cardX + 10, cy);
+    ctx.fillText('Sequence Magnitudes (Thevenin Terminal):', cardX + 10, cy);
     cy += 14;
 
     // 2 Columns: Currents and Voltages
     ctx.font = '9px monospace';
     // Column 1: Sequence Currents
     ctx.fillStyle = t.phaseA;
-    ctx.fillText('Ia1 = ' + ia1_mag.toFixed(3) + ' pu  (' + (ia1_mag * I_base_kA).toFixed(2) + ' kA)', cardX + 12, cy);
+    ctx.fillText('|Ia1| = ' + ia1_mag.toFixed(3) + ' pu  (' + (ia1_mag * I_base_kA).toFixed(2) + ' kA)', cardX + 12, cy);
     ctx.fillStyle = t.primary;
-    ctx.fillText('Va1 = ' + va1_mag.toFixed(3) + ' pu', cardX + 195, cy);
+    ctx.fillText('|Va1| = ' + va1_mag.toFixed(3) + ' pu', cardX + 195, cy);
     cy += 13;
 
     ctx.fillStyle = t.phaseB;
-    ctx.fillText('Ia2 = ' + ia2_mag.toFixed(3) + ' pu  (' + (ia2_mag * I_base_kA).toFixed(2) + ' kA)', cardX + 12, cy);
+    ctx.fillText('|Ia2| = ' + ia2_mag.toFixed(3) + ' pu  (' + (ia2_mag * I_base_kA).toFixed(2) + ' kA)', cardX + 12, cy);
     ctx.fillStyle = t.primary;
-    ctx.fillText('Va2 = ' + va2_mag.toFixed(3) + ' pu', cardX + 195, cy);
+    ctx.fillText('|Va2| = ' + va2_mag.toFixed(3) + ' pu', cardX + 195, cy);
     cy += 13;
 
     ctx.fillStyle = t.phaseC;
-    ctx.fillText('Ia0 = ' + ia0_mag.toFixed(3) + ' pu  (' + (ia0_mag * I_base_kA).toFixed(2) + ' kA)', cardX + 12, cy);
+    ctx.fillText('|Ia0| = ' + ia0_mag.toFixed(3) + ' pu  (' + (ia0_mag * I_base_kA).toFixed(2) + ' kA)', cardX + 12, cy);
     ctx.fillStyle = t.primary;
-    ctx.fillText('Va0 = ' + va0_mag.toFixed(3) + ' pu', cardX + 195, cy);
+    ctx.fillText('|Va0| = ' + va0_mag.toFixed(3) + ' pu', cardX + 195, cy);
     cy += 18;
 
     // Divider
@@ -1862,15 +1816,15 @@ function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
 
     ctx.fillStyle = t.accent;
     ctx.font = 'bold 10px monospace';
-    ctx.fillText('TOTAL FAULT CURRENT & INTERRUPTION:', cardX + 18, cy + 16);
+    ctx.fillText(faultType === 'dlg' ? 'GROUND CURRENT MAGNITUDE:' : 'FAULT CURRENT MAGNITUDE:', cardX + 18, cy + 16);
 
     ctx.fillStyle = '#dc2626';
     ctx.font = 'bold 15px monospace';
-    ctx.fillText('If = ' + if_pu.toFixed(3) + ' pu  (' + if_kA.toFixed(2) + ' kA)', cardX + 18, cy + 37);
+    ctx.fillText('|If| = ' + if_pu.toFixed(3) + ' pu  (' + if_kA.toFixed(2) + ' kA)', cardX + 18, cy + 37);
 
     ctx.fillStyle = t.muted;
     ctx.font = '9px monospace';
-    ctx.fillText('Short-Circuit MVA: ' + scmva.toFixed(1) + ' MVA | Zth = ' + z_eq_str, cardX + 18, cy + 54);
+    ctx.fillText('Equivalent MVA: ' + scmva.toFixed(1) + ' MVA | Zth = ' + z_eq_str, cardX + 18, cy + 54);
     ctx.fillText('Substation Base: ' + mva.toFixed(0) + ' MVA, ' + vll.toFixed(0) + ' kV (I_base=' + I_base_kA.toFixed(2) + ' kA)', cardX + 18, cy + 66);
 
     // ==========================================
@@ -1886,7 +1840,7 @@ function drawLoadFlowYBus(canvas, YBus, buses, branches, gsResult) {
     ctx.fillStyle = t.text;
     ctx.font = '9.5px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('SCADA TELEMETRY: ' + typeTitle + '  |  If = ' + if_pu.toFixed(2) + ' pu (' + if_kA.toFixed(2) + ' kA)  |  SCMVA = ' + scmva.toFixed(1) + ' MVA  |  Zth = ' + z_eq_str, w / 2, dashY + 18);
+    ctx.fillText(typeTitle + '  |  ' + (faultType === 'dlg' ? 'Ground ' : '') + '|If| = ' + if_pu.toFixed(2) + ' pu (' + if_kA.toFixed(2) + ' kA)  |  Equivalent MVA = ' + scmva.toFixed(1) + ' MVA  |  Zth = ' + z_eq_str, w / 2, dashY + 18);
   }
 
   // Exports

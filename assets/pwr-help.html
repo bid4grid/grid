@@ -248,6 +248,7 @@
       </div>
     </li>
   </ul>
+  <p>These length ranges are guidelines, not hard limits. The selected model is used even outside its typical range; the short-line model neglects shunt charging. The no-load voltage profile holds sending voltage fixed and uses the selected model, with the nominal &Pi; and T shunt elements located at the ends and midpoint respectively.</p>
   <p><strong>Ferranti Effect:</strong> At no load (<span class="m"><i>I</i><sub>R</sub> = 0</span>), <span class="m"><i>V</i><sub>R,nl</sub> = <i>V</i><sub>S</sub>/<i>A</i></span>. Because <span class="m">|<i>A</i>| &lt; 1</span> on a low-loss capacitive line, receiving voltage rises above sending voltage (<span class="m">|<i>V</i><sub>R</sub>| &gt; |<i>V</i><sub>S</sub>|</span>).</p>
   <p><strong>Surge Impedance Loading:</strong> For a lossless line, <span class="m"><i>Z</i><sub>c</sub></span> is real and <span class="m"><i>SIL</i> = <i>V</i><sub>LL</sub><sup>2</sup>/|<i>Z</i><sub>c</sub>|</span>. Use <span class="m"><i>V</i><sub>LL</sub></span> in kV to obtain SIL in MW. Loading a line at SIL produces a flat voltage profile.</p>
 
@@ -274,6 +275,7 @@
     <div class="ln"><span class="t">where <b>A</b> = [1, 1, 1; 1, <i>a</i><sup>2</sup>, <i>a</i>; 1, <i>a</i>, <i>a</i><sup>2</sup>]</span><span class="t"><i>a</i> = −0.5 + j(√3/2)</span></div>
   </div>
   <p>In the fault equations below, <span class="m"><i>V</i><sub>f</sub></span> is the pre-fault phase voltage, normally 1.0 pu in per-unit studies.</p>
+  <p>The calculator uses nonnegative sequence reactances in per unit and a zero fault impedance. Zero sequence reactances are permitted where the selected fault remains solvable; singular cases are rejected. Numeric sequence values in the diagram are magnitudes, while boundary equations describe phasors. For DLG faults the displayed fault current is the total ground current, not either individual phase current. Equivalent fault MVA is √3 times the base line-to-line voltage times the displayed current magnitude; it is not necessarily a breaker rating.</p>
   <div class="tw"><table>
     <thead><tr><th>Fault Type</th><th>Sequence Network Connection</th><th>Fault Current Equation</th></tr></thead>
     <tbody>

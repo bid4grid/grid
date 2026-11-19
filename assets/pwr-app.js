@@ -19,6 +19,10 @@
     activeTab: 'basics', // 'basics', 'gen', 'xfmr', 'lines', 'flow', 'faults', 'theory'
     basicsView: 'sld', // 'sld' (default), 'triangle', 'phasor'
     flowView: 'sld', // 'sld' (default), 'ybus'
+    flowResult: null,
+    xfmrResult: null,
+    lineResult: null,
+    faultResult: null,
     connType: 'wye', // 'wye' or 'delta'
     genRotor: 'salient', // 'salient' or 'cylindrical'
     lineModel: 'long', // 'long', 'medium_pi', 'medium_t', 'short'
@@ -41,13 +45,13 @@
       models: "Models cylindrical vs. salient-pole synchronous machines (two-reaction theory with Xd and Xq), field excitation EMF (Eg), and steady-state torque angle (δ). The P(δ) curve shows total 3-phase power using per-phase equations, with constant Eg and stator resistance neglected in the power-angle relation.",
       why: [
         "<strong>Grid Synchronism & Pole Slipping:</strong> If the rotor torque angle δ exceeds the stability limit (~65° for salient, 90° for round), the magnetic link snaps, poles slip, and massive mechanical torque rips the turbine shaft.",
-        "<strong>Voltage & Reactive Grid Support:</strong> Generators are the grid's primary voltage anchors. Adjusting field excitation current directly injects or absorbs MVARs across the transmission network.",
+        "<strong>Voltage & Reactive Grid Support:</strong> Generators are the grid's primary voltage anchors. Adjusting field excitation current directly injects or absorbs megavars across the transmission network.",
         "<strong>Reluctance Torque in Salient Rotors:</strong> Hydro and slow-speed generators have non-uniform rotor air gaps (Xd > Xq), generating ~20–25% extra peak power via the sin(2δ) reluctance term."
       ]
     },
     xfmr: {
       title: "Power Transformers & Equivalent Circuit Testing",
-      models: "Extracts T-equivalent parameters from Open-Circuit and Short-Circuit tests. The shunt branch comes from the low-voltage test, the series branch from the high-voltage test, and the series values are referred to the low-voltage side for the circuit. Displayed efficiency is at full load (m = 1) and 0.8 lagging power factor.",
+      models: "Extracts an approximate equivalent circuit from open-circuit and short-circuit tests. The open-circuit test is on the low-voltage side, the short-circuit test is on the high-voltage side, and all circuit impedances are referred to the low-voltage side. Full-load performance uses rated voltage and a 0.8 lagging power factor.",
       why: [
         "<strong>Testing Huge Units Safely:</strong> You cannot test a 100 MVA utility transformer by hooking up a city-sized load in a factory bay. OC and SC tests capture the entire physical model using under 2% rated power.",
         "<strong>Voltage Regulation at Motor Terminals:</strong> Transformer internal leakage reactance (Xeq) causes secondary voltage to drop when feeding inductive loads; calculating VR% ensures voltages stay within ±5% standards.",
@@ -56,7 +60,7 @@
     },
     lines: {
       title: "Transmission Lines & Per-Unit System",
-      models: "Calculates two-port ABCD parameter matrices for Short (< 80 km), Medium (80–250 km Pi/T), and Long (> 250 km hyperbolic cosh/sinh) lines, no-load Ferranti effect, SIL, and multi-zone per-unit scaling. Ferranti rise uses voltage magnitudes; displayed SIL uses V_LL²/|Zc| as a lossless-line approximation (V_LL in kV gives MW).",
+      models: "Calculates the selected short, medium (nominal Pi/T), or long-line model. Typical length guidelines are under 80 km for short, 80–250 km for medium, and over 250 km for long; these are not hard limits. The graph shows the selected model's no-load voltage profile with sending voltage held fixed. SIL uses V_LL²/|Zc| as a lossless-line approximation.",
       why: [
         "<strong>Ferranti Overvoltage Destroys Equipment:</strong> Long high-voltage lines have large ground capacitance. At night or under light load, capacitive charging current causes receiving-end voltage to spike (Vr > Vs), damaging bushings unless shunt reactors absorb the excess VARs.",
         "<strong>Surge Impedance Loading (SIL):</strong> The natural line loading where reactive generation (B) balances reactive consumption (X). Operating at SIL gives an ideal flat voltage profile from sending to receiving end.",
@@ -65,7 +69,7 @@
     },
     flow: {
       title: "Power Flow Analysis (Load Flow & Grid Dispatch)",
-      models: "Assembles the Bus Admittance Matrix (Y_bus), categorizes Slack (Swing), PV Generator, and PQ Load buses, and solves power flow using Gauss-Seidel. P and Q are net scheduled injections (generation minus load); PV buses update Q each iteration and restore the specified voltage magnitude while retaining the updated angle.",
+      models: "This example connects two generator buses to one load bus. Bus 1 balances the system, Bus 2 supplies the specified real power, and Bus 3 consumes the specified power. The solver calculates bus voltages, line flows and losses on a 100 MVA base. Voltage in per unit (pu) is relative to the reference voltage; MW is real power and megavars measure reactive power.",
       why: [
         "<strong>Interconnection Studies:</strong> Before permitting a new solar farm, wind plant, or hyperscale data center, grid operators run load flow to guarantee line thermal ratings and substation voltages are not violated.",
         "<strong>Contingency (N-1) Reliability:</strong> Grid operators must prove that if any single critical line or transformer trips, remaining parallel circuits can absorb redirected megawatt flows without cascading blackouts.",
@@ -326,19 +330,19 @@
                   <input type="number" id="tr-s" value="50">
                 </div>
                 <div class="pwr-input-group">
-                  <label>Ratio V1 / V2</label>
+                  <label>Rated high / low voltage (V)</label>
                   <input type="text" id="tr-ratio" value="2400/240">
                 </div>
               </div>
 
-              <div class="pwr-form-section-title">Open-Circuit Test (Low Voltage: 240 V)</div>
+              <div class="pwr-form-section-title">Open-Circuit Test (Low-Voltage Side)</div>
               <div class="pwr-input-row">
                 <div class="pwr-input-group"><label>Voc (V)</label><input type="number" id="tr-voc" value="240"></div>
                 <div class="pwr-input-group"><label>Ioc (A)</label><input type="number" id="tr-ioc" step="0.01" value="5.41"></div>
                 <div class="pwr-input-group"><label>Poc (W)</label><input type="number" id="tr-poc" value="186"></div>
               </div>
 
-              <div class="pwr-form-section-title">Short-Circuit Test (High Voltage: 2400 V)</div>
+              <div class="pwr-form-section-title">Short-Circuit Test (High-Voltage Side)</div>
               <div class="pwr-input-row">
                 <div class="pwr-input-group"><label>Vsc (V)</label><input type="number" id="tr-vsc" value="48"></div>
                 <div class="pwr-input-group"><label>Isc (A)</label><input type="number" id="tr-isc" step="0.1" value="20.8"></div>
@@ -351,7 +355,7 @@
 
             <div class="card">
               <div class="card-header">
-                <h2 class="card-title">Exact T-Equivalent Electrical Circuit</h2>
+                <h2 class="card-title">Approximate Equivalent Circuit</h2>
                 <div class="pwr-toolbar">
                   <span class="badge">REFERRED TO LOW VOLTAGE</span>
                   <button class="pwr-btn-action" id="btn-png-xfmr">📷 Export PNG</button>
@@ -403,7 +407,7 @@
               <div class="card-header">
                 <h2 class="card-title">Voltage Profile &amp; Ferranti Effect</h2>
                 <div class="pwr-toolbar">
-                  <span class="badge">SURGE IMPEDANCE LOADING &amp; FERRANTI EFFECT</span>
+                  <span class="badge">NO-LOAD PROFILE</span>
                   <button class="pwr-btn-action" id="btn-png-lines">📷 Export PNG</button>
                 </div>
               </div>
@@ -422,29 +426,29 @@
                 <h2 class="card-title">🌐 3-Bus Power Flow Controls</h2>
               </div>
 
-              <div class="pwr-form-section-title">Bus Classifications</div>
+              <div class="pwr-form-section-title">Example network inputs (100 MVA base)</div>
               <div class="pwr-input-group">
-                <label>Bus 1: Slack (Swing / Reference)</label>
+                <label>Bus 1: Balancing generator (slack / reference)</label>
                 <input type="text" value="|V1| = 1.0500 pu, δ1 = 0.00°" disabled>
               </div>
 
               <div class="pwr-input-group">
-                <label>Bus 2: PV Generator (|V2| pu, P2 MW)</label>
+                <label>Bus 2: Generator voltage (pu) and output (MW)</label>
                 <div class="pwr-input-row">
-                  <input type="number" id="flow-v2" step="0.01" value="1.03">
-                  <input type="number" id="flow-p2" step="10" value="50">
+                  <input type="number" id="flow-v2" aria-label="Bus 2 generator voltage in per unit" step="0.01" value="1.03">
+                  <input type="number" id="flow-p2" aria-label="Bus 2 generator real power in MW" step="10" value="50">
                 </div>
               </div>
 
               <div class="pwr-input-group">
-                <label>Bus 3: PQ Load (P3 MW, Q3 MVAR)</label>
+                <label>Bus 3: Load real power (MW) and reactive power (megavars)</label>
                 <div class="pwr-input-row">
-                  <input type="number" id="flow-p3" step="10" value="80">
-                  <input type="number" id="flow-q3" step="5" value="40">
+                  <input type="number" id="flow-p3" aria-label="Bus 3 load real power in MW" step="10" value="80">
+                  <input type="number" id="flow-q3" aria-label="Bus 3 load reactive power in megavars" step="5" value="40">
                 </div>
               </div>
 
-              <button class="btn-primary" id="btn-calc-flow">Run Gauss-Seidel Solver</button>
+              <button class="btn-primary" id="btn-calc-flow">Calculate Power Flow</button>
               <div class="pwr-results" id="res-flow">Computing...</div>
             </div>
 
@@ -452,7 +456,7 @@
               <div class="card-header">
                 <h2 class="card-title">3-Bus Network &amp; Power Flows</h2>
                 <div class="pwr-toolbar">
-                  <button class="pwr-btn-action active" id="btn-flow-sld">Network Flows SLD</button>
+                  <button class="pwr-btn-action active" id="btn-flow-sld">Network Diagram</button>
                   <button class="pwr-btn-action" id="btn-flow-ybus">Bus Matrix</button>
                   <button class="pwr-btn-action" id="btn-png-flow">📷 Export PNG</button>
                 </div>
@@ -482,9 +486,9 @@
 
               <div class="pwr-form-section-title">Thevenin Sequence Impedances (pu)</div>
               <div class="pwr-input-row">
-                <div class="pwr-input-group"><label>Z1 Positive (jΩ)</label><input type="number" id="flt-z1" step="0.05" value="0.20"></div>
-                <div class="pwr-input-group"><label>Z2 Negative (jΩ)</label><input type="number" id="flt-z2" step="0.05" value="0.20"></div>
-                <div class="pwr-input-group"><label>Z0 Zero (jΩ)</label><input type="number" id="flt-z0" step="0.05" value="0.30"></div>
+                <div class="pwr-input-group"><label>Z1 Positive (j pu)</label><input type="number" id="flt-z1" step="0.05" value="0.20"></div>
+                <div class="pwr-input-group"><label>Z2 Negative (j pu)</label><input type="number" id="flt-z2" step="0.05" value="0.20"></div>
+                <div class="pwr-input-group"><label>Z0 Zero (j pu)</label><input type="number" id="flt-z0" step="0.05" value="0.30"></div>
               </div>
 
               <div class="pwr-input-row">
@@ -700,41 +704,49 @@
       t6.innerHTML = '<b>' + (window.lastGenEg || 19.9).toFixed(2) + ' kV</b><span>Internal EMF Eg</span>';
       notice.textContent = 'Synchronous generator stability margin: Operating torque angle is safely below steady-state critical stability angle.';
     } else if (tabId === 'xfmr') {
-      t1.innerHTML = '<b>50 kVA</b><span>Rated Capacity</span>';
-      t2.innerHTML = '<b>98.03 %</b><span>Full-Load Eff.</span>';
-      t3.innerHTML = '<b>2.4kV : 240V</b><span>Rated Ratio</span>';
+      var xfmr = state.xfmrResult;
+      t1.innerHTML = '<b>' + (xfmr ? xfmr.S + ' kVA' : '—') + '</b><span>Rated Capacity</span>';
+      t2.innerHTML = '<b>' + (xfmr ? xfmr.perf.efficiency_pct.toFixed(2) + ' %' : '—') + '</b><span>Full-Load Eff.</span>';
+      t3.innerHTML = '<b>' + (xfmr ? xfmr.V1 + ' : ' + xfmr.V2 + ' V' : '—') + '</b><span>Rated Voltages</span>';
       t4.className = 'pwr-tile green';
-      t4.innerHTML = '<b>1.94 %</b><span>Voltage Reg.</span>';
-      t5.innerHTML = '<b>186 W</b><span>Core Loss Poc</span>';
-      t6.innerHTML = '<b>617 W</b><span>Copper Loss Psc</span>';
-      notice.textContent = 'Transformer equivalent circuit parameters extracted from Open-Circuit and Short-Circuit tests referred to low-voltage secondary.';
+      t4.innerHTML = '<b>' + (xfmr ? xfmr.perf.voltage_reg_pct.toFixed(2) + ' %' : '—') + '</b><span>Voltage Reg.</span>';
+      t5.innerHTML = '<b>' + (xfmr ? xfmr.coreLoss.toFixed(1) + ' W' : '—') + '</b><span>Rated Core Loss</span>';
+      t6.innerHTML = '<b>' + (xfmr ? (xfmr.perf.P_cu_kW * 1000).toFixed(1) + ' W' : '—') + '</b><span>Full-Load Copper Loss</span>';
+      notice.textContent = xfmr ? 'Approximate equivalent circuit referred to the low-voltage side; full-load performance assumes 0.8 lagging power factor.' : 'Enter valid transformer test measurements and calculate again.';
     } else if (tabId === 'lines') {
-      t1.innerHTML = '<b>' + (document.getElementById('line-len').value || 300) + ' km</b><span>Line Length</span>';
-      t2.innerHTML = '<b>' + (document.getElementById('line-vr').value || 220) + ' kV</b><span>Receiving Vr</span>';
-      t3.innerHTML = '<b>' + (window.lastLineVs || 222.4).toFixed(1) + ' kV</b><span>Sending End Vs</span>';
+      var line = state.lineResult;
+      t1.innerHTML = '<b>' + (line ? line.length + ' km' : '—') + '</b><span>Line Length</span>';
+      t2.innerHTML = '<b>' + (line ? line.vr + ' kV' : '—') + '</b><span>Receiving Vr</span>';
+      t3.innerHTML = '<b>' + (line ? line.solution.Vs_LL_kV.toFixed(1) + ' kV' : '—') + '</b><span>Sending End Vs</span>';
       t4.className = 'pwr-tile hot';
-      t4.innerHTML = '<b>+' + (window.lastLineFerranti || 21.3).toFixed(1) + ' kV</b><span>Ferranti Voltage Rise</span>';
-      t5.innerHTML = '<b>' + (window.lastLineSIL || 126.0).toFixed(1) + ' MW</b><span>Surge Loading (SIL)</span>';
-      t6.innerHTML = '<b>' + (window.lastLineEff || 96.8).toFixed(1) + ' %</b><span>Efficiency</span>';
-      notice.textContent = 'Long transmission line model: Distributed hyperbolic parameters cosh(γl) and sinh(γl) active to capture no-load Ferranti voltage rise.';
+      t4.innerHTML = '<b>' + (line ? (line.solution.ferrantiRise_kV >= 0 ? '+' : '') + line.solution.ferrantiRise_kV.toFixed(1) + ' kV' : '—') + '</b><span>No-Load Voltage Change</span>';
+      t5.innerHTML = '<b>' + (line ? line.solution.SIL_MW.toFixed(1) + ' MW' : '—') + '</b><span>Surge Loading (SIL)</span>';
+      t6.innerHTML = '<b>' + (line ? (line.load === 0 ? 'N/A' : line.solution.eff_pct.toFixed(1) + ' %') : '—') + '</b><span>Efficiency</span>';
+      notice.textContent = !line ? 'Enter valid transmission-line inputs and calculate again.' :
+        line.warning || 'Selected model: ' + line.modelName + '. The graph shows the no-load voltage profile.';
     } else if (tabId === 'flow') {
+      var flow = state.flowResult;
+      var flowLoss = flow ? flow.lineFlows.reduce(function (sum, line) { return sum + line.P_loss; }, 0) * 100 : 0;
       t1.innerHTML = '<b>3 Buses</b><span>Network Size</span>';
-      t2.innerHTML = '<b>1.050 pu</b><span>Slack Bus V1</span>';
-      t3.innerHTML = '<b>1.030 pu</b><span>PV Bus V2</span>';
+      t2.innerHTML = '<b>' + (flow ? flow.buses[0].V_mag.toFixed(3) + ' pu' : '—') + '</b><span>Bus 1 Voltage</span>';
+      t3.innerHTML = '<b>' + (flow ? flow.buses[1].V_mag.toFixed(3) + ' pu' : '—') + '</b><span>Bus 2 Voltage</span>';
       t4.className = 'pwr-tile green';
-      t4.innerHTML = '<b>0.965 pu</b><span>Load Bus V3</span>';
-      t5.innerHTML = '<b>4 Iterations</b><span>Convergence</span>';
-      t6.innerHTML = '<b>0.21 MW</b><span>Line Losses</span>';
-      notice.textContent = 'Gauss-Seidel load flow converged within 4 iterations with tolerance 1e-4. Real and reactive branch power flows balanced.';
+      t4.innerHTML = '<b>' + (flow ? flow.buses[2].V_mag.toFixed(3) + ' pu' : '—') + '</b><span>Bus 3 Voltage</span>';
+      t5.innerHTML = '<b>' + (flow ? flow.iterations + ' iterations' : '—') + '</b><span>' + (flow && !flow.converged ? 'Not converged' : 'Convergence') + '</span>';
+      t6.innerHTML = '<b>' + (flow ? flowLoss.toFixed(2) + ' MW' : '—') + '</b><span>Total Line Losses</span>';
+      notice.textContent = !flow ? 'Enter valid power-flow inputs and calculate again.' :
+        flow.converged ? 'Power flow converged in ' + flow.iterations + ' iterations. Arrows show the direction of real power; line losses are included.' :
+        'Power flow did not converge after ' + flow.iterations + ' iterations. The displayed values are estimates, not a valid solution.';
     } else if (tabId === 'faults') {
+      var fault = state.faultResult;
       t1.innerHTML = '<b>' + state.faultType.toUpperCase() + '</b><span>Fault Class</span>';
-      t2.innerHTML = '<b>' + (window.lastFaultIf || 4.29).toFixed(3) + ' pu</b><span>Magnitude</span>';
-      t3.innerHTML = '<b>' + (window.lastFaultKa || 1.80).toFixed(2) + ' kA</b><span>Magnitude</span>';
+      t2.innerHTML = '<b>' + (fault ? fault.result.If_pu.toFixed(3) + ' pu' : '—') + '</b><span>' + (state.faultType === 'dlg' ? 'Ground Current' : 'Fault Current') + '</span>';
+      t3.innerHTML = '<b>' + (fault ? fault.result.If_kA.toFixed(2) + ' kA' : '—') + '</b><span>Magnitude</span>';
       t4.className = 'pwr-tile hot';
-      t4.innerHTML = '<b>' + (window.lastFaultMva || 428.6).toFixed(1) + ' MVA</b><span>Short Circuit</span>';
-      t5.innerHTML = '<b>j0.20 pu</b><span>Pos Sequence Z1</span>';
-      t6.innerHTML = '<b>j0.30 pu</b><span>Zero Sequence Z0</span>';
-      notice.textContent = 'Fortescue sequence networks interconnected: Sequence loop calculated according to physical boundary conditions of the fault.';
+      t4.innerHTML = '<b>' + (fault ? (fault.mva * fault.result.If_pu).toFixed(1) + ' MVA' : '—') + '</b><span>Equivalent Fault MVA</span>';
+      t5.innerHTML = '<b>' + (fault ? 'j' + fault.z1 + ' pu' : '—') + '</b><span>Pos Sequence Z1</span>';
+      t6.innerHTML = '<b>' + (fault ? 'j' + fault.z0 + ' pu' : '—') + '</b><span>Zero Sequence Z0</span>';
+      notice.textContent = fault ? 'Sequence values shown in the diagram are magnitudes. Equivalent fault MVA is √3 × base line voltage × fault current magnitude.' : 'Enter valid fault inputs and calculate again.';
     }
   }
 
@@ -849,26 +861,43 @@
   }
 
   function recalcXfmr() {
-    var S = parseFloat(document.getElementById('tr-s').value) || 50;
-    var Voc = parseFloat(document.getElementById('tr-voc').value) || 240;
-    var Ioc = parseFloat(document.getElementById('tr-ioc').value) || 5.41;
-    var Poc = parseFloat(document.getElementById('tr-poc').value) || 186;
-    var Vsc = parseFloat(document.getElementById('tr-vsc').value) || 48;
-    var Isc = parseFloat(document.getElementById('tr-isc').value) || 20.8;
-    var Psc = parseFloat(document.getElementById('tr-psc').value) || 617;
+    var S = parseFloat(document.getElementById('tr-s').value);
+    var Voc = parseFloat(document.getElementById('tr-voc').value);
+    var Ioc = parseFloat(document.getElementById('tr-ioc').value);
+    var Poc = parseFloat(document.getElementById('tr-poc').value);
+    var Vsc = parseFloat(document.getElementById('tr-vsc').value);
+    var Isc = parseFloat(document.getElementById('tr-isc').value);
+    var Psc = parseFloat(document.getElementById('tr-psc').value);
+    var ratio = document.getElementById('tr-ratio').value.split('/');
+    var V1 = ratio.length === 2 && ratio[0].trim() ? Number(ratio[0]) : NaN;
+    var V2 = ratio.length === 2 && ratio[1].trim() ? Number(ratio[1]) : NaN;
+    var positive = [S, Voc, Ioc, Poc, Vsc, Isc, V1, V2].every(function (value) {
+      return Number.isFinite(value) && value > 0;
+    });
+    if (!positive || V1 < V2 || !Number.isFinite(Psc) || Psc < 0 ||
+        Poc >= Voc * Ioc || Psc > Vsc * Isc) {
+      state.xfmrResult = null;
+      document.getElementById('res-xfmr').textContent = 'Enter positive test values and rated voltages as high/low. OC watts must be below Voc × Ioc; SC watts must be between zero and Vsc × Isc.';
+      var invalidCanvas = document.getElementById('canvas-xfmr');
+      if (invalidCanvas) invalidCanvas.getContext('2d').clearRect(0, 0, invalidCanvas.width, invalidCanvas.height);
+      if (state.activeTab === 'xfmr') updateTilesForTab('xfmr');
+      return;
+    }
 
-    var p = core.calcTransformerParams(Voc, Ioc, Poc, Vsc, Isc, Psc, S, 2400, 240);
-    var Req_lv = p.Req * Math.pow(240 / 2400, 2);
-    var Xeq_lv = p.Xeq * Math.pow(240 / 2400, 2);
-    var perf = core.calcTransformerPerformance(S, 240, Req_lv, Xeq_lv, Poc, 1.0, 0.8, true);
+    var p = core.calcTransformerParams(Voc, Ioc, Poc, Vsc, Isc, Psc, S, V1, V2);
+    var Req_lv = p.Req * Math.pow(V2 / V1, 2);
+    var Xeq_lv = p.Xeq * Math.pow(V2 / V1, 2);
+    var coreLoss = V2 * V2 / p.Rc;
+    var perf = core.calcTransformerPerformance(S, V2, Req_lv, Xeq_lv, coreLoss, 1.0, 0.8, true);
+    state.xfmrResult = { S: S, V1: V1, V2: V2, coreLoss: coreLoss, perf: perf };
 
     var resText =
       "Core Resistance (Rc):     " + p.Rc.toFixed(1) + " Ω (Shunt)\n" +
       "Magnetizing (jXm):        " + p.Xm.toFixed(1) + " Ω (Shunt)\n" +
       "Series Req (Low Voltage): " + Req_lv.toFixed(4) + " Ω\n" +
       "Leakage jXeq (Low Voltage): " + Xeq_lv.toFixed(4) + " Ω\n" +
-      "Core Loss (P_core):       " + Poc.toFixed(0) + " W\n" +
-      "Full-Load Copper Loss:    " + Psc.toFixed(0) + " W\n\n" +
+      "Rated Core Loss:          " + coreLoss.toFixed(1) + " W\n" +
+      "Full-Load Copper Loss:    " + (perf.P_cu_kW * 1000).toFixed(1) + " W\n\n" +
       "Full-Load Efficiency (0.8 lag): " + perf.efficiency_pct.toFixed(2) + " %\n" +
       "Voltage Regulation:       " + perf.voltage_reg_pct.toFixed(2) + " %";
     document.getElementById('res-xfmr').textContent = resText;
@@ -882,36 +911,50 @@
       Req: Req_lv,
       Xeq: Xeq_lv,
       S_kVA: S,
+      V1: V1,
+      V2: V2,
       eff: perf.efficiency_pct,
       vr: perf.voltage_reg_pct,
-      Poc: Poc,
-      Psc: Psc
+      Pcore: coreLoss,
+      Pcu: perf.P_cu_kW * 1000
     });
   }
 
   function recalcLines() {
     var model = state.lineModel;
-    var len = parseFloat(document.getElementById('line-len').value) || 300;
-    var r = parseFloat(document.getElementById('line-r').value) || 0.08;
-    var x = parseFloat(document.getElementById('line-x').value) || 0.48;
-    var vr = parseFloat(document.getElementById('line-vr').value) || 220;
-    var pr = parseFloat(document.getElementById('line-pr').value) || 150;
+    var len = parseFloat(document.getElementById('line-len').value);
+    var r = parseFloat(document.getElementById('line-r').value);
+    var x = parseFloat(document.getElementById('line-x').value);
+    var vr = parseFloat(document.getElementById('line-vr').value);
+    var pr = parseFloat(document.getElementById('line-pr').value);
+    if (![len, r, x, vr, pr].every(Number.isFinite) ||
+        len <= 0 || vr <= 0 || r < 0 || x < 0 || (r === 0 && x === 0) || pr < 0) {
+      state.lineResult = null;
+      document.getElementById('res-line').textContent = 'Enter a positive length and receiving voltage, nonnegative load and line parameters, and a nonzero line impedance.';
+      var invalidCanvas = document.getElementById('canvas-lines');
+      if (invalidCanvas) invalidCanvas.getContext('2d').clearRect(0, 0, invalidCanvas.width, invalidCanvas.height);
+      if (state.activeTab === 'lines') updateTilesForTab('lines');
+      return;
+    }
 
     var lineSol = core.solveTransmissionLine(model, r, x, 0, 3.3e-6, len, vr, pr, 0.9, true);
-
-    window.lastLineVs = lineSol.Vs_LL_kV;
-    window.lastLineFerranti = lineSol.ferrantiRise_kV;
-    window.lastLineSIL = lineSol.SIL_MW;
-    window.lastLineEff = lineSol.eff_pct;
+    var modelNames = { short: 'Short', medium_pi: 'Medium nominal Pi', medium_t: 'Medium nominal T', long: 'Long' };
+    var outsideRange = model === 'short' ? len >= 80 :
+      model === 'long' ? len <= 250 : len < 80 || len > 250;
+    var warning = outsideRange ? 'Warning: ' + modelNames[model] + ' model selected for ' + len +
+      ' km. Typical ranges are short <80 km, medium 80–250 km, and long >250 km; the selected model is still used.' : '';
+    state.lineResult = { length: len, vr: vr, load: pr, modelName: modelNames[model], solution: lineSol, warning: warning };
 
     var resText =
+      "Selected Model:           " + modelNames[model] + "\n" +
+      (warning ? warning + "\n\n" : "") +
       "Sending End Voltage (Vs): " + lineSol.Vs_LL_kV.toFixed(1) + " kV ∠ " + lineSol.Vs_angle_deg.toFixed(2) + "°\n" +
       "Sending End Current (Is): " + lineSol.Is_mag.toFixed(1) + " A ∠ " + lineSol.Is_angle_deg.toFixed(2) + "°\n" +
       "Voltage Regulation (VR):  " + lineSol.voltageRegulation_pct.toFixed(2) + " %\n" +
-      "Ferranti No-Load Vr:     " + lineSol.Vr_nl_LL_kV.toFixed(1) + " kV (Rise: +" + lineSol.ferrantiRise_kV.toFixed(1) + " kV)\n" +
+      "No-Load Vr:              " + lineSol.Vr_nl_LL_kV.toFixed(1) + " kV (Change: " + (lineSol.ferrantiRise_kV >= 0 ? "+" : "") + lineSol.ferrantiRise_kV.toFixed(1) + " kV)\n" +
       "SIL (lossless approximation): " + lineSol.SIL_MW.toFixed(1) + " MW\n" +
       "Characteristic Zc:        " + lineSol.Zc_mag.toFixed(1) + " Ω\n" +
-      "Transmission Efficiency:  " + lineSol.eff_pct.toFixed(2) + " %";
+      "Transmission Efficiency:  " + (pr === 0 ? "N/A (no load)" : lineSol.eff_pct.toFixed(2) + " %");
     document.getElementById('res-line').textContent = resText;
 
     if (state.activeTab === 'lines') updateTilesForTab('lines');
@@ -921,15 +964,23 @@
   }
 
   function recalcFlow() {
-    var v2 = parseFloat(document.getElementById('flow-v2').value) || 1.03;
-    var p2 = (parseFloat(document.getElementById('flow-p2').value) || 50) / 100;
-    var p3 = -(parseFloat(document.getElementById('flow-p3').value) || 80) / 100;
-    var q3 = -(parseFloat(document.getElementById('flow-q3').value) || 40) / 100;
+    var v2 = parseFloat(document.getElementById('flow-v2').value);
+    var p2 = parseFloat(document.getElementById('flow-p2').value);
+    var p3 = parseFloat(document.getElementById('flow-p3').value);
+    var q3 = parseFloat(document.getElementById('flow-q3').value);
+    if (!Number.isFinite(v2) || v2 <= 0 || !Number.isFinite(p2) || !Number.isFinite(p3) || !Number.isFinite(q3)) {
+      state.flowResult = null;
+      document.getElementById('res-flow').textContent = 'Enter a positive generator voltage and valid numeric power values.';
+      var invalidCanvas = document.getElementById('canvas-flow');
+      if (invalidCanvas) invalidCanvas.getContext('2d').clearRect(0, 0, invalidCanvas.width, invalidCanvas.height);
+      if (state.activeTab === 'flow') updateTilesForTab('flow');
+      return;
+    }
 
     var buses = [
       { type: 'slack', V_mag: 1.05, V_angle_deg: 0, P: 0, Q: 0 },
-      { type: 'pv', V_mag: v2, V_angle_deg: 0, P: p2, Q: 0 },
-      { type: 'pq', V_mag: 1.0, V_angle_deg: 0, P: p3, Q: q3 }
+      { type: 'pv', V_mag: v2, V_angle_deg: 0, P: p2 / 100, Q: 0 },
+      { type: 'pq', V_mag: 1.0, V_angle_deg: 0, P: -p3 / 100, Q: -q3 / 100 }
     ];
 
     var branches = [
@@ -938,13 +989,18 @@
       { from: 2, to: 3, r: 0.06, x: 0.18, b_shunt: 0.0 }
     ];
 
-    var result = core.solveGaussSeidel(buses, branches, 80, 1e-4);
+    var result = core.solveGaussSeidel(buses, branches, 80, 1e-7);
+    state.flowResult = result;
 
     var resText =
-      "Gauss-Seidel: Converged in " + result.iterations + " iterations\n\n" +
+      "Gauss-Seidel: " + (result.converged ? "Converged in " : "NOT CONVERGED after ") + result.iterations + " iterations\n" +
+      "Bus power is net injection (+ supplied, − consumed).\n\n" +
       "Bus 1 (Slack): |V1| = " + result.buses[0].V_mag.toFixed(4) + " pu ∠ " + result.buses[0].V_angle_deg.toFixed(2) + "°\n" +
       "Bus 2 (PV):    |V2| = " + result.buses[1].V_mag.toFixed(4) + " pu ∠ " + result.buses[1].V_angle_deg.toFixed(2) + "°\n" +
       "Bus 3 (PQ):    |V3| = " + result.buses[2].V_mag.toFixed(4) + " pu ∠ " + result.buses[2].V_angle_deg.toFixed(2) + "°\n\n" +
+      result.buses.map(function (bus) {
+        return "Bus " + bus.busNum + " net: " + (bus.P * 100).toFixed(2) + " MW, " + (bus.Q * 100).toFixed(2) + " megavars";
+      }).join('\n') + "\n\n" +
       "Line 1-2 Active Loss: " + (result.lineFlows[0].P_loss * 100).toFixed(2) + " MW\n" +
       "Line 1-3 Active Loss: " + (result.lineFlows[1].P_loss * 100).toFixed(2) + " MW\n" +
       "Line 2-3 Active Loss: " + (result.lineFlows[2].P_loss * 100).toFixed(2) + " MW";
@@ -956,40 +1012,72 @@
     if (canvas) draw.drawLoadFlowNetwork(canvas, result.buses, branches, result.lineFlows, state.flowView, result.YBus, result);
   }
 
+  function clearFaultResult(message) {
+    state.faultResult = null;
+    document.getElementById('res-faults').textContent = message;
+    var canvas = document.getElementById('canvas-faults');
+    if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+    if (state.activeTab === 'faults') updateTilesForTab('faults');
+  }
+
   function recalcFaults() {
     var type = state.faultType;
-    var z1 = parseFloat(document.getElementById('flt-z1').value) || 0.20;
-    var z2 = parseFloat(document.getElementById('flt-z2').value) || 0.20;
-    var z0 = parseFloat(document.getElementById('flt-z0').value) || 0.30;
-    var mva = parseFloat(document.getElementById('flt-mva').value) || 100;
-    var vll = parseFloat(document.getElementById('flt-v').value) || 138;
+    var z1 = parseFloat(document.getElementById('flt-z1').value);
+    var z2 = parseFloat(document.getElementById('flt-z2').value);
+    var z0 = parseFloat(document.getElementById('flt-z0').value);
+    var mva = parseFloat(document.getElementById('flt-mva').value);
+    var vll = parseFloat(document.getElementById('flt-v').value);
+    var invalid = ![z1, z2, z0, mva, vll].every(Number.isFinite) || z1 < 0 || z2 < 0 || z0 < 0 || mva <= 0 || vll <= 0;
+    var singular = !invalid && (
+      type === '3phase' ? z1 === 0 :
+      type === 'slg' ? z1 + z2 + z0 === 0 :
+      type === 'll' ? z1 + z2 === 0 :
+      z0 + z2 === 0 || (z1 === 0 && (z0 === 0 || z2 === 0))
+    );
+    if (invalid || singular) {
+      clearFaultResult(invalid ?
+        'Enter nonnegative sequence reactances and positive base MVA and line voltage.' :
+        'These impedances give zero equivalent fault impedance or indeterminate sequence currents; enter a solvable combination.');
+      return;
+    }
 
     var faultRes;
-    if (type === '3phase') {
-      faultRes = core.solveSymmetricalFault([1, 0], [0, z1], [0, 0], mva, vll);
-    } else if (type === 'slg') {
-      faultRes = core.solveSLGFault([1, 0], [0, z0], [0, z1], [0, z2], [0, 0], mva, vll);
-    } else if (type === 'll') {
-      faultRes = core.solveLLFault([1, 0], [0, z0], [0, z1], [0, z2], [0, 0], mva, vll);
-    } else {
-      faultRes = core.solveDLGFault([1, 0], [0, z0], [0, z1], [0, z2], [0, 0], mva, vll);
+    try {
+      if (type === '3phase') {
+        faultRes = core.solveSymmetricalFault([1, 0], [0, z1], [0, 0], mva, vll);
+      } else if (type === 'slg') {
+        faultRes = core.solveSLGFault([1, 0], [0, z0], [0, z1], [0, z2], [0, 0], mva, vll);
+      } else if (type === 'll') {
+        faultRes = core.solveLLFault([1, 0], [0, z0], [0, z1], [0, z2], [0, 0], mva, vll);
+      } else {
+        faultRes = core.solveDLGFault([1, 0], [0, z0], [0, z1], [0, z2], [0, 0], mva, vll);
+      }
+    } catch (error) {
+      if (!(error instanceof RangeError)) throw error;
+      clearFaultResult('Fault impedances are singular or too small to calculate reliably.');
+      return;
+    }
+    var finiteSequences = ['I012', 'V012'].every(function (key) {
+      return !faultRes[key] || faultRes[key].every(function (phasor) { return phasor.every(Number.isFinite); });
+    });
+    if (!finiteSequences || ![faultRes.If_pu, faultRes.If_kA, mva * faultRes.If_pu].every(Number.isFinite)) {
+      clearFaultResult('These values exceed the supported numerical range; enter less extreme inputs.');
+      return;
     }
 
     faultRes.mva = mva;
     faultRes.vll = vll;
 
-    window.lastFaultIf = faultRes.If_pu;
-    window.lastFaultKa = faultRes.If_kA;
-    window.lastFaultMva = mva * faultRes.If_pu;
+    state.faultResult = { result: faultRes, z1: z1, z2: z2, z0: z0, mva: mva };
 
     var resText =
       "Fault Type:              " + type.toUpperCase() + "\n" +
-      "Fault Current Magnitude: " + faultRes.If_pu.toFixed(4) + " pu\n" +
-      "Fault Current Magnitude: " + faultRes.If_kA.toFixed(2) + " kA\n" +
-      "Short-Circuit SCMVA:     " + (mva * faultRes.If_pu).toFixed(1) + " MVA\n" +
-      "Positive Sequence Z1:    j" + z1.toFixed(2) + " pu\n" +
-      "Negative Sequence Z2:    j" + z2.toFixed(2) + " pu\n" +
-      "Zero Sequence Z0:        j" + z0.toFixed(2) + " pu";
+      (type === 'dlg' ? "Ground Current Magnitude: " : "Fault Current Magnitude: ") + faultRes.If_pu.toFixed(4) + " pu\n" +
+      (type === 'dlg' ? "Ground Current Magnitude: " : "Fault Current Magnitude: ") + faultRes.If_kA.toFixed(2) + " kA\n" +
+      "Equivalent Fault MVA:    " + (mva * faultRes.If_pu).toFixed(1) + " MVA\n" +
+      "Positive Sequence Z1:    j" + z1 + " pu\n" +
+      "Negative Sequence Z2:    j" + z2 + " pu\n" +
+      "Zero Sequence Z0:        j" + z0 + " pu";
     document.getElementById('res-faults').textContent = resText;
 
     if (state.activeTab === 'faults') updateTilesForTab('faults');

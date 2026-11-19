@@ -388,17 +388,18 @@
   }
 
   function solveTransmissionLine(modelType, r_ohm_km, x_ohm_km, g_s_km, b_s_km, length_km, Vr_LL_kV, Pr_MW, pf, lagging) {
+    if (modelType === 'medium') modelType = 'medium_pi';
     var z_per_km = [r_ohm_km, x_ohm_km];
     var y_per_km = [g_s_km, b_s_km];
     var Z_total = cscale(z_per_km, length_km);
     var Y_total = cscale(y_per_km, length_km);
 
     var ABCD, Zc, gamma;
-    if (modelType === 'short' || length_km < 80) {
+    if (modelType === 'short') {
       ABCD = tlineShort(Z_total);
       Zc = csqrt(cdiv(z_per_km, [1e-9, b_s_km || 1e-9]));
       gamma = [0, 0];
-    } else if (modelType === 'medium_pi' || (modelType === 'medium' && length_km <= 250)) {
+    } else if (modelType === 'medium_pi') {
       ABCD = tlineMediumPi(Z_total, Y_total);
       Zc = csqrt(cdiv(z_per_km, y_per_km));
       gamma = csqrt(cmul(z_per_km, y_per_km));
@@ -447,14 +448,23 @@
     var Zc_mag = cabs(Zc);
     var SIL_MW = (Vr_LL_kV * Vr_LL_kV) / Zc_mag;
 
-    // Voltage profile along the line (x = 0 to length)
+    // Lumped models locate their shunt elements at the ends (pi) or midpoint (T).
     var profile = [];
     var steps = 20;
     for (var i = 0; i <= steps; i++) {
       var dist = (length_km / steps) * i;
       var remaining = length_km - dist;
-      var subSol = tlineLongHyperbolic(z_per_km, y_per_km, remaining);
-      var V_x_nl = cabs(cdiv(Vs_vec, subSol.ABCD[0])) * Math.sqrt(3) / 1e3;
+      var A_x;
+      if (modelType === 'short') {
+        A_x = ONE;
+      } else if (modelType === 'medium_pi') {
+        A_x = cadd(ONE, cscale(cmul(Z_total, Y_total), remaining / (2 * length_km)));
+      } else if (modelType === 'medium_t') {
+        A_x = cadd(ONE, cscale(cmul(Z_total, Y_total), Math.max(0, 0.5 - dist / length_km)));
+      } else {
+        A_x = ccosh(cscale(gamma, remaining));
+      }
+      var V_x_nl = cabs(cmul(A_x, Vr_nl_vec)) * Math.sqrt(3) / 1e3;
       profile.push({ dist_km: dist, V_nl: V_x_nl });
     }
 
@@ -579,7 +589,7 @@
             sumYV = cadd(sumYV, cmul(Y[i * n + j], V[j]));
           }
           var S_pv = cmul(V[i], cconj(sumYV));
-          Q_i = -S_pv[1];
+          Q_i = S_pv[1];
         }
 
         // V_new = (1 / Y_ii) * [ (P_i - jQ_i) / conj(V_i) - sum_{j!=i} Y_ij * V_j ]
@@ -603,7 +613,8 @@
         }
 
         var diff = cabs(csub(V_new, V[i]));
-        if (diff > maxDiff) maxDiff = diff;
+        if (!Number.isFinite(diff)) maxDiff = Infinity;
+        else if (diff > maxDiff) maxDiff = diff;
         V[i] = V_new;
         iterSnapshot.push([V[i][0], V[i][1]]);
       }
@@ -646,17 +657,24 @@
     });
 
     var busResults = buses.map(function (b, idx) {
+      var current = [0, 0];
+      for (var j = 0; j < n; j++) {
+        current = cadd(current, cmul(Y[idx * n + j], V[j]));
+      }
+      var power = cmul(V[idx], cconj(current));
       return {
         busNum: idx + 1,
         type: b.type,
         V_mag: cabs(V[idx]),
-        V_angle_deg: cangleDeg(V[idx])
+        V_angle_deg: cangleDeg(V[idx]),
+        P: power[0],
+        Q: power[1]
       };
     });
 
     return {
       converged: converged,
-      iterations: iter + 1,
+      iterations: Math.min(iter + 1, maxIter),
       buses: busResults,
       lineFlows: lineFlows,
       history: history,
@@ -691,6 +709,7 @@
     Vf = Vf || [1, 0];
     Zf = Zf || [0, 0];
     var Ztotal = cadd(Z1, Zf);
+    if (cabs(Ztotal) === 0) throw new RangeError('Fault impedance must not be zero.');
     var If1 = cdiv(Vf, Ztotal); // per unit
     var If_mag_pu = cabs(If1);
     var I_base_kA = (MVA_base) / (Math.sqrt(3) * V_LL_kV);
@@ -717,6 +736,7 @@
     Vf = Vf || [1, 0];
     Zf = Zf || [0, 0];
     var Ztotal = cadd(cadd(Z0, Z1), cadd(Z2, cscale(Zf, 3)));
+    if (cabs(Ztotal) === 0) throw new RangeError('Fault impedance must not be zero.');
     var Ia0 = cdiv(Vf, Ztotal);
     var Ia1 = Ia0;
     var Ia2 = Ia0;
@@ -750,6 +770,7 @@
     Vf = Vf || [1, 0];
     Zf = Zf || [0, 0];
     var Ztotal = cadd(cadd(Z1, Z2), Zf);
+    if (cabs(Ztotal) === 0) throw new RangeError('Fault impedance must not be zero.');
     var Ia1 = cdiv(Vf, Ztotal);
     var Ia2 = cscale(Ia1, -1);
     var Ia0 = ZERO;
@@ -781,21 +802,24 @@
     Vf = Vf || [1, 0];
     Zf = Zf || [0, 0];
     var Z0_mod = cadd(Z0, cscale(Zf, 3));
-    var Z_par = cdiv(cmul(Z2, Z0_mod), cadd(Z2, Z0_mod));
-    var Ia1 = cdiv(Vf, cadd(Z1, Z_par));
+    var Z_parallel_sum = cadd(Z2, Z0_mod);
+    if (cabs(Z_parallel_sum) === 0) throw new RangeError('Parallel sequence currents are indeterminate.');
+    var Z_par = cdiv(cmul(Z2, Z0_mod), Z_parallel_sum);
+    var Ztotal = cadd(Z1, Z_par);
+    if (cabs(Ztotal) === 0) throw new RangeError('Fault impedance must not be zero.');
+    var Ia1 = cdiv(Vf, Ztotal);
 
+    var Ia2 = cscale(cmul(Ia1, cdiv(Z0_mod, Z_parallel_sum)), -1);
+    var Ia0 = cscale(cmul(Ia1, cdiv(Z2, Z_parallel_sum)), -1);
     var V1 = csub(Vf, cmul(Z1, Ia1));
-    var V2 = V1;
-    var V0 = V1;
-
-    var Ia2 = cscale(cdiv(V2, Z2), -1);
-    var Ia0 = cscale(cdiv(V0, Z0_mod), -1);
+    var V2 = cscale(cmul(Z2, Ia2), -1);
+    var V0 = cscale(cmul(Z0, Ia0), -1);
 
     var I012 = [Ia0, Ia1, Ia2];
     var Iabc = getPhaseComponents(I012);
     var Vabc = getPhaseComponents([V0, V1, V2]);
 
-    var If_ground_pu = cabs(cadd(Iabc[1], Iabc[2])); // Ib + Ic = 3*Ia0
+    var If_ground_pu = 3 * cabs(Ia0);
     var I_base_kA = (MVA_base) / (Math.sqrt(3) * V_LL_kV);
 
     return {

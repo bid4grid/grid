@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Technical Theory &amp; Formulas | Distribution Systems CAD Calculator</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px 16px 56px;
+      background: #f8fafc;
+      color: #1e293b;
+      font: 15px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    main {
+      max-width: 1040px;
+      margin: auto;
+      padding: 36px 40px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+    }
+    h1, h2, h3, h4 { color: #0f2744; line-height: 1.3; }
+    h1 { margin: 0 0 10px; font-size: 26px; font-weight: 700; letter-spacing: -0.4px; }
+    h2 {
+      margin: 36px 0 14px;
+      font-size: 19px;
+      font-weight: 700;
+      border-bottom: 2px solid #edf2f7;
+      padding-bottom: 8px;
+    }
+    h3 { margin: 20px 0 8px; font-size: 15px; color: #d9631e; font-weight: 600; }
+    p { margin: 8px 0 12px; }
+    .intro {
+      font-size: 14.5px;
+      color: #334155;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid #1f3a5f;
+      padding: 16px 18px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }
+    body { counter-reset: eqn; }
+    .eq {
+      position: relative;
+      margin: 12px 0;
+      padding: 8px 48px 8px 16px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 3px solid #1f3a5f;
+      border-radius: 8px;
+      color: #0f172a;
+      font-family: "STIX Two Math", "Cambria Math", "Latin Modern Math", "Times New Roman", Times, serif;
+      font-size: 18px;
+      line-height: 1.6;
+      text-align: center;
+      counter-increment: eqn;
+      overflow-x: auto;
+    }
+    .eq::after {
+      content: "(" counter(eqn) ")";
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      font: 12px -apple-system, "Segoe UI", Arial, sans-serif;
+    }
+    .eq .ln {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 4px 24px;
+      padding: 4px 0;
+    }
+    .eq .t { white-space: nowrap; }
+    .m {
+      font-family: "STIX Two Math", "Cambria Math", "Latin Modern Math", "Times New Roman", Times, serif;
+      font-size: 1.07em;
+      white-space: nowrap;
+    }
+    .frac {
+      display: inline-flex;
+      flex-direction: column;
+      vertical-align: middle;
+      margin: 0 .2em;
+      line-height: 1.2;
+      text-align: center;
+    }
+    .frac > span:first-child { border-bottom: 1px solid currentColor; padding: 0 .3em .08em; }
+    .frac > span:last-child { padding: .08em .3em 0; }
+    .rad { white-space: nowrap; }
+    .rel { margin: 0 .25em; }
+    .bin { margin: 0 .18em; }
+    .m sub, .m sup, .eq sub, .eq sup { font-size: .68em; line-height: 0; }
+    .tw { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 24px;
+      font-size: 14px;
+    }
+    th, td {
+      padding: 9px 12px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    th {
+      background: #f8fafc;
+      color: #475569;
+      font-weight: 600;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: ui-monospace, Menlo, monospace;
+    }
+    .badge-green { background: #dcfce7; color: #15803d; }
+    .badge-amber { background: #fef3c7; color: #b45309; }
+    .ref-box {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-left: 4px solid #16a34a;
+      padding: 16px 18px;
+      border-radius: 6px;
+      margin-top: 30px;
+      font-size: 13.5px;
+      color: #166534;
+    }
+    .ref-box strong { color: #14532d; }
+    ul { margin: 8px 0 16px 20px; }
+    li { margin-bottom: 6px; }
+    @media (max-width: 640px) {
+      main { padding: 20px 16px; border-radius: 8px; }
+      h1 { font-size: 21px; }
+      h2 { font-size: 17px; }
+      .eq { font-size: 15px; padding: 6px 38px 6px 10px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Distribution Systems Technical Theory &amp; Formulas</h1>
+  <div class="intro">
+    This reference document details the governing mathematical equations, vector calculus, physical constraints, and IEEE/NESC procurement standards implemented in the <strong>Distribution Systems CAD Calculator</strong>.
+  </div>
+
+  <h2>1. Electric Power Cascade &amp; Bulk Transmission Physics</h2>
+  <p>Electrical power traverses five distinct voltage transformation tiers between generation and customer utilization. In single line diagrams (SLD) conforming to <strong>IEEE Std 315</strong> and <strong>IEC 60617</strong>, bulk balanced power <span class="m"><b>S</b><sub>3φ</sub></span> and line current <span class="m"><i>I</i><sub>line</sub></span> are governed by:</p>
+  <div class="eq">
+    <div class="ln">
+      <span class="t"><b>S</b><sub>3φ</sub> = √3 · <b>V</b><sub>LL</sub> · <b>I</b>*</span>
+      <span class="t">|<b>S</b>| = √(<i>P</i><sup>2</sup> + <i>Q</i><sup>2</sup>)</span>
+      <span class="t">cos <i>θ</i> = <span class="frac"><span><i>P</i></span><span>|<b>S</b>|</span></span></span>
+    </div>
+  </div>
+  <p>Transmission line current <span class="m"><i>I</i><sub>line</sub></span> and series conductor <span class="m"><i>I</i><sup>2</sup><i>R</i></span> thermal losses over line length <span class="m"><i>L</i></span> with per-phase resistance <span class="m"><i>R</i></span>:</p>
+  <div class="eq">
+    <div class="ln">
+      <span class="t"><i>I</i><sub>line</sub> = <span class="frac"><span>|<b>S</b><sub>3φ</sub>|</span><span>√3 · <i>V</i><sub>LL</sub></span></span></span>
+      <span class="t"><i>P</i><sub>loss</sub> = 3 · <i>I</i><sub>line</sub><sup>2</sup> · <i>R</i><sub>line</sub></span>
+      <span class="t">[Watts]</span>
+    </div>
+  </div>
+  <p>Stepping the generator voltage up to extra-high voltage (EHV) reduces current proportionally to the voltage ratio, drastically reducing line heat losses:</p>
+  <div class="eq">
+    <div class="ln">
+      <span class="t"><span class="frac"><span><i>P</i><sub>loss, HV</sub></span><span><i>P</i><sub>loss, MV</sub></span></span> = <span class="frac"><span>(<i>V</i><sub>MV</sub>)<sup>2</sup></span><span>(<i>V</i><sub>HV</sub>)<sup>2</sup></span></span> = <span class="frac"><span>(13.8 kV)<sup>2</sup></span><span>(230 kV)<sup>2</sup></span></span> = 0.0036</span>
+      <span class="t">(99.64% Thermal Loss Reduction)</span>
+    </div>
+  </div>
+
+  <h2>2. Voltage Drop Vector Equations (IEEE / Neher-McGrath)</h2>
+  <p>Conductors possess series resistance <span class="m"><i>R</i></span> and inductive reactance <span class="m"><i>X</i></span>. Under lagging load power factor <span class="m">cos <i>φ</i></span>, the voltage drop vector is calculated as:</p>
+  <div class="eq">
+    <div class="ln">
+      <span class="t">Single-Phase (2-Wire): Δ<i>V</i><sub>1φ</sub> = 2 · <i>I</i> · <i>L</i> · (<i>R</i> · cos <i>φ</i> + <i>X</i> · sin <i>φ</i>)</span>
+      <span class="t">[Volts]</span>
+    </div>
+  </div>
+  <div class="eq">
+    <div class="ln">
+      <span class="t">Three-Phase (Line-to-Line): Δ<i>V</i><sub>3φ, LL</sub> = √3 · <i>I</i><sub>line</sub> · <i>L</i> · (<i>R</i> · cos <i>φ</i> + <i>X</i> · sin <i>φ</i>)</span>
+      <span class="t">[Volts]</span>
+    </div>
+  </div>
+  <p>Percentage voltage drop relative to nominal system voltage <span class="m"><i>V</i><sub>nom</sub></span>:</p>
+  <div class="eq">
+    <div class="ln">
+      <span class="t">%VD = <span class="frac"><span>Δ<i>V</i></span><span><i>V</i><sub>nom</sub></span></span> × 100%</span>
+      <span class="t"><i>V</i><sub>terminal</sub> = <i>V</i><sub>send</sub> − Δ<i>V</i></span>
+    </div>
+  </div>
+
+  <h2>3. Residential 120/240-V Split-Phase Physics &amp; Phasor Subtraction</h2>
+  <p>North American residential service is supplied from a single-phase transformer with a center-tapped secondary winding (terminals X1, X2, X3). The two 120 V legs are 180° out of phase relative to the center-tap neutral (X2 / MGN):</p>
+  <div class="eq">
+    <div class="ln">
+      <span class="t"><b>V</b><sub>L1-N</sub> = 120 V ∠ 0°</span>
+      <span class="t"><b>V</b><sub>L2-N</sub> = 120 V ∠ 180°</span>
+    </div>
+  </div>
+  <p>The 240 V line-to-line voltage is obtained by phasor subtraction across the full secondary winding:</p>
+  <div class="eq">
+    <div class="ln">
+      <span class="t"><b>V</b><sub>L1-L2</sub> = <b>V</b><sub>L1</sub> − <b>V</b><sub>L2</sub> = 120∠0° − 120∠180° = 120 − (−120) = 240 V ∠ 0°</span>
+    </div>
+  </div>
+  <p>Neutral return current <span class="m"><b>I</b><sub>N</sub></span> carries only the vector difference between the single-phase leg currents:</p>
+  <div class="eq">
+    <div class="ln">
+      <span class="t"><b>I</b><sub>N</sub> = <b>I</b><sub>L1</sub> + <b>I</b><sub>L2</sub></span>
+      <span class="t">|<b>I</b><sub>N</sub>| = |<i>I</i><sub>L1</sub> − <i>I</i><sub>L2</sub>|</span>
+      <span class="t">(Zero Neutral Current when <i>I</i><sub>L1</sub> = <i>I</i><sub>L2</sub>)</span>
+    </div>
+  </div>
+
+  <h2>4. ANSI C84.1 Voltage Quality &amp; Range Standards</h2>
+  <p>ANSI C84.1 establishes utility service voltage boundaries to protect equipment and optimize motor efficiency:</p>
+  <div class="tw">
+    <table>
+      <thead>
+        <tr>
+          <th>Voltage Class Base</th>
+          <th>Nominal</th>
+          <th>Range A (Normal Operation ±5.0%)</th>
+          <th>Range B (Contingency Limits -8.3% / +5.8%)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>120 V Base (Service)</strong></td>
+          <td>120 V</td>
+          <td><span class="badge badge-green">114 V – 126 V</span></td>
+          <td><span class="badge badge-amber">110 V – 127 V</span></td>
+        </tr>
+        <tr>
+          <td><strong>240 V Base (Service)</strong></td>
+          <td>240 V</td>
+          <td><span class="badge badge-green">228 V – 252 V</span></td>
+          <td><span class="badge badge-amber">220 V – 254 V</span></td>
+        </tr>
+        <tr>
+          <td><strong>480 V Base (Commercial)</strong></td>
+          <td>480 V</td>
+          <td><span class="badge badge-green">456 V – 504 V</span></td>
+          <td><span class="badge badge-amber">440 V – 508 V</span></td>
+        </tr>
+        <tr>
+          <td><strong>13.2 kV Primary Feeder</strong></td>
+          <td>13,200 V</td>
+          <td><span class="badge badge-green">12,540 V – 13,860 V</span></td>
+          <td><span class="badge badge-amber">12,100 V – 13,970 V</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>5. Overhead Utility Pole Framing &amp; NESC Clearance Mandates (IEEE C2)</h2>
+  <p>The National Electrical Safety Code (NESC C2-2023) specifies mandatory vertical separations on joint-use distribution wood poles:</p>
+  <ul>
+    <li><strong>Primary Distribution Zone (Top of Pole):</strong> Pin or post insulators supporting 13.2 kV / 12.47 kV 3-phase conductors atop treated wood or fiberglass crossarms.</li>
+    <li><strong>Equipment Space:</strong> Expulsion cutout switches with internal link fusing and Heavy-Duty Metal-Oxide Varistor (MOV) surge arresters mounted above the transformer can.</li>
+    <li><strong>Rule 235 Separation:</strong> Minimum <strong>48 inches (1.22 m)</strong> vertical separation between primary medium-voltage phase conductors and the multi-grounded neutral (MGN).</li>
+    <li><strong>Rule 238 Communication Worker Safety Zone:</strong> Minimum <strong>40 inches (1.02 m)</strong> clear vertical buffer space below the neutral before any communications attachments (fiber, coaxial cable) may attach.</li>
+    <li><strong>Rule 232 Roadway Clearances:</strong> Minimum 18.5 ft vertical clearance over public roads subject to truck traffic, and 15.5 ft over residential driveways.</li>
+  </ul>
+
+  <h2>6. Three-Phase Transformer Banking Vector Calculus</h2>
+  <p>Utilities bank single-phase transformer cans to supply 3-phase customer loads:</p>
+  <h3>Delta-Wye (Dyn1) 30° Angular Displacement</h3>
+  <p>Secondary line-to-neutral voltages lag primary line-to-line voltages by 30°, trapping triplen harmonics in the primary delta:</p>
+  <div class="eq">
+    <div class="ln">
+      <span class="t"><b>V</b><sub>a</sub> = <span class="frac"><span><b>V</b><sub>AB</sub></span><span>√3 · <i>n</i></span></span> ∠ −30°</span>
+      <span class="t"><i>n</i> = <span class="frac"><span><i>N</i><sub>1</sub></span><span><i>N</i><sub>2</sub></span></span> (Turns Ratio)</span>
+    </div>
+  </div>
+
+  <h3>240V 4-Wire High-Leg (Wild-Leg) Delta (NEC 110.15)</h3>
+  <p>When Phase A-C is center-tapped to provide 120 V single-phase power, the geometric altitude of the equilateral triangle creates the 208 V high-leg on Phase B:</p>
+  <div class="eq">
+    <div class="ln">
+      <span class="t"><i>V</i><sub>B-N</sub> = 120 V × √3 = 207.85 V ≈ 208 V ∠ 90°</span>
+      <span class="t"><i>V</i><sub>A-N</sub> = 120 V</span>
+      <span class="t"><i>V</i><sub>C-N</sub> = 120 V</span>
+      <span class="t"><i>V</i><sub>AB</sub> = <i>V</i><sub>BC</sub> = <i>V</i><sub>CA</sub> = 240 V</span>
+    </div>
+  </div>
+
+  <h3>Open-Delta (V-V Bank) Capacity Derating</h3>
+  <p>When two single-phase transformers operate in an open-delta bank, the 3-phase capacity is derated to 57.7% of a 3-transformer bank:</p>
+  <div class="eq">
+    <div class="ln">
+      <span class="t"><i>S</i><sub>open</sub> = √3 · <i>S</i><sub>can</sub> = 1.732 · <i>S</i><sub>can</sub></span>
+      <span class="t"><span class="frac"><span><i>S</i><sub>open</sub></span><span><i>S</i><sub>3-can</sub></span></span> = <span class="frac"><span>√3 · <i>S</i><sub>can</sub></span><span>3 · <i>S</i><sub>can</sub></span></span> = <span class="frac"><span>1</span><span>√3</span></span> = 57.74%</span>
+    </div>
+  </div>
+  <div class="eq">
+    <div class="ln">
+      <span class="t">Can Utilization Factor = <span class="frac"><span><i>S</i><sub>open</sub></span><span>2 · <i>S</i><sub>can</sub></span></span> = <span class="frac"><span>√3</span><span>2</span></span> = 86.60%</span>
+    </div>
+  </div>
+
+  <h2>7. Urban Secondary Spot Networks &amp; Reverse-Power Protection</h2>
+  <p>Secondary spot networks provide N-1 continuous service reliability in downtown metropolitan areas. Network protectors (IEEE C37.51) trip on directional reverse power:</p>
+  <div class="eq">
+    <div class="ln">
+      <span class="t"><i>P</i><sub>net</sub> = Re{<b>V</b> · <b>I</b>*} &lt; 0</span>
+      <span class="t">(Directional Reverse-Power Trip in 2 to 5 cycles)</span>
+    </div>
+  </div>
+
+  <h2>8. Bid4Grid Equipment Procurement Standards</h2>
+  <div class="tw">
+    <table>
+      <thead>
+        <tr>
+          <th>Apparatus</th>
+          <th>IEEE / ANSI Standard</th>
+          <th>Key Procurement Parameters</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>1φ Pole-Mount Can</strong></td>
+          <td>IEEE C57.12.20</td>
+          <td>10–167 kVA, 13.2 kV GrdY / 7620 V to 120/240 V split-phase, 2.1% Z, ANSI 70 Grey powder coat, hanger lugs.</td>
+        </tr>
+        <tr>
+          <td><strong>3φ Padmount Transformer</strong></td>
+          <td>IEEE C57.12.22 / C57.12.28</td>
+          <td>75–2500 kVA, 13.2 kV to 480Y/277 V, Dead-front loop feed, Bayonet dual fusing, tamper-resistant green cabinet.</td>
+        </tr>
+        <tr>
+          <td><strong>Automatic Circuit Recloser</strong></td>
+          <td>IEEE C37.60</td>
+          <td>15.5 kV, 630 A Continuous, 12.5 kA Interrupting, Solid-dielectric vacuum bottles, electronic controller.</td>
+        </tr>
+        <tr>
+          <td><strong>Padmount Switchgear</strong></td>
+          <td>IEEE C37.20.2 / C37.74</td>
+          <td>15 kV, 600 A Main Bus, 25 kA Symmetrical, Vacuum fault interrupters, 3-position disconnect switches.</td>
+        </tr>
+        <tr>
+          <td><strong>Step-Voltage Regulator</strong></td>
+          <td>IEEE C57.15</td>
+          <td>578 kVA, 32-step ±10% regulation in 5/8% steps, Line Drop Compensation (LDC) R/X dials, reverse power logic.</td>
+        </tr>
+        <tr>
+          <td><strong>Substation Circuit Breaker</strong></td>
+          <td>IEEE C37.04 / C37.09</td>
+          <td>15 kV to 230 kV Substation Class, 600–2000 A, 20–40 kA Interrupting, O-0.3s-CO-3min-CO operating duty cycle.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="ref-box">
+    <strong>Procurement Compliance Note:</strong> All apparatus ratings and test parameters generated in the Bid4Grid Equipment Sourcing Console adhere strictly to standard IEEE C57 and C37 manufacturer test codes (FAT certified reports and ANSI C84.1 service drop limits).
+  </div>
+</main>
+</body>
+</html>

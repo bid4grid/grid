@@ -95,14 +95,19 @@
       <!-- Header -->
       <header class="pwr-header">
         <div class="pwr-header-content">
-          <div>
-            <h1>Power Systems CAD Calculator</h1>
+          <div class="pwr-title-wrap">
+            <h1>Power Systems CAD</h1>
             <div class="subtitle">Interactive Power Systems Engineering Suite</div>
           </div>
-          <button type="button" class="pwr-btn-action pwr-watch-video" id="btn-watch-walkthrough" aria-label="Watch walkthrough">
-            <span class="pwr-watch-icon" aria-hidden="true">▶</span>
-            <span class="pwr-watch-label">Walkthrough</span>
-          </button>
+          <div class="pwr-header-actions">
+            <a href="index.html" class="pwr-btn-action">
+              <span>⚡ Distribution CAD</span>
+            </a>
+            <button type="button" class="pwr-watch-video" id="btn-watch-walkthrough" title="Watch Video Walkthrough" aria-label="Watch video walkthrough">
+              <span class="pwr-watch-icon"><svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2.5v11l9-5.5z"/></svg></span>
+              <span class="pwr-watch-label">Walkthrough</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -139,9 +144,9 @@
             <span class="pwr-tab-full">Fault Analysis</span>
             <span class="pwr-tab-short">Faults</span>
           </button>
-          <button type="button" class="pwr-nav-guide" data-tab="theory" aria-label="Technical Theory and Formulas">
+          <button data-tab="theory">
             <span class="pwr-tab-icon">📖</span>
-            <span class="pwr-tab-full">Technical Theory &amp; Formulas</span>
+            <span class="pwr-tab-full">Theory &amp; Formulas</span>
             <span class="pwr-tab-short">Theory</span>
           </button>
         </nav>
@@ -593,14 +598,16 @@
     var walkthroughStatus = document.getElementById('walkthrough-status');
     var watchButton = document.getElementById('btn-watch-walkthrough');
 
-    watchButton.addEventListener('click', function () {
-      walkthroughVideo.volume = 0.15;
-      walkthrough.showModal();
-      document.getElementById('btn-close-walkthrough').focus();
-      walkthroughVideo.play().catch(function () {
-        walkthroughStatus.textContent = 'Playback did not start. Press Play in the video controls to try again.';
+    if (walkthrough && walkthroughVideo && watchButton) {
+      watchButton.addEventListener('click', function () {
+        walkthroughVideo.volume = 0.15;
+        walkthrough.showModal();
+        document.getElementById('btn-close-walkthrough').focus();
+        walkthroughVideo.play().catch(function () {
+          walkthroughStatus.textContent = 'Playback did not start. Press Play in the video controls to try again.';
+        });
       });
-    });
+    }
 
     document.getElementById('btn-close-walkthrough').addEventListener('click', function () {
       walkthrough.close();
@@ -613,7 +620,7 @@
     walkthrough.addEventListener('close', function () {
       walkthroughVideo.pause();
       walkthroughStatus.textContent = '';
-      watchButton.focus();
+      if (watchButton) watchButton.focus();
     });
 
     walkthroughVideo.addEventListener('playing', function () {

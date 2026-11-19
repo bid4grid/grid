@@ -42,40 +42,93 @@ body.pwr-standalone,
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .pwr-header h1 {
-  margin: 0 0 4px 0;
-  font-size: 24px;
+  margin: 0;
+  font-size: 20px;
   font-weight: 700;
   color: var(--primary);
   letter-spacing: -0.3px;
+  display: flex;
+  align-items: center;
 }
 
 .pwr-header .subtitle {
-  font-size: 13.5px;
+  font-size: 12px;
   color: var(--muted);
-  line-height: 1.4;
+  line-height: 1.3;
+  margin-top: 2px;
 }
 
-.pwr-btn-action.pwr-watch-video {
-  min-height: 38px;
-  padding: 0 16px;
-  color: #ffffff;
-  background: #087f5b;
-  border-color: #087f5b;
+.pwr-header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
 }
 
-.pwr-btn-action.pwr-watch-video:hover {
-  color: #ffffff;
-  background: #066448;
-  border-color: #066448;
+.pwr-watch-video {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1.5px solid #a7f3d0;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.12);
+  white-space: nowrap;
 }
 
-.pwr-nav-guide {
-  margin-left: auto;
+.pwr-watch-video:hover {
+  background: #d1fae5;
+  border-color: #6ee7b7;
+  color: #047857;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+}
+
+.pwr-watch-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+}
+
+.pwr-watch-icon svg {
+  display: block;
+  margin-left: 1.5px;
+}
+
+.pwr-btn-action {
+  background: #ffffff;
+  color: var(--primary);
+  border: 1.5px solid var(--border);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  white-space: nowrap;
+}
+
+.pwr-btn-action:hover {
+  background: #f8fafc;
+  border-color: var(--primary);
+  box-shadow: 0 2px 6px rgba(31, 58, 95, 0.1);
 }
 
 /* Walkthrough video dialog */
@@ -660,41 +713,37 @@ button.btn-primary:hover {
 /* Responsive Styles (Matches Mobile Screenshot) */
 @media (max-width: 768px) {
   .pwr-header {
-    padding: 14px 16px;
+    padding: 12px 14px;
   }
 
   .pwr-header h1 {
-    font-size: 20px;
+    font-size: 17px;
   }
 
   .pwr-header-content {
-    position: relative;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
   }
 
-  .pwr-header-content > div:first-child {
-    padding-right: 50px;
-  }
-
-  .pwr-btn-action.pwr-watch-video {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 38px;
-    height: 38px;
-    min-height: 38px;
+  .pwr-watch-video {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
     padding: 0;
     border-radius: 50%;
+    justify-content: center;
   }
 
-  .pwr-watch-label {
+  .pwr-watch-video .pwr-watch-label {
     display: none;
   }
 
-  .pwr-watch-icon {
-    font-size: 15px;
+  .pwr-btn-action {
+    padding: 6px 10px;
+    font-size: 11px;
+    height: 32px;
   }
 
   .pwr-video-overlay {
@@ -741,10 +790,6 @@ button.btn-primary:hover {
     white-space: nowrap;
     border-radius: 9px;
     text-align: center;
-  }
-
-  .pwr-nav .pwr-nav-guide {
-    margin-left: 0;
   }
 
   .pwr-nav .pwr-tab-icon {

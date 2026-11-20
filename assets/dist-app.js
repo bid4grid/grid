@@ -422,7 +422,6 @@
       } else {
         html += '      <div class="card-header">';
         html += '        <h2 class="card-title">' + tab.icon + ' ' + tab.full + ' CAD Diagram</h2>';
-        html += '        <span class="badge blue">CAD VIEW</span>';
         html += '      </div>';
       }
       html += '      <div class="dist-canvas-wrapper">';

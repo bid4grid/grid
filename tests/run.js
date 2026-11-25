@@ -15,7 +15,7 @@ function ok(condition, msg) {
 
 function assertClose(actual, expected, tol, msg) {
   const diff = Math.abs(actual - expected);
-  if (diff > tol) {
+  if (!Number.isFinite(actual) || diff > tol) {
     console.error(`  FAIL ${msg} | Expected ${expected}, got ${actual} (diff ${diff.toExponential(3)} > ${tol})`);
     failed++;
   } else {
@@ -27,7 +27,7 @@ function assertClose(actual, expected, tol, msg) {
 function assertComplexClose(actual, expected, tol, msg) {
   const diffRe = Math.abs(actual[0] - expected[0]);
   const diffIm = Math.abs(actual[1] - expected[1]);
-  if (diffRe > tol || diffIm > tol) {
+  if (!Number.isFinite(actual[0]) || !Number.isFinite(actual[1]) || diffRe > tol || diffIm > tol) {
     console.error(`  FAIL ${msg} | Expected [${expected[0]}, ${expected[1]}], got [${actual[0]}, ${actual[1]}]`);
     failed++;
   } else {
@@ -87,8 +87,20 @@ assertClose(genCyl.Pmax_MW, (3 * genCyl.Eg_mag * genCyl.Vt_ph) / (1.8 * 1e6), 0.
 
 // Salient-pole machine (Xd > Xq)
 const genSal = core.calcSalientGenerator(13.8, 50, 0.8, true, 0.05, 1.8, 1.2);
+assertClose(genSal.Eg_LL, 19.85, 0.02, "Salient generator lagging excitation voltage");
+assertClose(genSal.delta_deg, 13.7, 0.1, "Salient generator lagging torque angle");
+for (const lagging of [true, false]) {
+  const salient = core.calcSalientGenerator(13.8, 50, 0.8, lagging, 0.05, 1.8, 1.8);
+  const cylindrical = core.calcCylindricalGenerator(13.8, 50, 0.8, lagging, 0.05, 1.8);
+  assertClose(salient.Eg_LL, cylindrical.Eg_LL, 1e-9, `Equal reactances match cylindrical excitation (lagging=${lagging})`);
+  assertClose(salient.delta_deg, cylindrical.delta_deg, 1e-9, `Equal reactances match cylindrical angle (lagging=${lagging})`);
+}
 ok(genSal.delta_max < 90, `Salient-pole P_max occurs at delta < 90 deg due to reluctance torque (${genSal.delta_max} deg)`);
 ok(genSal.Pmax_MW > genSal.P_fund_max, `Salient-pole P_max includes reluctance power (${genSal.Pmax_MW.toFixed(2)} MW > ${genSal.P_fund_max.toFixed(2)} MW)`);
+const nearPeak = core.calcSalientGenerator(13.8, 10000, 1, true, 0, 10, 1.2);
+assertClose(nearPeak.delta_max, 89.2000395, 1e-5, "Critical angle is calculated between plotted degree samples");
+ok(nearPeak.delta_deg < nearPeak.delta_max && nearPeak.delta_deg > 89,
+  "Continuous critical angle avoids a false instability warning near a sampled peak");
 
 // 4. Power Transformers (Section 5)
 console.log("\n4. Power Transformers (Section 5)");
@@ -194,6 +206,10 @@ ok(noPvPower.converged, "Power flow converges with zero scheduled generator outp
 assertClose(noPvPower.buses[1].P, 0, 1e-5, "Zero scheduled generator output is retained");
 const unfinishedFlow = core.solveGaussSeidel(buses3, branches3, 1, 1e-12);
 ok(!unfinishedFlow.converged && unfinishedFlow.iterations === 1, "Unconverged power flow reports the actual iteration limit");
+let qLimitRejected = false;
+try { core.solveGaussSeidel([buses3[0], { ...buses3[1], Qmax: 0 }, buses3[2]], branches3); }
+catch (e) { qLimitRejected = e instanceof RangeError && /reactive power limits/.test(e.message); }
+ok(qLimitRejected, "Unsupported reactive power limits are explicitly rejected, including zero");
 
 // 8. Fault Analysis & Symmetrical Components (Sections 10, 11, 12)
 console.log("\n8. Fault Analysis & Symmetrical Components (Sections 10, 11, 12)");
@@ -210,6 +226,9 @@ assertComplexClose(seq_bal[2], [0, 0], 1e-6, "Negative sequence V2 is 0 for bala
 const Z1 = [0, 0.2], Z2 = [0, 0.2], Z0 = [0, 0.3], Zf = [0, 0];
 const symFault = core.solveSymmetricalFault([1, 0], Z1, Zf, 100, 138);
 assertClose(symFault.If_pu, 1 / 0.2, 0.01, "3-Phase balanced fault If = 1 / 0.2 = 5.0 pu");
+const symFaultWithZf = core.solveSymmetricalFault([1, 0], Z1, [0.02, 0.1], 100, 138);
+symFaultWithZf.V_phase.forEach((v, i) =>
+  assertComplexClose(v, core.cmul([0.02, 0.1], symFaultWithZf.I_phase[i]), 1e-9, `3-phase fault phase ${i + 1} voltage includes fault impedance`));
 
 const slgFault = core.solveSLGFault([1, 0], Z0, Z1, Z2, Zf, 100, 138);
 // If_slg = 3 / (Z0 + Z1 + Z2) = 3 / j0.7 = -j4.2857 pu -> mag 4.2857 pu

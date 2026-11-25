@@ -3,7 +3,7 @@
  * Standalone pure mathematical and analytical library covering:
  * - Conductor resistance, reactance, ampacity database (Copper & Aluminum/ACSR)
  * - Single-Phase (2-wire & 120/240V split-phase 3-wire) and Three-Phase voltage drop
- * - Full Grid-to-Customer Voltage Cascade Solver (Gen -> Transmission -> Substation -> Feeder -> Xfmr -> Service -> Meter)
+ * - Illustrative grid stages and regulated-bus-to-customer voltage calculation
  * - ANSI C84.1 Voltage Tolerance & Power Quality Compliance (Range A & Range B)
  * - Transformer bank transformation ratios and unbalanced neutral return currents
  * - Bid4Grid IEEE Equipment Specification Integration (Transformers, Switchgear, Regulators, Reclosers, Breakers)
@@ -13,8 +13,8 @@
 
   // =========================================================================
   // 1. CONDUCTOR IMPEDANCE & AMPACITY DATABASE
-  // Standard 60 Hz parameters (75°C conductor temp, typical pole/duct spacing)
-  // Values: R in ohms/km, X in ohms/km, ampacity in Amps (NEC / IEEE 738)
+  // Cable/service values: approximate room-temperature DC resistance, cable-like
+  // reactance and illustrative building-wire ampacities. Correct 25°C to 75°C.
   // =========================================================================
   var CONDUCTORS = {
     cu: {
@@ -35,18 +35,33 @@
       '6_AWG':    { name: '#6 AWG Al',    area_mm2: 13.3,  r_ohm_per_km: 2.208,  x_ohm_per_km: 0.165, ampacity: 50 },
       '4_AWG':    { name: '#4 AWG Al',    area_mm2: 21.2,  r_ohm_per_km: 1.388,  x_ohm_per_km: 0.157, ampacity: 65 },
       '2_AWG':    { name: '#2 AWG Al',    area_mm2: 33.6,  r_ohm_per_km: 0.873,  x_ohm_per_km: 0.148, ampacity: 90 },
-      '1/0_AWG':  { name: '1/0 AWG ACSR', area_mm2: 53.5,  r_ohm_per_km: 0.548,  x_ohm_per_km: 0.141, ampacity: 120 },
-      '2/0_AWG':  { name: '2/0 AWG ACSR', area_mm2: 67.4,  r_ohm_per_km: 0.435,  x_ohm_per_km: 0.138, ampacity: 135 },
-      '3/0_AWG':  { name: '3/0 AWG ACSR', area_mm2: 85.0,  r_ohm_per_km: 0.345,  x_ohm_per_km: 0.135, ampacity: 155 },
-      '4/0_AWG':  { name: '4/0 AWG ACSR', area_mm2: 107.2, r_ohm_per_km: 0.274,  x_ohm_per_km: 0.131, ampacity: 180 },
+      '1/0_AWG':  { name: '1/0 AWG Al', area_mm2: 53.5,  r_ohm_per_km: 0.548,  x_ohm_per_km: 0.141, ampacity: 120 },
+      '2/0_AWG':  { name: '2/0 AWG Al', area_mm2: 67.4,  r_ohm_per_km: 0.435,  x_ohm_per_km: 0.138, ampacity: 135 },
+      '3/0_AWG':  { name: '3/0 AWG Al', area_mm2: 85.0,  r_ohm_per_km: 0.345,  x_ohm_per_km: 0.135, ampacity: 155 },
+      '4/0_AWG':  { name: '4/0 AWG Al', area_mm2: 107.2, r_ohm_per_km: 0.274,  x_ohm_per_km: 0.131, ampacity: 180 },
       '250_kcmil':{ name: '250 kcmil Al', area_mm2: 126.7, r_ohm_per_km: 0.232,  x_ohm_per_km: 0.128, ampacity: 205 },
-      '336_kcmil':{ name: '336.4 kcmil ACSR (Linnet)', area_mm2: 170.5, r_ohm_per_km: 0.174, x_ohm_per_km: 0.126, ampacity: 235 },
-      '477_kcmil':{ name: '477 kcmil ACSR (Hawk)', area_mm2: 241.7, r_ohm_per_km: 0.122, x_ohm_per_km: 0.122, ampacity: 290 },
       '500_kcmil':{ name: '500 kcmil Al', area_mm2: 253.4, r_ohm_per_km: 0.116,  x_ohm_per_km: 0.121, ampacity: 310 },
-      '795_kcmil':{ name: '795 kcmil ACSR (Drake)', area_mm2: 402.8, r_ohm_per_km: 0.073, x_ohm_per_km: 0.117, ampacity: 400 },
       '1000_kcmil':{name:'1000 kcmil Al',area_mm2: 506.7, r_ohm_per_km: 0.059,  x_ohm_per_km: 0.115, ampacity: 445 }
+    },
+    // Nexans ACSR electrical data: 75°C AC resistance and 60 Hz reactance
+    // at 1 ft equivalent spacing (ohms/1000 ft), illustrative sun and 2 ft/s wind.
+    acsr: {
+      '1/0_AWG':  { name: '1/0 AWG ACSR (Raven)', area_mm2: 53.5, r_ohm_per_km: 0.216 / 0.3048, x_ohm_per_km: 0.116 / 0.3048, ampacity: 240 },
+      '2/0_AWG':  { name: '2/0 AWG ACSR (Quail)', area_mm2: 67.4, r_ohm_per_km: 0.176 / 0.3048, x_ohm_per_km: 0.113 / 0.3048, ampacity: 275 },
+      '3/0_AWG':  { name: '3/0 AWG ACSR (Pigeon)', area_mm2: 85.0, r_ohm_per_km: 0.145 / 0.3048, x_ohm_per_km: 0.109 / 0.3048, ampacity: 315 },
+      '4/0_AWG':  { name: '4/0 AWG ACSR (Penguin)', area_mm2: 107.2, r_ohm_per_km: 0.116 / 0.3048, x_ohm_per_km: 0.105 / 0.3048, ampacity: 365 },
+      '336_kcmil':{ name: '336.4 kcmil ACSR (Linnet)', area_mm2: 170.5, r_ohm_per_km: 0.0619 / 0.3048, x_ohm_per_km: 0.0854 / 0.3048, ampacity: 530 },
+      '477_kcmil':{ name: '477 kcmil ACSR (Hawk)', area_mm2: 241.7, r_ohm_per_km: 0.0438 / 0.3048, x_ohm_per_km: 0.0814 / 0.3048, ampacity: 660 },
+      '795_kcmil':{ name: '795 kcmil ACSR (Drake)', area_mm2: 402.8, r_ohm_per_km: 0.0263 / 0.3048, x_ohm_per_km: 0.0756 / 0.3048, ampacity: 910 }
     }
   };
+
+  ['cu', 'al'].forEach(function (material) {
+    var alpha = material === 'cu' ? 0.00393 : 0.00403;
+    Object.keys(CONDUCTORS[material]).forEach(function (key) {
+      CONDUCTORS[material][key].r_ohm_per_km *= (1 + alpha * 55) / (1 + alpha * 5);
+    });
+  });
 
   // Convert km to feet and miles
   var KM_TO_MILES = 0.621371;
@@ -102,8 +117,9 @@
    * @param {number} params.voltage - Line-to-line or line-to-neutral nominal voltage (V)
    * @param {number} params.current_A - Load current in Amperes
    * @param {number} params.length_km - One-way conductor length in km
-   * @param {string} params.material - 'cu' or 'al'
+   * @param {string} params.material - 'cu', 'al', or overhead 'acsr'
    * @param {string} params.sizeKey - Conductor key (e.g., '1/0_AWG', '4/0_AWG')
+   * @param {number} [params.spacing_ft=4] - ACSR equivalent phase spacing (ft)
    * @param {number} [params.powerFactor=0.90] - Lagging power factor (0.0 to 1.0)
    * @returns {Object} Voltage drop results
    */
@@ -111,11 +127,18 @@
     var phaseType = params.phaseType || '3phase';
     var V_nom = params.voltage || 12470;
     var I = Math.max(0, params.current_A || 0);
-    var L_km = Math.max(0.0001, params.length_km || 1.0);
-    var mat = params.material === 'cu' ? 'cu' : 'al';
+    var L_km = params.length_km !== undefined ? params.length_km : 1.0;
+    if (!Number.isFinite(L_km) || L_km < 0) throw new RangeError('Conductor length must be nonnegative.');
+    var mat = params.material === 'cu' || params.material === 'acsr' ? params.material : 'al';
     var size = params.sizeKey || (mat === 'al' ? '1/0_AWG' : '2_AWG');
-    var cond = (CONDUCTORS[mat] && CONDUCTORS[mat][size]) || CONDUCTORS.al['1/0_AWG'];
-    var pf = Math.min(1.0, Math.max(0.1, params.powerFactor !== undefined ? params.powerFactor : 0.90));
+    if (mat === 'acsr' && !params.sizeKey) size = '1/0_AWG';
+    if (mat === 'al' && !CONDUCTORS.al[size] && CONDUCTORS.acsr[size]) mat = 'acsr';
+    var cond = CONDUCTORS[mat][size];
+    if (!cond) throw new RangeError('Unknown conductor: ' + mat + ' ' + size);
+    var spacing = params.spacing_ft !== undefined ? params.spacing_ft : 4;
+    if (mat === 'acsr' && (!Number.isFinite(spacing) || spacing <= 0)) throw new RangeError('ACSR equivalent spacing must be positive.');
+    var pf = params.powerFactor !== undefined ? params.powerFactor : 0.90;
+    if (!Number.isFinite(pf) || pf <= 0 || pf > 1) throw new RangeError('Power factor must be greater than 0 and at most 1.');
 
     // cos(theta) = pf, sin(theta) = sqrt(1 - pf^2)
     var cosPhi = pf;
@@ -123,7 +146,8 @@
 
     // Total resistance and reactance for length L
     var R_tot = cond.r_ohm_per_km * L_km;
-    var X_tot = cond.x_ohm_per_km * L_km;
+    var X_per_km = cond.x_ohm_per_km + (mat === 'acsr' ? 0.0754 * Math.log(spacing) : 0);
+    var X_tot = X_per_km * L_km;
 
     // Effective impedance drop factor: R*cos(phi) + X*sin(phi)
     var effective_z = (R_tot * cosPhi + X_tot * sinPhi);
@@ -189,13 +213,16 @@
     var p1 = Math.max(0, params.load1_W || 0);
     var p2 = Math.max(0, params.load2_W || 0);
     var p240 = Math.max(0, params.load240_W || 0);
-    var pf = params.pf || 0.92;
-    var len_ft = params.secondary_len_ft || 120;
+    var pf = params.pf !== undefined ? params.pf : 0.92;
+    if (!Number.isFinite(pf) || pf <= 0 || pf > 1) throw new RangeError('Split-phase power factor must be greater than 0 and at most 1.');
+    var len_ft = params.secondary_len_ft !== undefined ? params.secondary_len_ft : 120;
+    if (!Number.isFinite(len_ft) || len_ft < 0) throw new RangeError('Secondary length must be nonnegative.');
     var len_km = len_ft * FEET_TO_KM;
     var size = params.secondary_size || '4_AWG';
     var mat = params.secondary_mat || 'al';
 
-    var cond = (CONDUCTORS[mat] && CONDUCTORS[mat][size]) || CONDUCTORS.al['4_AWG'];
+    var cond = CONDUCTORS[mat] && CONDUCTORS[mat][size];
+    if (!cond || mat === 'acsr') throw new RangeError('Unknown split-phase service conductor: ' + mat + ' ' + size);
 
     // Current on L1 and L2
     // I_L1 = (P1 / (120 * pf)) + (P240 / (240 * pf))
@@ -223,21 +250,26 @@
     // Net voltages at customer panel
     // If L1 is more heavily loaded, neutral drop shifts neutral potential toward L1,
     // causing V_L1 to drop more and V_L2 to experience less drop (neutral shift)
-    var v_L1_N = 120.0 - drop_L1 - (i1_120 >= i2_120 ? drop_N : -drop_N * 0.5);
-    var v_L2_N = 120.0 - drop_L2 - (i2_120 >= i1_120 ? drop_N : -drop_N * 0.5);
+    var sign = Math.sign(i1_120 - i2_120);
+    var v_L1_N = 120.0 - drop_L1 - sign * drop_N;
+    var v_L2_N = 120.0 - drop_L2 + sign * drop_N;
     var v_L1_L2 = 240.0 - (drop_L1 + drop_L2);
 
     // ANSI C84 evaluation
-    var ansi = evaluateANSI(v_L1_N, 120);
+    var ansi1 = evaluateANSI(v_L1_N, 120);
+    var ansi2 = evaluateANSI(v_L2_N, 120);
+    var severity = { A: 0, B: 1, V: 2 };
+    var ansi = severity[ansi1.code] > severity[ansi2.code] ||
+      (severity[ansi1.code] === severity[ansi2.code] && Math.abs(ansi1.pct_dev) >= Math.abs(ansi2.pct_dev)) ? ansi1 : ansi2;
 
     return {
       I_L1: I_L1,
       I_L2: I_L2,
       I_N: I_N,
       unbalance_A: Math.abs(I_L1 - I_L2),
-      v_L1_N: Math.max(0, v_L1_N),
-      v_L2_N: Math.max(0, v_L2_N),
-      v_L1_L2: Math.max(0, v_L1_L2),
+      v_L1_N: v_L1_N,
+      v_L2_N: v_L2_N,
+      v_L1_L2: v_L1_L2,
       drop_L1_V: drop_L1,
       drop_L2_V: drop_L2,
       drop_N_V: drop_N,
@@ -245,7 +277,9 @@
       pct_drop_240: ((drop_L1 + drop_L2) / 240.0) * 100,
       conductor: cond,
       length_ft: len_ft,
-      ansiStatus: ansi
+      ansiStatus: ansi,
+      ansiLeg1: ansi1,
+      ansiLeg2: ansi2
     };
   }
 
@@ -288,7 +322,8 @@
 
   // =========================================================================
   // 5. GRID-TO-CUSTOMER COMPLETE VOLTAGE CASCADE SOLVER
-  // Traces power flow through all 7 physical stages:
+  // Illustrates upstream stages; a regulated substation bus is the downstream
+  // voltage source, so upstream drops and equipment impedances do not propagate.
   // 1. Generation (13.8 kV - 24 kV)
   // 2. Step-Up Substation GSU (13.8 kV -> 230 kV)
   // 3. High-Voltage Transmission Line (230 kV, ACSR Drake)
@@ -299,7 +334,7 @@
   // =========================================================================
 
   /**
-   * Solves the complete power cascade from power plant generation to customer meter
+   * Illustrates upstream stages and estimates voltage from the regulated bus to the meter
    * @param {Object} config - System configuration options
    * @returns {Object} Multi-stage solution with node telemetry and equipment specs
    */
@@ -308,28 +343,31 @@
 
     // 1. Generation Stage
     var gen_kV = config.gen_kV || 13.8;
-    var gen_MVA = config.gen_MVA || 100.0;
-    var gen_pf = config.gen_pf || 0.92;
+    var gen_MVA = config.gen_MVA !== undefined ? config.gen_MVA : 100.0;
+    var gen_pf = config.gen_pf !== undefined ? config.gen_pf : 0.92;
+    if (!Number.isFinite(gen_MVA) || gen_MVA < 0) throw new RangeError('Generator rating must be nonnegative.');
 
     // 2. GSU Transformer Stage
     var gsu_hv_kV = config.gsu_hv_kV || 230.0;
-    var gsu_z_pct = config.gsu_z_pct || 10.0; // % impedance
+    var gsu_z_pct = config.gsu_z_pct !== undefined ? config.gsu_z_pct : 10.0; // % impedance
     var gsu_eff_pct = 99.2;
 
     // 3. Transmission Line Stage
-    var trans_len_km = config.trans_len_km || 50.0; // 50 km (~31 miles)
-    var trans_cond = CONDUCTORS.al['795_kcmil']; // ACSR Drake
-    var feeder_load_MVA = config.feeder_load_MVA || 6.5;
+    var trans_len_km = config.trans_len_km !== undefined ? config.trans_len_km : 50.0; // 50 km (~31 miles)
+    var trans_cond = CONDUCTORS.acsr['795_kcmil']; // ACSR Drake
+    var feeder_load_MVA = config.feeder_load_MVA !== undefined ? config.feeder_load_MVA : 6.5;
+    if (!Number.isFinite(feeder_load_MVA) || feeder_load_MVA < 0) throw new RangeError('Feeder load must be nonnegative.');
     // Transmission line power dynamically tracks downstream feeder loading
-    var trans_MVA = Math.max(0.5, feeder_load_MVA * 1.03);
+    var trans_MVA = feeder_load_MVA * 1.03;
     var trans_I = (trans_MVA * 1e6) / (Math.sqrt(3) * gsu_hv_kV * 1e3);
     var trans_drop = calcVoltageDrop({
       phaseType: '3phase',
       voltage: gsu_hv_kV * 1e3,
       current_A: trans_I,
       length_km: trans_len_km,
-      material: 'al',
+      material: 'acsr',
       sizeKey: '795_kcmil',
+      spacing_ft: 10,
       powerFactor: gen_pf
     });
     var trans_recv_kV = trans_drop.v_end_V / 1e3;
@@ -337,14 +375,13 @@
     // 4. Substation Step-Down Stage
     var dist_sub_kV = config.dist_sub_kV || 13.2; // 13.2 kV or 12.47 kV
     var sub_xfmr_MVA = config.sub_xfmr_MVA || 25.0; // 25 MVA substation xfmr
-    var sub_xfmr_z_pct = config.sub_xfmr_z_pct || 8.0;
+    var sub_xfmr_z_pct = config.sub_xfmr_z_pct !== undefined ? config.sub_xfmr_z_pct : 8.0;
 
     // 5. Distribution Feeder Stage
     var feeder_type = config.feeder_type || 'overhead'; // 'overhead' or 'underground'
-    var feeder_len_km = config.feeder_len_km || 4.5; // 4.5 km (~2.8 miles)
-    var feeder_load_MVA = config.feeder_load_MVA || 6.5; // 6.5 MVA on feeder
+    var feeder_len_km = config.feeder_len_km !== undefined ? config.feeder_len_km : 4.5; // 4.5 km (~2.8 miles)
     var feeder_cond_key = (feeder_type === 'overhead') ? '336_kcmil' : '500_kcmil';
-    var feeder_cond_mat = (feeder_type === 'overhead') ? 'al' : 'cu';
+    var feeder_cond_mat = (feeder_type === 'overhead') ? 'acsr' : 'cu';
 
     var feeder_I = (feeder_load_MVA * 1e6) / (Math.sqrt(3) * dist_sub_kV * 1e3);
     var feeder_drop = calcVoltageDrop({
@@ -363,25 +400,33 @@
     var service_type = config.service_type || 'residential_split'; // 'residential_split', 'commercial_480', 'commercial_208'
     var service_label = service_type === 'residential_split' ? '1φ 120/240V' : (service_type === 'commercial_480' ? '3φ 480V' : '3φ 208V');
     var xfmr_kVA = config.xfmr_kVA || (service_type === 'residential_split' ? 50.0 : 500.0);
-    var xfmr_z_pct = config.xfmr_z_pct || (service_type === 'residential_split' ? 2.1 : 5.75);
+    var xfmr_z_pct = config.xfmr_z_pct !== undefined ? config.xfmr_z_pct : (service_type === 'residential_split' ? 2.1 : 5.75);
+    if (!Number.isFinite(xfmr_z_pct) || xfmr_z_pct < 0) throw new RangeError('Transformer impedance must be nonnegative.');
 
     var sec_nominal_V = (service_type === 'residential_split') ? 120.0 : (service_type === 'commercial_480' ? 277.0 : 120.0);
     var sec_nominal_LL_V = (service_type === 'residential_split') ? 240.0 : (service_type === 'commercial_480' ? 480.0 : 208.0);
 
-    // Transformer internal voltage regulation drop at rated load (~ Z% * cos(phi))
-    var xfmr_drop_pct = (xfmr_z_pct * 0.90) * (config.xfmr_load_pct ? config.xfmr_load_pct / 100.0 : 0.75);
+    // Illustrative X/R unless a transformer-specific value is supplied.
+    var xfmr_xr = config.xfmr_xr !== undefined ? config.xfmr_xr : 4;
+    if (!Number.isFinite(xfmr_xr) || xfmr_xr < 0) throw new RangeError('Transformer X/R must be nonnegative.');
+    var xfmr_r_pct = xfmr_z_pct / Math.sqrt(1 + xfmr_xr * xfmr_xr);
+    var xfmr_x_pct = xfmr_r_pct * xfmr_xr;
+    var service_pf = 0.92;
+    var xfmr_load_pct = config.xfmr_load_pct !== undefined ? config.xfmr_load_pct : 75;
+    if (!Number.isFinite(xfmr_load_pct) || xfmr_load_pct < 0) throw new RangeError('Transformer loading must be nonnegative.');
+    var xfmr_drop_pct = (xfmr_r_pct * service_pf + xfmr_x_pct * Math.sqrt(1 - service_pf * service_pf)) * xfmr_load_pct / 100;
     var sec_xfmr_out_V = Math.max(0, sec_nominal_V * (1.0 - (feeder_drop.pct_drop / 100.0) - (xfmr_drop_pct / 100.0)));
 
     // 7. Secondary Triplex & Service Drop Lateral
-    var sec_len_ft = config.sec_len_ft || 150.0; // 150 ft triplex / lateral
+    var sec_len_ft = config.sec_len_ft !== undefined ? config.sec_len_ft : 150.0; // 150 ft triplex / lateral
     var sec_len_km = sec_len_ft * FEET_TO_KM;
     var sec_cond_key = config.sec_cond_key || '2_AWG';
     var sec_mat = config.sec_mat || 'al';
-    var customer_load_kW = config.customer_load_kW || (service_type === 'residential_split' ? 12.0 : 180.0);
+    var customer_load_kW = config.customer_load_kW !== undefined ? config.customer_load_kW : (service_type === 'residential_split' ? 12.0 : 180.0);
 
     var cust_I = (service_type === 'residential_split')
-      ? (customer_load_kW * 1e3) / (sec_nominal_LL_V * 0.92)
-      : (customer_load_kW * 1e3) / (Math.sqrt(3) * sec_nominal_LL_V * 0.90);
+      ? (customer_load_kW * 1e3) / (sec_nominal_LL_V * service_pf)
+      : (customer_load_kW * 1e3) / (Math.sqrt(3) * sec_nominal_LL_V * service_pf);
 
     var sec_drop = calcVoltageDrop({
       phaseType: (service_type === 'residential_split') ? '1phase' : '3phase',
@@ -390,7 +435,7 @@
       length_km: sec_len_km,
       material: sec_mat,
       sizeKey: sec_cond_key,
-      powerFactor: 0.92
+      powerFactor: service_pf
     });
 
     // Customer Meter Terminal Voltage
@@ -403,7 +448,7 @@
       gsu_breaker: {
         item: "Substation Circuit Breaker (Transmission)",
         standard: "IEEE C37.04 / C37.09",
-        sample: "IEEE C37.04 Substation Vacuum Breaker (Rated 15kV/230kV, 600A-2000A, 20kA Interrupting)"
+        sample: "Illustrative IEEE C37.04 / C37.09 SF6 Transmission Breaker (245 kV class for 230 kV system, 2000 A, 40 kA symmetrical)"
       },
       sub_xfmr: {
         item: "Substation Power Transformer",
@@ -416,9 +461,9 @@
         sample: "IEEE C37.60 Solid-Dielectric Recloser (15.5 kV, 630 A Continuous, 12.5 kA Interrupting, 3-cycle)"
       },
       dist_switchgear: {
-        item: "Medium-Voltage Padmount / Metal-Clad Switchgear",
-        standard: "IEEE C37.20.2",
-        sample: "IEEE C37.20.2 Metal-Clad Switchgear (15 kV Nominal, 1200 A Bus, 25 kA Sym. Interrupting)"
+        item: "Medium-Voltage Pad-Mounted Switchgear",
+        standard: "IEEE C37.74",
+        sample: "Illustrative IEEE C37.74 Pad-Mounted Switchgear (15 kV class, 600 A bus, 25 kA symmetrical)"
       },
       dist_xfmr: {
         item: "Pad-Mounted Distribution Transformer",
@@ -494,6 +539,9 @@
         secondary_nominal_LL_V: sec_nominal_LL_V,
         rating_kVA: xfmr_kVA,
         z_pct: xfmr_z_pct,
+        r_pct: xfmr_r_pct,
+        x_pct: xfmr_x_pct,
+        x_r_ratio: xfmr_xr,
         voltage_out_V: sec_xfmr_out_V,
         internal_drop_pct: xfmr_drop_pct
       },
@@ -597,7 +645,7 @@
       // Comparison: Padmount Switchgear vs Transformer
       switchgear_comparison: {
         type: 'Pad-Mounted Vacuum / SF6 Sectionalizing Switchgear',
-        standard: 'IEEE C37.20.2',
+        standard: 'IEEE C37.74',
         functional_diff: 'Switchgear has NO windings and NO voltage transformation. It provides vacuum fault interruption (12.5kA-25kA), 3-position sectionalizing (Close-Open-Ground), and SCADA motor operators.'
       }
     },

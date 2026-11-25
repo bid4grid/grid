@@ -470,7 +470,7 @@
       sub_xfmr: { x: subTX, label: 'SUBSTATION POWER XFMR (IEEE C57.12)', color: t.cadBlue, cardIdx: 0 },
       voltage_regulator: { x: bus2X, label: 'STEP-VOLTAGE REGULATOR (IEEE C57.15)', color: t.cadBlue, cardIdx: 1 },
       feeder_recloser: { x: recX, label: 'AUTOMATIC RECLOSER (IEEE C37.60)', color: t.cadBlue, cardIdx: 1 },
-      dist_switchgear: { x: poleX, label: 'PADMOUNT SWITCHGEAR (IEEE C37.20.2)', color: '#059669', cardIdx: 1 },
+      dist_switchgear: { x: poleX, label: 'PADMOUNT SWITCHGEAR (IEEE C37.74)', color: '#059669', cardIdx: 1 },
       dist_xfmr: { x: distTX, label: '3φ PADMOUNT TRANSFORMER (IEEE C57.12.22)', color: t.accent, cardIdx: 2 },
       pole_xfmr: { x: distTX, label: '1φ POLE-MOUNT CAN (IEEE C57.12.20)', color: t.accent, cardIdx: 2 },
       feeder: { x: poleX, label: 'PRIMARY FEEDER APPARATUS', color: t.cadBlue, cardIdx: 1 },
@@ -575,7 +575,7 @@
     ctx.fillText('Utility-Grade Xfmr | Drop: ' + cascade.customerMeter.total_pct_drop.toFixed(2) + '% (' + cascade.customerMeter.ansi.code + ')', 24 + (cardW + 8) * 2, specY + 27);
 
     // Bottom Light Telemetry Bar
-    var teleText = 'CASCADE TELEMETRY: Gen ' + cascade.gen.voltage_kV + 'kV → Trans ' + cascade.transmission.voltage_recv_kV.toFixed(1) + 'kV → Feeder ' + cascade.feeder.end_kV.toFixed(2) + 'kV → Meter ' + cascade.customerMeter.terminal_V.toFixed(1) + 'V | ANSI ' + cascade.customerMeter.ansi.code + ' | Total Drop: ' + cascade.customerMeter.total_pct_drop.toFixed(2) + '%';
+    var teleText = 'ILLUSTRATIVE: Trans ' + cascade.transmission.voltage_recv_kV.toFixed(1) + 'kV | REGULATED BUS → Feeder ' + cascade.feeder.end_kV.toFixed(2) + 'kV → Meter ' + cascade.customerMeter.terminal_V.toFixed(1) + 'V | ANSI ' + cascade.customerMeter.ansi.code + ' | Drop: ' + cascade.customerMeter.total_pct_drop.toFixed(2) + '%';
     drawTelemetryBar(ctx, w, h, teleText);
   }
 
@@ -1292,7 +1292,7 @@
     var title = isJunction
       ? 'PRIMARY SECTIONALIZING / JUNCTION CABINET (GEORGIA POWER SPEC)'
       : (isSwitchgear
-        ? 'PAD-MOUNTED MEDIUM-VOLTAGE SWITCHGEAR ELEVATION (IEEE C37.20.2)'
+        ? 'PAD-MOUNTED MEDIUM-VOLTAGE SWITCHGEAR ELEVATION (IEEE C37.74)'
         : 'PAD-MOUNTED DISTRIBUTION TRANSFORMER DUAL COMPARTMENT (IEEE C57.12.22)');
     ctx.fillText(title, 20, 24);
 
@@ -1620,7 +1620,7 @@
       { label: 'Security Lock', val: 'Pentahead Bolt with Padlock Hasp' },
       { label: 'Application', val: 'Underground Loop Taps & Isolation' }
     ] : (isSwitchgear ? [
-      { label: 'Standard', val: 'IEEE C37.20.2 / C37.74' },
+      { label: 'Standard', val: 'IEEE C37.74' },
       { label: 'Nominal Voltage', val: '15 kV (95 kV BIL)' },
       { label: 'Continuous Current', val: '600 A Main / 200 A Taps' },
       { label: 'Interrupting kA', val: '12.5 kA - 25 kA Sym.' },

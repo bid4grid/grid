@@ -15,7 +15,7 @@ function ok(cond, msg) {
 
 function assertClose(actual, expected, tol, msg) {
   const diff = Math.abs(actual - expected);
-  if (diff > tol) {
+  if (!Number.isFinite(actual) || diff > tol) {
     console.error('  FAIL ' + msg + ' | Expected ' + expected + ', got ' + actual + ' (diff ' + diff + ' > ' + tol + ')');
     failed++;
   } else {
@@ -33,6 +33,9 @@ console.log('1. Conductor Database & Resistances');
 ok(core.CONDUCTORS.cu['4/0_AWG'].ampacity === 230, 'Cu 4/0 ampacity is 230 A');
 ok(core.CONDUCTORS.al['4/0_AWG'].ampacity === 180, 'Al 4/0 ampacity is 180 A');
 ok(core.CONDUCTORS.al['4/0_AWG'].r_ohm_per_km > core.CONDUCTORS.cu['4/0_AWG'].r_ohm_per_km, 'Al resistance > Cu resistance for same gauge');
+assertClose(core.CONDUCTORS.cu['4/0_AWG'].r_ohm_per_km, 0.1992, 0.0001, 'Cu resistance corrected to 75 C');
+assertClose(core.CONDUCTORS.al['4_AWG'].r_ohm_per_km, 1.6621, 0.0001, 'Al resistance corrected to 75 C');
+ok(core.CONDUCTORS.acsr['336_kcmil'].ampacity === 530 && core.CONDUCTORS.acsr['795_kcmil'].ampacity === 910, 'ACSR ampacities match reference conditions');
 
 // 2. 3-Phase & 1-Phase Voltage Drop Solvers
 console.log('\n2. Voltage Drop Equation Verification');
@@ -45,8 +48,8 @@ const drop3ph = core.calcVoltageDrop({
   sizeKey: '336_kcmil',
   powerFactor: 0.90
 });
-assertClose(drop3ph.v_drop_V, 183.18, 0.5, '3-phase voltage drop: dV = sqrt(3) * I * L * (R*cos + X*sin)');
-assertClose(drop3ph.pct_drop, (183.18 / 12470) * 100, 0.05, 'Percentage voltage drop calculation');
+assertClose(drop3ph.v_drop_V, 303.51, 0.01, '3-phase overhead voltage drop at 4 ft spacing');
+assertClose(drop3ph.pct_drop, (303.51 / 12470) * 100, 0.001, 'Percentage voltage drop calculation');
 ok(drop3ph.p_loss_kW > 0, '3-phase line loss = ' + drop3ph.p_loss_kW.toFixed(2) + ' kW');
 
 // 1-phase 2-wire comparison: K = 2
@@ -59,7 +62,13 @@ const drop1ph = core.calcVoltageDrop({
   sizeKey: '2_AWG',
   powerFactor: 0.95
 });
-assertClose(drop1ph.v_drop_V / (2 * 50 * 0.1 * (0.531 * 0.95 + 0.148 * Math.sqrt(1 - 0.95*0.95))), 1.0, 1e-4, '1-phase K=2 factor verified');
+assertClose(drop1ph.v_drop_V, 6.478, 0.001, '1-phase drop uses two conductors and 75 C resistance');
+const wide = core.calcVoltageDrop({ material: 'acsr', sizeKey: '336_kcmil', length_km: 1, spacing_ft: 10, current_A: 100, powerFactor: 0.9 });
+const narrow = core.calcVoltageDrop({ material: 'acsr', sizeKey: '336_kcmil', length_km: 1, spacing_ft: 1, current_A: 100, powerFactor: 0.9 });
+assertClose(narrow.X_ohms, 0.0854 / 0.3048, 1e-10, 'ACSR reactance matches one-foot reference');
+ok(wide.v_drop_V > narrow.v_drop_V && wide.X_ohms > 0.4, 'Overhead spacing increases reactance and voltage drop');
+const zeroDrop = core.calcVoltageDrop({ length_km: 0, current_A: 100 });
+ok(zeroDrop.v_drop_V === 0 && zeroDrop.p_loss_kW === 0, 'Zero conductor length has no drop or loss');
 
 // 3. Residential 120/240V Split-Phase Solver
 console.log('\n3. Residential 120/240V Split-Phase Solver');
@@ -86,6 +95,16 @@ const splitUnbal = core.solveSplitPhase({
 });
 assertClose(splitUnbal.I_N, 20.0, 1e-3, 'Neutral carries the exact load difference (30A - 10A = 20A)');
 ok(splitUnbal.v_L1_N < splitUnbal.v_L2_N, 'Heavily loaded L1 experiences greater voltage drop than lightly loaded L2');
+assertClose(splitUnbal.v_L1_N + splitUnbal.v_L2_N, splitUnbal.v_L1_L2, 1e-10, 'Split-phase voltages satisfy KVL');
+const splitB = core.solveSplitPhase({ load1_W: 8000, load2_W: 0, pf: 1, secondary_len_ft: 100 });
+const splitBSwapped = core.solveSplitPhase({ load1_W: 0, load2_W: 8000, pf: 1, secondary_len_ft: 100 });
+ok(splitB.ansiStatus.code === 'B' && splitBSwapped.ansiStatus.code === 'B', 'Worst-leg ANSI status is unchanged by swapping loads');
+assertClose(splitB.v_L1_N, splitBSwapped.v_L2_N, 1e-10, 'Swapping loads swaps leg voltages');
+let badPfRejected = false;
+try { core.solveSplitPhase({ pf: 1.1 }); } catch (e) { badPfRejected = e instanceof RangeError; }
+ok(badPfRejected, 'Invalid split-phase power factor is rejected');
+const zeroSplit = core.solveSplitPhase({ load1_W: 8000, pf: 1, secondary_len_ft: 0 });
+ok(zeroSplit.v_L1_N === 120 && zeroSplit.v_L2_N === 120, 'Zero-length split-phase service has nominal leg voltages');
 
 // 4. ANSI C84.1 Evaluation
 console.log('\n4. ANSI C84.1 Voltage Standard Compliance');
@@ -115,9 +134,21 @@ ok(cascadeRes.transmission.current_A < 300, 'Transmission current stepped down: 
 ok(cascadeRes.transmission.voltage_recv_kV < 230, 'Transmission receiving voltage reflects line drop');
 ok(cascadeRes.feeder.end_kV < 13.2, 'Feeder end voltage reflects 3-phase line drop');
 ok(cascadeRes.customerMeter.terminal_V >= 110 && cascadeRes.customerMeter.terminal_V <= 126, 'Customer terminal voltage in realistic range (' + cascadeRes.customerMeter.terminal_V.toFixed(1) + ' V)');
-ok(cascadeRes.bid4grid_specs.gsu_breaker.sample.includes('Substation Vacuum Breaker'), 'Bid4Grid breaker spec matched');
+ok(cascadeRes.bid4grid_specs.gsu_breaker.sample.includes('245 kV') && cascadeRes.bid4grid_specs.gsu_breaker.sample.includes('40 kA'), 'Illustrative transmission breaker has consistent ratings');
+ok(cascadeRes.bid4grid_specs.dist_switchgear.standard === 'IEEE C37.74', 'Pad-mounted switchgear references IEEE C37.74');
 ok(cascadeRes.bid4grid_specs.dist_xfmr.sample.includes('Utility-Grade'), 'Bid4Grid transformer spec matched');
 ok(cascadeRes.bid4grid_specs.voltage_regulator.sample.includes('32-Step Voltage Regulator'), 'Bid4Grid regulator spec matched');
+const isolated = core.solveGridCascade({ trans_len_km: 400, sub_xfmr_z_pct: 30, gen_MVA: 1, gsu_z_pct: 30 });
+const baseline = core.solveGridCascade({});
+ok(isolated.transmission.voltage_recv_kV < baseline.transmission.voltage_recv_kV, 'Transmission drop changes upstream telemetry');
+assertClose(isolated.customerMeter.terminal_V, baseline.customerMeter.terminal_V, 1e-10, 'Regulated bus isolates meter from upstream parameters');
+const noLoad = core.solveGridCascade({ gen_MVA: 0, feeder_load_MVA: 0, customer_load_kW: 0, xfmr_load_pct: 0, feeder_len_km: 0, trans_len_km: 0, sec_len_ft: 0 });
+ok(noLoad.gen.power_MVA === 0 && noLoad.transmission.current_A === 0 && noLoad.feeder.current_A === 0 && noLoad.customerMeter.terminal_V === 120, 'Zero loads, rating and lengths remain zero');
+const xfmr = core.solveGridCascade({ xfmr_z_pct: 5, xfmr_xr: 4, xfmr_load_pct: 100 });
+assertClose(xfmr.distTransformer.internal_drop_pct, 5 / Math.sqrt(17) * (0.92 + 4 * Math.sqrt(1 - 0.92 ** 2)), 1e-10, 'Transformer drop uses R and X at service power factor');
+let badXrRejected = false;
+try { core.solveGridCascade({ xfmr_xr: -1 }); } catch (e) { badXrRejected = e instanceof RangeError; }
+ok(badXrRejected, 'Invalid transformer X/R is rejected');
 
 for (const [service, label, factor] of [
   ['residential_split', '1φ 120/240V', 2],
@@ -127,6 +158,9 @@ for (const [service, label, factor] of [
   const c = core.solveGridCascade({ service_type: service, customer_load_kW: 12, sec_len_ft: 125 });
   ok(c.distTransformer.service_label === label, service + ' reports the selected service');
   assertClose(c.distTransformer.voltage_out_V - c.customerMeter.terminal_V, c.serviceDrop.v_drop_V / factor, 1e-8, service + ' converts line-to-line drop to line-to-neutral drop');
+  if (service !== 'residential_split') {
+    assertClose(c.serviceDrop.current_A, 12000 / (Math.sqrt(3) * c.distTransformer.secondary_nominal_LL_V * 0.92), 1e-10, service + ' uses service drop power factor for current');
+  }
 }
 
 // 6. CAD Canvas Diagram Verification (850x420 Bounds)

@@ -20,6 +20,7 @@
     basicsView: 'sld', // 'sld' (default), 'triangle', 'phasor'
     flowView: 'sld', // 'sld' (default), 'ybus'
     flowResult: null,
+    genResult: null,
     xfmrResult: null,
     lineResult: null,
     faultResult: null,
@@ -780,14 +781,18 @@
     if (tabId === 'basics') {
       recalcBasics();
     } else if (tabId === 'gen') {
-      t1.innerHTML = '<b>' + (document.getElementById('gen-p').value || 50) + ' MW</b><span>Active Power</span>';
-      t2.innerHTML = '<b>' + (document.getElementById('gen-pf').value || 0.8) + ' lag</b><span>Power Factor</span>';
-      t3.innerHTML = '<b>' + (document.getElementById('gen-vt').value || 13.8) + ' kV</b><span>Terminal V</span>';
-      t4.className = 'pwr-tile green';
-      t4.innerHTML = '<b>' + (window.lastGenPmax || 96.4).toFixed(1) + ' MW</b><span>P_max Limit</span>';
-      t5.innerHTML = '<b>' + (window.lastGenDelta || 18.7).toFixed(1) + '°</b><span>Torque Angle δ</span>';
-      t6.innerHTML = '<b>' + (window.lastGenEg || 19.9).toFixed(2) + ' kV</b><span>Internal EMF Eg</span>';
-      notice.textContent = 'Synchronous generator stability margin: Operating torque angle is safely below steady-state critical stability angle.';
+      var gen = state.genResult;
+      t1.innerHTML = '<b>' + (gen ? gen.P + ' MW' : '—') + '</b><span>Active Power</span>';
+      t2.innerHTML = '<b>' + (gen ? gen.pf + ' lag' : '—') + '</b><span>Power Factor</span>';
+      t3.innerHTML = '<b>' + (gen ? gen.Vt_LL + ' kV' : '—') + '</b><span>Terminal V</span>';
+      t4.className = 'pwr-tile' + (gen && gen.delta_deg < gen.delta_max ? ' green' : '');
+      t4.innerHTML = '<b>' + (gen ? gen.Pmax_MW.toFixed(1) + ' MW' : '—') + '</b><span>P_max Limit</span>';
+      t5.innerHTML = '<b>' + (gen ? gen.delta_deg.toFixed(1) + '°' : '—') + '</b><span>Torque Angle δ</span>';
+      t6.innerHTML = '<b>' + (gen ? gen.Eg_LL.toFixed(2) + ' kV' : '—') + '</b><span>Internal EMF Eg</span>';
+      notice.textContent = gen ? (gen.delta_deg < gen.delta_max ?
+        'Operating torque angle is below the modeled steady-state critical angle (' + gen.delta_max.toFixed(1) + '°); transient stability is not evaluated.' :
+        'Operating torque angle is at or beyond the modeled steady-state critical angle (' + gen.delta_max.toFixed(1) + '°).') :
+        'Enter valid generator parameters and calculate again.';
     } else if (tabId === 'xfmr') {
       var xfmr = state.xfmrResult;
       t1.innerHTML = '<b>' + (xfmr ? xfmr.S + ' kVA' : '—') + '</b><span>Rated Capacity</span>';
@@ -911,12 +916,22 @@
 
   function recalcGen() {
     var type = state.genRotor;
-    var Vt = parseFloat(document.getElementById('gen-vt').value) || 13.8;
-    var P = parseFloat(document.getElementById('gen-p').value) || 50;
-    var pf = parseFloat(document.getElementById('gen-pf').value) || 0.80;
-    var Ra = parseFloat(document.getElementById('gen-ra').value) || 0.05;
-    var Xd = parseFloat(document.getElementById('gen-xd').value) || 1.8;
-    var Xq = parseFloat(document.getElementById('gen-xq').value) || 1.2;
+    var Vt = parseFloat(document.getElementById('gen-vt').value);
+    var P = parseFloat(document.getElementById('gen-p').value);
+    var pf = parseFloat(document.getElementById('gen-pf').value);
+    var Ra = parseFloat(document.getElementById('gen-ra').value);
+    var Xd = parseFloat(document.getElementById('gen-xd').value);
+    var Xq = parseFloat(document.getElementById('gen-xq').value);
+    if (![Vt, P, pf, Ra, Xd].every(Number.isFinite) ||
+        Vt <= 0 || P < 0 || pf <= 0 || pf > 1 || Ra < 0 || Xd <= 0 ||
+        (type === 'salient' && (!Number.isFinite(Xq) || Xq <= 0))) {
+      state.genResult = null;
+      document.getElementById('res-gen').textContent = 'Enter positive voltage and reactances, nonnegative power and resistance, and a power factor above 0 and at most 1.';
+      var invalidCanvas = document.getElementById('canvas-gen');
+      if (invalidCanvas) invalidCanvas.getContext('2d').clearRect(0, 0, invalidCanvas.width, invalidCanvas.height);
+      if (state.activeTab === 'gen') updateTilesForTab('gen');
+      return;
+    }
 
     var genData;
     if (type === 'salient') {
@@ -925,9 +940,9 @@
       genData = core.calcCylindricalGenerator(Vt, P, pf, true, Ra, Xd);
     }
 
-    window.lastGenPmax = genData.Pmax_MW;
-    window.lastGenDelta = genData.delta_deg;
-    window.lastGenEg = genData.Eg_LL;
+    genData.P = P;
+    genData.pf = pf;
+    state.genResult = genData;
 
     var resText =
       "Machine Type:            " + (type === 'salient' ? "Salient-Pole" : "Cylindrical (Round)") + "\n" +

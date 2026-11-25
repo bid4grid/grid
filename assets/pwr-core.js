@@ -200,6 +200,7 @@
       Eg_mag: Eg_mag,
       Eg_LL: Eg_mag * Math.sqrt(3) / 1e3,
       delta_deg: delta_deg,
+      delta_max: 90,
       Pmax_MW: Pmax,
       curve: curve
     };
@@ -214,14 +215,14 @@
     var phi = Math.acos(Math.max(-1, Math.min(1, pf))) * (lagging ? -1 : 1);
 
     // Initial estimate for delta angle using Xq:
-    // tan(delta) = (Ia * Xq * cos(phi) - Ia * Ra * sin(phi)) / (Vt + Ia * Ra * cos(phi) + Ia * Xq * sin(phi))
-    var num = Ia_mag * Xq * Math.cos(phi) - Ia_mag * Ra * Math.sin(phi);
-    var den = Vt_ph + Ia_mag * Ra * Math.cos(phi) + Ia_mag * Xq * Math.sin(phi);
+    // phi is the signed current angle relative to terminal voltage.
+    var num = Ia_mag * (Xq * Math.cos(phi) + Ra * Math.sin(phi));
+    var den = Vt_ph + Ia_mag * Ra * Math.cos(phi) - Ia_mag * Xq * Math.sin(phi);
     var delta_rad = Math.atan2(num, den);
     var delta_deg = delta_rad * 180 / Math.PI;
 
     // Direct and Quadrature currents
-    var psi = phi + delta_rad; // angle between Ia and q-axis
+    var psi = delta_rad - phi; // angle between Ia and q-axis
     var Id = Ia_mag * Math.sin(psi);
     var Iq = Ia_mag * Math.cos(psi);
 
@@ -230,19 +231,31 @@
 
     // Power-Angle curve (MW 3-phase)
     var curve = [];
-    var Pmax = 0;
-    var delta_max = 90;
     var P_fund_max = (3 * Eg_mag * Vt_ph) / (Xd * 1e6);
     var P_rel_max = (3 * Vt_ph * Vt_ph * (Xd - Xq)) / (2 * Xd * Xq * 1e6);
+    var Pmax = 0;
+    var delta_max = 0;
+    var roots = [0];
+    if (P_rel_max !== 0) {
+      var disc = Math.sqrt(P_fund_max * P_fund_max + 32 * P_rel_max * P_rel_max);
+      var root = P_fund_max >= 0 ? 4 * P_rel_max / (P_fund_max + disc) :
+        (-P_fund_max + disc) / (8 * P_rel_max);
+      roots = [root, -0.5 / root];
+    }
+    roots.forEach(function (cosDelta) {
+      if (cosDelta < -1 || cosDelta > 1) return;
+      var rad = Math.acos(cosDelta);
+      var power = P_fund_max * Math.sin(rad) + P_rel_max * Math.sin(2 * rad);
+      if (power > Pmax) {
+        Pmax = power;
+        delta_max = rad * 180 / Math.PI;
+      }
+    });
 
     for (var d = 0; d <= 180; d += 1) {
       var rad = d * Math.PI / 180;
       var P_val = P_fund_max * Math.sin(rad) + P_rel_max * Math.sin(2 * rad);
       curve.push({ delta: d, P: P_val });
-      if (P_val > Pmax) {
-        Pmax = P_val;
-        delta_max = d;
-      }
     }
 
     return {
@@ -552,8 +565,11 @@
   }
 
   // Gauss-Seidel 3-Bus Power Flow Solver
-  // Buses array: [ { type: 'slack'|'pv'|'pq', V_mag, V_angle_deg, P, Q, Qmin, Qmax } ]
+  // Buses array: [ { type: 'slack'|'pv'|'pq', V_mag, V_angle_deg, P, Q } ]
   function solveGaussSeidel(buses, branches, maxIter, tol) {
+    if (buses.some(function (b) { return b.Qmin != null || b.Qmax != null; })) {
+      throw new RangeError('Gauss-Seidel reactive power limits are not supported.');
+    }
     maxIter = maxIter || 50;
     tol = tol || 1e-4;
     var n = buses.length;
@@ -719,6 +735,7 @@
     var Ia = If1;
     var Ib = cmul(a2, If1);
     var Ic = cmul(a, If1);
+    var Va = cmul(Zf, Ia);
 
     return {
       faultType: '3phase',
@@ -726,7 +743,7 @@
       If_kA: If_kA,
       SCMVA: SCMVA,
       I_phase: [Ia, Ib, Ic],
-      V_phase: [ZERO, ZERO, ZERO]
+      V_phase: [Va, cmul(a2, Va), cmul(a, Va)]
     };
   }
 

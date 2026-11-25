@@ -74,10 +74,11 @@
   var TOPIC_GUIDES = {
     cascade: {
       title: "Complete Grid-to-Customer Voltage Cascade & Architecture",
-      models: "Models the end-to-end electrical cascade from central generating station (13.8 kV) through step-up GSU (230 kV), transmission, distribution substation (13.2 kV), primary feeder, padmount/pole transformer, down to customer meter (120/240 V).",
+      models: "Illustrates generation and transmission separately; estimates feeder-to-meter voltage from a regulated substation bus. Upstream transmission drop, generator and GSU ratings, and substation impedance do not affect the meter. Transformer regulation assumes X/R = 4 and 0.92 lagging power factor.",
       why: [
         "<strong>Where Transmission Ends &amp; Distribution Begins:</strong> Transmission lines (69 kV–500 kV) transport bulk energy across regions. The distribution substation steps voltage down to medium voltage (4.16 kV–34.5 kV) for safe routing down suburban streets.",
         "<strong>Why Distribution Stays at Medium Voltage Near Homes:</strong> Pushing 5 MW at 240 V would require conductors thicker than tree trunks (20,800 Amps!). Keeping voltage at 13.2 kV slashes feeder current to just 218 Amps, slashing I²R line losses by 99.9%.",
+        "<strong>Conductor estimates:</strong> ACSR ratings use illustrative 75°C, sun and 2 ft/s wind conditions, with assumed equivalent spacing of 4 ft for distribution and 10 ft for transmission. Cable values are approximate. Verify actual geometry, installation and manufacturer ratings.",
         "<strong>Where the Final Transformer Fits:</strong> The pole-top 'can' or green padmount transformer is the final step-down apparatus, placed within 100–300 feet of the customer's meter to minimize low-voltage drop."
       ]
     },
@@ -137,16 +138,16 @@
     },
     profile: {
       title: "ANSI C84.1 Feeder Voltage Profile &amp; Regulation Limits",
-      models: "Analyzes voltage drop along feeder distance against ANSI C84.1 Range A (±5% normal service tolerance: 114 V–126 V) and Range B (-8.3% / +5.8% contingency: 110 V–127 V).",
+      models: "Analyzes voltage drop along feeder distance against ANSI C84.1 Range A and Range B. The local transformer estimate assumes X/R = 4 and 0.92 lagging power factor.",
       why: [
         "<strong>Preventing Appliance Damage:</strong> Induction motors (refrigerators, AC compressors) overheat and trip when voltage drops below 110 V due to increased current draw (I = P / V).",
         "<strong>Voltage Regulators &amp; Capacitors:</strong> When primary feeders exceed 5–10 miles, utilities install 32-step autotransformer regulators and shunt capacitor banks to boost the line profile back into Range A.",
-        "<strong>Bid4Grid Sizing Alignment:</strong> Sizing substation transformers and conductors with appropriate %Z impedance ensures utility compliance across full peak-load cycles."
+        "<strong>Model boundary:</strong> The substation bus is assumed regulated; upstream voltage drop and substation impedance do not affect this profile. Verify equipment and compliance with actual system data."
       ]
     },
     split: {
       title: "Residential 120/240-V Split-Phase System &amp; Center-Tap Physics",
-      models: "Simulates the single-phase center-tapped transformer secondary winding. Explains why 120/240 V is NOT two phases of 3-phase power, but rather a single-phase winding split 180° by a grounded center tap (X2).",
+      models: "Simulates a single-phase center-tapped transformer using a linearized voltage-drop approximation. Extreme results, including negative leg voltages, are outside the approximation's valid range.",
       why: [
         "<strong>The 180° Center-Tap Principle:</strong> L1 to Neutral is 120 V ∠0°. L2 to Neutral is 120 V ∠180°. The voltage across both legs is V_L1 - V_L2 = 120 - (-120) = 240 V.",
         "<strong>Why Both 120 V and 240 V Are Available:</strong> Small loads (lighting, outlets) connect between either leg and Neutral (120 V). High-power loads (EV chargers, heat pumps, water heaters) connect across L1-L2 (240 V).",
@@ -155,7 +156,7 @@
     },
     spec: {
       title: "Bid4Grid IEEE Equipment Procurement Specifications &amp; Nameplate Sizing",
-      models: "Interactive procurement and evaluation console for high-voltage and medium-voltage grid apparatus conforming to IEEE C57 and C37 standard sample specifications.",
+      models: "Illustrative equipment examples referencing IEEE C57 and C37 standards. Ratings are not verified for a particular installation or procurement.",
       why: [
         "<strong>Pad-Mounted vs. Pole-Mounted Transformers (IEEE C57.12):</strong> Green ground-level boxes house dead-front loadbreak elbows and bayonet fuses; pole-mount cans use external porcelain bushings and fuse cutouts.",
         "<strong>Switchgear vs. Transformers:</strong> Not every green metal box is a transformer. Pad-mounted switchgear provides vacuum sectionalizing, isolation, and overcurrent protection without transforming voltage.",
@@ -223,8 +224,8 @@
 
   function updateTabSharing() {
     var descriptions = {
-      cascade: 'Master settings also appear in V-Profile; some values are used by Pole and Banks.',
-      profile: 'All settings are shared with Cascade.',
+      cascade: 'Regulated substation bus: upstream drops and impedances do not affect meter voltage. Settings also appear in V-Profile; some are used by Pole and Banks.',
+      profile: 'Regulated substation bus: upstream drops and impedances do not affect meter voltage. All settings are shared with Cascade.',
       pole: 'Substation voltage is shared with Cascade and Banks; other pole settings are independent.',
       padmount: 'Independent example: primary voltage is fixed at 13.2 kV; other settings are local.',
       riser: 'Independent, fixed hardware example; Cascade settings do not change this diagram.',
@@ -770,15 +771,15 @@
     if (!cSpec) return;
 
     var h = '<div class="card-header"><h2 class="card-title">📋 Bid4Grid Equipment Sourcing Console</h2><span class="badge blue">INTERACTIVE RFQ</span></div>';
-    h += '<div style="font-size:12px;color:var(--muted);margin-bottom:10px">Click an equipment lot to view the live IEEE Technical Datasheet and highlight its location on the CAD schematic:</div>';
+    h += '<div style="font-size:12px;color:var(--muted);margin-bottom:10px">Illustrative examples only; verify ratings and standards with the manufacturer. Select equipment to view its example nameplate and CAD location:</div>';
 
     var specItems = [
       { id: 'pole_xfmr', icon: '🪵', name: 'Pole-Mount Transformer', std: 'IEEE C57.12.20', rating: '50 kVA 1φ Overhead Can (120/240V)' },
       { id: 'dist_xfmr', icon: '⚡', name: 'Padmount Transformer', std: 'IEEE C57.12.22 / C57.12.28', rating: state.padkVA + ' kVA 3φ Padmount' },
       { id: 'feeder_recloser', icon: '🛡️', name: 'Automatic Recloser', std: 'IEEE C37.60', rating: '15.5 kV, 630 A, 12.5 kA Trip' },
-      { id: 'dist_switchgear', icon: '🟩', name: 'Padmount Switchgear', std: 'IEEE C37.20.2', rating: '15 kV, 600 A Bus, 25 kA Sym.' },
+      { id: 'dist_switchgear', icon: '🟩', name: 'Padmount Switchgear', std: 'IEEE C37.74', rating: '15 kV class, 600 A Bus, 25 kA Sym.' },
       { id: 'voltage_regulator', icon: '📈', name: 'Step-Voltage Regulator', std: 'IEEE C57.15', rating: '578 kVA, 32-Step ±10%' },
-      { id: 'gsu_breaker', icon: '⚡', name: 'Substation Vacuum Breaker', std: 'IEEE C37.04', rating: '230 kV / 15 kV, 20 kA Trip' }
+      { id: 'gsu_breaker', icon: '⚡', name: 'Transmission SF6 Breaker', std: 'IEEE C37.04', rating: '245 kV class, 2000 A, 40 kA Sym.' }
     ];
 
     h += '<div class="spec-selector-grid">';
@@ -857,7 +858,7 @@
       var annualLossKWh = (((parseFloat(noLoadW) + parseFloat(fullLoadW) * 0.5) * 8760) / 1000).toFixed(0);
       var estWeightLbs = (kVA * 8.5 + 1200).toFixed(0);
 
-      h += '<div class="spec-nameplate-header"><span>IEEE C57.12 NAMEPLATE SPECIFICATION</span><span class="badge green">LOT VERIFIED</span></div>';
+      h += '<div class="spec-nameplate-header"><span>IEEE C57.12 NAMEPLATE EXAMPLE</span><span class="badge green">EXAMPLE</span></div>';
       h += '<div class="spec-nameplate-grid">';
       h += '  <span class="spec-prop-label">Equipment Category:</span><span class="spec-prop-val">3-Phase Padmount Transformer</span>';
       h += '  <span class="spec-prop-label">Rated Power:</span><span class="spec-prop-val">' + kVA + ' kVA Continuous (65°C Rise)</span>';
@@ -884,9 +885,9 @@
       h += '  <span class="spec-prop-label">Automation / RTU:</span><span class="spec-prop-val">Integrated DNP3 / Modbus Controller</span>';
       h += '</div>';
     } else if (id === 'dist_switchgear') {
-      h += '<div class="spec-nameplate-header"><span>IEEE C37.20.2 SWITCHGEAR SPECIFICATION</span><span class="badge green">SECTIONALIZING</span></div>';
+      h += '<div class="spec-nameplate-header"><span>IEEE C37.74 SWITCHGEAR SPECIFICATION</span><span class="badge green">SECTIONALIZING</span></div>';
       h += '<div class="spec-nameplate-grid">';
-      h += '  <span class="spec-prop-label">Equipment Category:</span><span class="spec-prop-val">Pad-Mounted Metal-Clad Switchgear</span>';
+      h += '  <span class="spec-prop-label">Equipment Category:</span><span class="spec-prop-val">Pad-Mounted Switchgear</span>';
       h += '  <span class="spec-prop-label">Nominal Voltage:</span><span class="spec-prop-val">15 kV / 17.5 kV (95 kV BIL)</span>';
       h += '  <span class="spec-prop-label">Bus Continuous:</span><span class="spec-prop-val">600 A Main / 200 A Taps</span>';
       h += '  <span class="spec-prop-label">Short-Circuit kA:</span><span class="spec-prop-val">25 kA Symmetrical</span>';
@@ -905,10 +906,10 @@
     } else {
       h += '<div class="spec-nameplate-header"><span>IEEE C37.04 BREAKER SPECIFICATION</span><span class="badge purple">SUBSTATION CLASS</span></div>';
       h += '<div class="spec-nameplate-grid">';
-      h += '  <span class="spec-prop-label">Equipment Category:</span><span class="spec-prop-val">Substation Vacuum Circuit Breaker</span>';
-      h += '  <span class="spec-prop-label">Rated Voltage:</span><span class="spec-prop-val">15 kV to 230 kV Substation Class</span>';
-      h += '  <span class="spec-prop-label">Continuous Current:</span><span class="spec-prop-val">600 A – 2000 A</span>';
-      h += '  <span class="spec-prop-label">Interrupting kA:</span><span class="spec-prop-val">20 kA to 40 kA Symmetrical</span>';
+      h += '  <span class="spec-prop-label">Equipment Category:</span><span class="spec-prop-val">Illustrative SF6 Transmission Circuit Breaker</span>';
+      h += '  <span class="spec-prop-label">Rated Voltage:</span><span class="spec-prop-val">245 kV class for a 230 kV system</span>';
+      h += '  <span class="spec-prop-label">Continuous Current:</span><span class="spec-prop-val">2000 A</span>';
+      h += '  <span class="spec-prop-label">Interrupting kA:</span><span class="spec-prop-val">40 kA Symmetrical</span>';
       h += '  <span class="spec-prop-label">Operating Cycle:</span><span class="spec-prop-val">O-0.3s -CO -3min -CO</span>';
       h += '</div>';
     }

@@ -321,7 +321,7 @@
     html += '<header class="dist-header">';
     html += '  <div class="dist-header-content">';
     html += '    <div class="dist-title-wrap">';
-    html += '      <h1># Distribution Systems | <span style="color:var(--accent);font-weight:700;">BID4GRID</span></h1>';
+    html += '      <h1># Distribution Systems |  <span style="color:var(--accent);font-weight:700;">BID4GRID</span></h1>';
     html += '      <div class="subtitle">Interactive Grid-to-Customer Voltage Cascade &amp; Hardware</div>';
     html += '    </div>';
     html += '    <div class="dist-header-actions">';

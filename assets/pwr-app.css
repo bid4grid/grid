@@ -491,6 +491,7 @@ body.pwr-standalone,
   padding: 20px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   border: 1px solid var(--border);
+  min-width: 0;
 }
 
 .card-header {
@@ -685,11 +686,13 @@ button.btn-primary:hover {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   margin-top: 12px;
+  min-width: 0;
 }
 
 .pwr-canvas-wrapper canvas {
   display: block;
   max-width: 100%;
+  min-width: 850px;
   height: auto;
   margin: 0 auto;
 }

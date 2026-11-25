@@ -321,12 +321,12 @@
     html += '<header class="dist-header">';
     html += '  <div class="dist-header-content">';
     html += '    <div class="dist-title-wrap">';
-    html += '      <h1>Distribution Systems CAD</h1>';
+    html += '      <h1># Distribution Systems | <span style="color:var(--accent);font-weight:700;">BID4GRID</span></h1>';
     html += '      <div class="subtitle">Interactive Grid-to-Customer Voltage Cascade &amp; Hardware</div>';
     html += '    </div>';
     html += '    <div class="dist-header-actions">';
     html += '      <a href="datacenter.html" class="dist-btn-action">Data Center</a>';
-    html += '      <a href="transmission.html" class="dist-btn-action">⚡ Transmission CAD</a>';
+    html += '      <a href="transmission.html" class="dist-btn-action">⚡ Transmission</a>';
     html += '      <button type="button" class="dist-watch-video" id="btn-watch-walkthrough" title="Watch Video Walkthrough" aria-label="Watch video walkthrough">';
     html += '        <span class="dist-watch-icon"><svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2.5v11l9-5.5z"/></svg></span>';
     html += '        <span class="dist-watch-label">Walkthrough</span>';
@@ -439,7 +439,7 @@
     html += '<dialog class="dist-video-overlay" id="walkthrough-overlay" aria-labelledby="walkthrough-title">';
     html += '  <div class="dist-video-header">';
     html += '    <div>';
-    html += '      <h2 id="walkthrough-title">Distribution Systems CAD Walkthrough</h2>';
+    html += '      <h2 id="walkthrough-title">Distribution Systems Walkthrough</h2>';
     html += '      <p>Use the video controls to pause or adjust playback.</p>';
     html += '    </div>';
     html += '    <button type="button" class="dist-btn-action" id="btn-close-walkthrough" aria-label="Close walkthrough">Close</button>';

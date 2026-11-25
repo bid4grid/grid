@@ -97,12 +97,12 @@
       <header class="pwr-header">
         <div class="pwr-header-content">
           <div class="pwr-title-wrap">
-            <h1>Power Systems CAD</h1>
+            <h1>⚡ Transmission</h1>
             <div class="subtitle">Interactive Power Systems Engineering Suite</div>
           </div>
           <div class="pwr-header-actions">
-            <a href="index.html" class="pwr-btn-action">
-              <span>⚡ Distribution CAD</span>
+            <a href="distribution.html" class="pwr-btn-action">
+              <span># Distribution Systems</span>
             </a>
             <button type="button" class="pwr-watch-video" id="btn-watch-walkthrough" title="Watch Video Walkthrough" aria-label="Watch video walkthrough">
               <span class="pwr-watch-icon"><svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2.5v11l9-5.5z"/></svg></span>
@@ -566,7 +566,7 @@
       <dialog class="pwr-video-overlay" id="walkthrough-overlay" aria-labelledby="walkthrough-title">
         <div class="pwr-video-header">
           <div>
-            <h2 id="walkthrough-title">Power Systems Calculator Walkthrough</h2>
+            <h2 id="walkthrough-title">Transmission Walkthrough</h2>
             <p>Use the video controls to pause or adjust playback.</p>
           </div>
           <button type="button" class="pwr-btn-action" id="btn-close-walkthrough" aria-label="Close walkthrough">

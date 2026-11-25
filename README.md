@@ -42,9 +42,17 @@ The Cascade diagram distinguishes overhead and underground feeders and displays 
 
 The transformer-bank diagram shows idealized two-terminal windings, with matching T numbers and corresponding H1/X1 polarity ends. Wye neutrals are grounded; the open-delta example is three-wire without a center tap. Delta grounding and protective equipment are omitted. Verify actual transformer terminal markings, polarity, grounding, and utility requirements before wiring equipment.
 
+### Data Center Power Sizing
+
+Open [Data Center Power Sizing](datacenter.html) from the distribution header. The standalone calculator estimates IT demand, UPS input losses, total facility kVA, balanced three-phase service currents, transformer and UPS normal and N−1 capacity, and battery runtime. It assumes identical units share load and that the full load transfers to the remaining units; a kVA capacity check alone does not establish redundant paths or availability, and UPS kW limits are not checked. A warning flags primary voltages less than or equal to the secondary voltage. Non-UPS load includes cooling and other loads outside the UPS. Usable battery energy is the DC energy remaining after reserves and derating, and the specified battery-to-load efficiency accounts for discharge conversion losses. Battery runtime covers the IT load only.
+
+The live summary tiles and conceptual diagram show key sizing results and where the data center connects to a distribution feeder. The expandable guide describes the assumptions and limitations. This is a separate model: inputs and results are not synchronized with the distribution cascade. The diagram does not represent actual redundant paths, switching or protection.
+
+These are preliminary estimates: transformer losses, harmonics, battery discharge-rate effects, UPS kW limits, generators, switching, protection and path topology are not modeled. Equipment ratings, design margins, site conditions and applicable standards must be verified by qualified engineers and manufacturers.
+
 ### Quick Start & Testing
 
-* **Run in browser:** Open `index.html` directly or run:
+* **Run in browser:** Open [Distribution CAD](distribution.html), [Power Systems CAD](transmission.html), or [Data Center Power Sizing](datacenter.html) directly. `index.html` and `dist.html` redirect to Distribution CAD. Alternatively, serve the repository:
   ```bash
   npx serve .
   # or: python3 -m http.server 8000
@@ -53,5 +61,6 @@ The transformer-bank diagram shows idealized two-terminal windings, with matchin
   ```bash
   node tests/run.js
   node tests/run-dist.js
+  node tests/run-datacenter.js
   ```
-  *(Automated tests verify calculations and diagram rendering.)*
+  The power and distribution suites test calculations and diagram drawing using mock canvases. The data center suite tests calculations and mocked DOM updates; it does not render the SVG or exercise browser-native form validation.

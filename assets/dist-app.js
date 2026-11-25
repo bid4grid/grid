@@ -324,6 +324,7 @@
     html += '      <div class="subtitle">Interactive Grid-to-Customer Voltage Cascade &amp; Hardware</div>';
     html += '    </div>';
     html += '    <div class="dist-header-actions">';
+    html += '      <a href="datacenter.html" class="dist-btn-action">Data Center</a>';
     html += '      <a href="transmission.html" class="dist-btn-action">⚡ Transmission CAD</a>';
     html += '      <button type="button" class="dist-watch-video" id="btn-watch-walkthrough" title="Watch Video Walkthrough" aria-label="Watch video walkthrough">';
     html += '        <span class="dist-watch-icon"><svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2.5v11l9-5.5z"/></svg></span>';

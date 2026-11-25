@@ -2201,8 +2201,8 @@
 
       ctx.fillStyle = t.muted;
       ctx.font = '500 10.5px system-ui, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText('VAULT ' + (v + 1), vx - vW / 2 + 6, vYs - vH / 2 + 12);
+      ctx.textAlign = 'right';
+      ctx.fillText('VAULT ' + (v + 1), vx + vW / 2 - 6, vYs - vH / 2 + 12);
 
       drawTransformerSymbol(ctx, vx - 25, vYs + 4, 11, isFeederActive ? t.primary : '#94a3b8');
 

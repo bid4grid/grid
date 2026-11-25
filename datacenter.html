@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Data Center Power Sizing | Bid4Grid</title>
+  <meta name="description" content="Preliminary data center transformer, UPS, and battery capacity calculator.">
+  <link rel="stylesheet" href="assets/dist-app.css?v=5">
+  <link rel="stylesheet" href="assets/datacenter.css?v=6">
+</head>
+<body class="dist-standalone">
+  <header class="dist-header">
+    <div class="dist-header-content">
+      <div>
+        <h1>Data Center Power Sizing</h1>
+        <div class="subtitle">Preliminary transformer, UPS and battery capacity</div>
+      </div>
+      <div class="dist-header-actions">
+        <a href="distribution.html" class="dist-btn-action">Distribution CAD</a>
+      </div>
+    </div>
+  </header>
+  <main class="dc-main">
+    <div id="dc-summary" class="dist-tiles dc-summary" aria-label="Data center sizing highlights">
+      <div class="dist-tile purple"><b id="tile-it"></b><span>IT demand</span><small>After demand factor</small></div>
+      <div class="dist-tile"><b id="tile-facility"></b><span>Facility demand</span><small>Transformer load</small></div>
+      <div class="dist-tile green"><b id="tile-voltage"></b><span>Primary / secondary</span><small>Line-to-line</small></div>
+      <div id="tile-transformer-card" class="dist-tile"><b id="tile-transformer"></b><span>Transformer N−1</span><small>Capacity only</small></div>
+      <div id="tile-ups-card" class="dist-tile"><b id="tile-ups"></b><span>UPS N−1 (kVA)</span><small>kW rating not checked</small></div>
+      <div id="tile-battery-card" class="dist-tile"><b id="tile-battery"></b><span>Battery runtime</span><small>Estimated for IT load</small></div>
+    </div>
+    <p id="dc-error" class="dc-card dc-error" role="alert" hidden></p>
+    <details class="dist-guide-card dc-guide">
+      <summary class="dist-guide-header">
+        <strong>Data Center Power Architecture &amp; Sizing Guide</strong>
+        <span class="dc-guide-toggle"></span>
+      </summary>
+      <div class="dist-guide-body">
+        <p><strong>How it fits:</strong> A distribution feeder supplies the site transformers, then switchgear distributes power to the UPS and other loads. This calculator is independent of the Distribution CAD cascade; their inputs are not synchronized.</p>
+        <p><strong>Load inputs:</strong> IT/rack is connected load per rack, and IT demand is its expected percentage. Include cooling and other equipment outside the UPS in the non-UPS load. For this simplified model, include any UPS-supported cooling in the IT load input. UPS efficiency is at load; UPS PF is its output power factor, and facility PF is measured at the transformer.</p>
+        <p><strong>Battery:</strong> Enter usable DC energy after reserves and derating; battery efficiency is the battery-to-load efficiency. Runtime assumes the shared battery supports the full IT load only; generator start and recharge are excluded.</p>
+        <p><strong>Capacity and redundancy:</strong> The model assumes balanced three-phase loads and identical units sharing the load. N−1 checks only whether the remaining units have enough kVA after one fails; it does not verify UPS kW limits, redundant paths or availability.</p>
+        <p><strong>Design limits:</strong> The diagram is conceptual. Actual A/B paths, generators, transfer equipment, switchgear ratings, switching and protective coordination are not modeled. Estimates also exclude transformer losses, harmonics, battery discharge-rate effects, equipment kW limits and generator capacity. Have qualified engineers and manufacturers verify the design and equipment ratings.</p>
+      </div>
+    </details>
+    <div class="dc-layout">
+      <form id="dc-form" class="dc-card dc-inputs" novalidate>
+        <h2>Data Center Settings</h2>
+        <section>
+          <h3>Load and power</h3>
+          <div class="dc-fields">
+            <label>Rack count <input name="racks" type="number" min="1" max="100000" step="1" value="50" required></label>
+            <label title="Connected IT load per rack">IT/rack (kW) <input name="rackKW" type="number" min="0.01" max="1000" step="any" value="5" required></label>
+            <label title="IT demand as a percentage of connected load">IT demand (%) <input name="demandPct" type="number" min="1" max="100" step="any" value="80" required></label>
+            <label title="Non-UPS facility load">Non-UPS load (kW) <input name="otherKW" type="number" min="0" max="10000000" step="any" value="70" required></label>
+            <label title="UPS efficiency at load">UPS efficiency (%) <input name="upsEfficiencyPct" type="number" min="1" max="100" step="any" value="95" required></label>
+            <label title="UPS output power factor">UPS output PF <input name="upsPF" type="number" min="0.1" max="1" step="any" value="0.95" required></label>
+            <label title="Facility power factor at the transformer">Facility PF <input name="facilityPF" type="number" min="0.1" max="1" step="any" value="0.9" required></label>
+          </div>
+        </section>
+        <section>
+          <h3>Service transformers</h3>
+          <div class="dc-fields">
+            <label title="Primary line-to-line voltage">Primary L-L (kV) <input name="primaryKV" type="number" min="0.1" max="500" step="any" value="13.2" required></label>
+            <label title="Secondary line-to-line voltage">Secondary L-L (V) <input name="secondaryV" type="number" min="100" max="35000" step="any" value="480" required></label>
+            <label title="Number of transformers installed">Units installed <input name="transformerCount" type="number" min="1" max="100" step="1" value="2" required></label>
+            <label title="Rating per transformer">Unit rating (kVA) <input name="transformerKVA" type="number" min="1" max="1000000" step="any" value="400" required></label>
+          </div>
+          <p id="voltage-warning" class="dc-warning" role="status" hidden>Primary voltage is less than or equal to secondary voltage. This is not a step-down transformer; verify the selected voltages.</p>
+        </section>
+        <section>
+          <h3>UPS and battery</h3>
+          <div class="dc-fields">
+            <label title="UPS modules installed">UPS modules <input name="upsCount" type="number" min="1" max="100" step="1" value="2" required></label>
+            <label title="Rating per UPS module">UPS rating (kVA) <input name="upsKVA" type="number" min="1" max="1000000" step="any" value="300" required></label>
+            <label title="Usable battery energy">Battery (kWh) <input name="batteryKWh" type="number" min="0" max="10000000" step="any" value="100" required></label>
+            <label title="Battery-to-load efficiency">Battery eff. (%) <input name="batteryEfficiencyPct" type="number" min="1" max="100" step="any" value="90" required></label>
+            <label title="Target battery runtime">Runtime target (min) <input name="targetMinutes" type="number" min="0" max="10080" step="any" value="15" required></label>
+          </div>
+        </section>
+      </form>
+      <div class="dc-output">
+    <section class="dc-card dc-diagram" aria-labelledby="diagram-title">
+      <h2 id="diagram-title">Data Center CAD Diagram</h2>
+      <div id="diagram-unavailable" class="dc-error" hidden>Diagram values are unavailable until all inputs are valid.</div>
+      <div id="diagram-content" class="dc-diagram-scroll">
+        <svg viewBox="0 0 1200 480" role="img" aria-labelledby="diagram-svg-title diagram-svg-desc">
+          <title id="diagram-svg-title">Conceptual data center single-line diagram</title>
+          <desc id="diagram-svg-desc">A distribution feeder supplies a site transformer and main switchgear. The switchgear supplies UPS modules feeding IT racks and separately supplies cooling and other non-UPS loads. A battery supports the UPS. This conceptual view does not show redundant paths or model protection.</desc>
+          <defs>
+            <pattern id="dc-grid" width="30" height="30" patternUnits="userSpaceOnUse">
+              <path d="M 30 0 H 0 V 30" fill="none" stroke="#edf0f3" stroke-width="1"></path>
+            </pattern>
+          </defs>
+          <rect width="1200" height="480" fill="#fff"></rect>
+          <rect width="1200" height="480" fill="url(#dc-grid)"></rect>
+          <text x="24" y="28" class="dc-cad-title">DATA CENTER DISTRIBUTION SINGLE-LINE DIAGRAM</text>
+          <text x="24" y="47" class="dc-cad-subtitle">Conceptual path: Utility distribution → site transformer → switchgear → UPS → IT load</text>
+
+          <g stroke-dasharray="5 5" stroke-width="1.5">
+            <rect x="20" y="60" width="265" height="290" fill="#0284c7" fill-opacity=".02" stroke="#0284c7" stroke-opacity=".22"></rect>
+            <rect x="293" y="60" width="365" height="290" fill="#e07a3f" fill-opacity=".02" stroke="#e07a3f" stroke-opacity=".22"></rect>
+            <rect x="666" y="60" width="514" height="290" fill="#16a34a" fill-opacity=".02" stroke="#16a34a" stroke-opacity=".22"></rect>
+          </g>
+          <g class="dc-cad-zone">
+            <text x="30" y="78" fill="#075985">ZONE 1: PRIMARY DISTRIBUTION</text>
+            <text x="303" y="78" fill="#c45c19">ZONE 2: SITE SERVICE</text>
+            <text x="676" y="78" fill="#15803d">ZONE 3: DATA CENTER LOADS</text>
+          </g>
+          <g fill="none" stroke-width="3">
+            <path d="M 48 210 H 325" stroke="#0284c7"></path>
+            <path d="M 375 210 H 460" stroke="#e07a3f"></path>
+            <path d="M 460 210 H 735 M 825 210 H 1050" stroke="#16a34a"></path>
+            <path d="M 460 155 V 265" stroke="#0284c7" stroke-width="6"></path>
+            <path d="M 570 210 V 282" stroke="#16a34a"></path>
+            <path d="M 780 230 V 281" stroke="#7c3aed"></path>
+            <circle cx="340" cy="210" r="15" stroke="#e07a3f"></circle>
+            <circle cx="360" cy="210" r="15" stroke="#e07a3f"></circle>
+            <rect x="735" y="190" width="90" height="40" fill="#fff" stroke="#16a34a"></rect>
+            <rect x="1050" y="177" width="40" height="66" fill="#fff" stroke="#475569"></rect>
+            <path d="M 1056 190 H 1084 M 1056 202 H 1084 M 1056 214 H 1084 M 1056 226 H 1084" stroke="#475569" stroke-width="2"></path>
+            <rect x="557" y="282" width="26" height="20" fill="#fff" stroke="#16a34a"></rect>
+            <path d="M 768 281 H 792 M 773 289 H 787 M 768 297 H 792 M 773 305 H 787" stroke="#7c3aed"></path>
+          </g>
+          <g class="dc-cad-text" text-anchor="middle">
+            <text x="130" y="177" class="dc-cad-label dc-blue">UTILITY FEEDER</text>
+            <text x="130" y="240" id="diagram-primary"></text>
+            <text x="130" y="258">Distribution CAD interface</text>
+            <text x="350" y="177" class="dc-cad-label dc-orange">SITE TRANSFORMERS</text>
+            <text x="350" y="240" id="diagram-transformer"></text>
+            <text x="460" y="135" class="dc-cad-label dc-blue">MAIN SWITCHGEAR</text>
+            <text x="460" y="285" id="diagram-secondary"></text>
+            <text x="780" y="177" class="dc-cad-label dc-green">UPS MODULES</text>
+            <text x="780" y="216" class="dc-cad-label dc-green">UPS</text>
+            <text x="780" y="255" id="diagram-ups"></text>
+            <text x="1070" y="159" class="dc-cad-label">IT RACKS</text>
+            <text x="1070" y="265" id="diagram-racks"></text>
+            <text x="1070" y="283" id="diagram-it"></text>
+            <text x="570" y="320" id="diagram-other"></text>
+            <text x="570" y="337">Cooling and other loads</text>
+            <text x="780" y="325" id="diagram-battery"></text>
+            <text x="780" y="342" id="diagram-runtime"></text>
+          </g>
+          <g class="dc-cad-panel">
+            <rect x="20" y="362" width="375" height="48"></rect>
+            <rect x="412" y="362" width="375" height="48"></rect>
+            <rect x="804" y="362" width="376" height="48"></rect>
+            <rect x="20" y="429" width="1160" height="30"></rect>
+          </g>
+          <g class="dc-cad-text">
+            <text x="32" y="380" class="dc-cad-label dc-orange">TRANSFORMER CAPACITY</text>
+            <text x="32" y="399" id="diagram-transformer-status"></text>
+            <text x="424" y="380" class="dc-cad-label dc-green">UPS CAPACITY (kVA ONLY)</text>
+            <text x="424" y="399" id="diagram-ups-status"></text>
+            <text x="816" y="380" class="dc-cad-label dc-blue">MODEL INTERFACE</text>
+            <text x="816" y="399">Independent of distribution cascade inputs</text>
+            <text x="600" y="449" text-anchor="middle">CONCEPTUAL MODEL  |  N−1 CHECKS CAPACITY ONLY  |  VERIFY DESIGN AND EQUIPMENT RATINGS</text>
+          </g>
+        </svg>
+      </div>
+      <p>Conceptual capacity planning only; N−1 does not verify redundant paths. See the guide for assumptions and design limits.</p>
+    </section>
+      <section class="dc-card dc-results" aria-labelledby="results-title">
+        <h2 id="results-title">Sizing results</h2>
+        <div id="dc-results" class="dc-result-grid" aria-live="polite">
+          <section>
+          <h3>Calculated demand</h3>
+          <dl>
+            <div><dt>IT demand</dt><dd id="itKW"></dd></div>
+            <div><dt>UPS input / estimated losses</dt><dd id="upsInput"></dd></div>
+            <div><dt>Facility demand</dt><dd id="facility"></dd></div>
+            <div><dt>Primary / secondary current</dt><dd id="currents"></dd></div>
+          </dl>
+          </section>
+          <section>
+          <h3>Transformer capacity</h3>
+          <dl>
+            <div><dt>Required / installed</dt><dd id="transformerCapacity"></dd></div>
+            <div><dt>Normal capacity</dt><dd id="transformerNormal"></dd></div>
+            <div><dt>After one unit fails</dt><dd id="transformerN1"></dd></div>
+            <div><dt>Minimum units for N−1</dt><dd id="transformerMinimum"></dd></div>
+          </dl>
+          </section>
+          <section>
+          <h3>UPS output capacity (kVA only)</h3>
+          <dl>
+            <div><dt>Required / installed</dt><dd id="upsCapacity"></dd></div>
+            <div><dt>Normal capacity</dt><dd id="upsNormal"></dd></div>
+            <div><dt>After one module fails</dt><dd id="upsN1"></dd></div>
+            <div><dt>Minimum modules for N−1</dt><dd id="upsMinimum"></dd></div>
+          </dl>
+          </section>
+          <section>
+          <h3>Battery</h3>
+          <dl>
+            <div><dt>Estimated runtime</dt><dd id="runtime"></dd></div>
+            <div><dt>Usable energy for target</dt><dd id="batteryRequired"></dd></div>
+            <div><dt>Runtime target</dt><dd id="batteryTarget"></dd></div>
+          </dl>
+          </section>
+        </div>
+      </section>
+      </div>
+    </div>
+  </main>
+  <script src="assets/datacenter-core.js?v=6"></script>
+  <script src="assets/datacenter-app.js?v=6"></script>
+</body>
+</html>

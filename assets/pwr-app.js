@@ -120,35 +120,35 @@
             <span class="pwr-tab-full">3-Phase Power</span>
             <span class="pwr-tab-short">3Φ</span>
           </button>
-          <button data-tab="flow">
-            <span class="pwr-tab-icon">🌐</span>
-            <span class="pwr-tab-full">Power Flow</span>
-            <span class="pwr-tab-short">Flow</span>
-          </button>
-          <button data-tab="gen">
-            <span class="pwr-tab-icon">⚙️</span>
-            <span class="pwr-tab-full">Generators (P-δ)</span>
-            <span class="pwr-tab-short">Generators</span>
+          <button data-tab="theory">
+            <span class="pwr-tab-icon">📖</span>
+            <span class="pwr-tab-full">Theory &amp; Formulas</span>
+            <span class="pwr-tab-short">Theory</span>
           </button>
           <button data-tab="xfmr">
             <span class="pwr-tab-icon">🔄</span>
             <span class="pwr-tab-full">Transformers</span>
             <span class="pwr-tab-short">Transformers</span>
           </button>
+          <button data-tab="gen">
+            <span class="pwr-tab-icon">⚙️</span>
+            <span class="pwr-tab-full">Generators (P-δ)</span>
+            <span class="pwr-tab-short">Generators</span>
+          </button>
           <button data-tab="lines">
             <span class="pwr-tab-icon">🗼</span>
             <span class="pwr-tab-full">Lines &amp; Per-Unit</span>
             <span class="pwr-tab-short">Lines</span>
           </button>
+          <button data-tab="flow">
+            <span class="pwr-tab-icon">🌐</span>
+            <span class="pwr-tab-full">Power Flow</span>
+            <span class="pwr-tab-short">Flow</span>
+          </button>
           <button data-tab="faults">
             <span class="pwr-tab-icon">⚡</span>
             <span class="pwr-tab-full">Fault Analysis</span>
             <span class="pwr-tab-short">Faults</span>
-          </button>
-          <button data-tab="theory">
-            <span class="pwr-tab-icon">📖</span>
-            <span class="pwr-tab-full">Theory &amp; Formulas</span>
-            <span class="pwr-tab-short">Theory</span>
           </button>
         </nav>
       </div>

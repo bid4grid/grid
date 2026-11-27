@@ -433,7 +433,7 @@
 
     ctx.fillStyle = cascade.customerMeter.ansi.color;
     ctx.font = '500 10.5px system-ui, sans-serif';
-    ctx.fillText('kWh', meterX, y - 2);
+    ctx.fillText('kWh', meterX, y - 24);
     ctx.font = '500 10px system-ui, sans-serif';
     ctx.fillText(cascade.customerMeter.terminal_V.toFixed(1) + ' V', meterX, y + 24);
     ctx.fillStyle = t.muted;

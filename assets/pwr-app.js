@@ -102,7 +102,7 @@
           </div>
           <div class="pwr-header-actions">
             <a href="distribution.html" class="pwr-btn-action">
-              <span># Distribution Systems</span>
+              <span>Distribution Systems</span>
             </a>
             <button type="button" class="pwr-watch-video" id="btn-watch-walkthrough" title="Watch Video Walkthrough" aria-label="Watch video walkthrough">
               <span class="pwr-watch-icon"><svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2.5v11l9-5.5z"/></svg></span>

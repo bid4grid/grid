@@ -339,17 +339,17 @@
     html += '<div class="dist-nav-container">';
     html += '  <nav class="dist-nav" aria-label="Main Navigation">';
     var tabs = [
+      { id: 'theory', icon: '📖', full: 'Theory & Formulas', short: 'Theory' },
       { id: 'cascade', icon: '⚡', full: 'Cascade', short: 'Cascade' },
       { id: 'pole', icon: '🪵', full: 'Pole', short: 'Pole' },
       { id: 'riser', icon: '🧗', full: 'Riser', short: 'Riser' },
       { id: 'padmount', icon: '🟩', full: 'Padmount', short: 'Padmount' },
+      { id: 'split', icon: '🔌', full: 'Split-Phase', short: 'Split' },
       { id: 'bank', icon: '📦', full: '3Φ Banks', short: 'Banks' },
       { id: 'highleg', icon: '🟧', full: 'High-Leg', short: 'High-Leg' },
       { id: 'network', icon: '🏙️', full: 'Network', short: 'Network' },
       { id: 'profile', icon: '📉', full: 'V-Profile', short: 'V-Profile' },
-      { id: 'split', icon: '🔌', full: 'Split-Phase', short: 'Split' },
-      { id: 'spec', icon: '📋', full: 'Specs', short: 'Specs' },
-      { id: 'theory', icon: '📖', full: 'Theory & Formulas', short: 'Theory' }
+      { id: 'spec', icon: '📋', full: 'Specs', short: 'Specs' }
     ];
 
     tabs.forEach(function (tab) {

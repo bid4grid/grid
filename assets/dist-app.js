@@ -341,8 +341,8 @@
     var tabs = [
       { id: 'cascade', icon: '⚡', full: 'Cascade', short: 'Cascade' },
       { id: 'pole', icon: '🪵', full: 'Pole', short: 'Pole' },
-      { id: 'padmount', icon: '🟩', full: 'Padmount', short: 'Padmount' },
       { id: 'riser', icon: '🧗', full: 'Riser', short: 'Riser' },
+      { id: 'padmount', icon: '🟩', full: 'Padmount', short: 'Padmount' },
       { id: 'bank', icon: '📦', full: '3Φ Banks', short: 'Banks' },
       { id: 'highleg', icon: '🟧', full: 'High-Leg', short: 'High-Leg' },
       { id: 'network', icon: '🏙️', full: 'Network', short: 'Network' },
